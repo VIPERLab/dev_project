@@ -1,0 +1,406 @@
+//
+//  AudioUnitRecorder.mm
+//  KwSing
+//
+//  Created by 永杰 单 on 12-8-12.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "AudioUnitRecorder.h"
+#include "MessageManager.h"
+#include "IAudioStateObserver.h"
+#include "AutoLock.h"
+#include "Score.h"
+#include "KuwoLog.h"
+
+#import <AudioToolbox/AudioServices.h>
+#import <AVFoundation/AVAudioSession.h>
+#import <AudioToolbox/AudioFormat.h>
+#include <math.h>
+
+#define kOutputBus 0
+#define kInputBus 1
+#define kBufferSize (4096)
+#define kFreeSingAudioSize (52923776) //44100 * 2 * 2 * 300
+static UInt64 s_un_audio_size = 0;
+static double s_f_volume = 0;
+static KwTools::CLock s_lock;
+//static KwTools::CLock s_volume_lock;
+
+static dispatch_queue_t s_dispatchQueue;
+
+static bool s_b_notify = false;
+
+static AudioComponentInstance g_audio_unit;
+static AudioStreamBasicDescription g_audio_format;
+static AudioBufferList g_audio_buf_list;
+static bool b_headphone_in = true;
+static bool s_b_is_freesing = false;
+
+CAudioUnitRecorder::CAudioUnitRecorder(){
+    AudioComponentDescription audio_unit_desc;
+    audio_unit_desc.componentType = kAudioUnitType_Output;
+    audio_unit_desc.componentSubType = kAudioUnitSubType_RemoteIO;
+    audio_unit_desc.componentFlags = 0;
+    audio_unit_desc.componentFlagsMask = 0;
+    audio_unit_desc.componentManufacturer = kAudioUnitManufacturer_Apple;
+    
+    AudioComponent input_component = AudioComponentFindNext(NULL, &audio_unit_desc);
+    OSStatus ret_status = AudioComponentInstanceNew(input_component, &g_audio_unit);
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    AVAudioSession* audio_session = [AVAudioSession sharedInstance];
+    [audio_session setActive:YES error:nil];
+    UInt32 un_audio_override = kAudioSessionCategory_PlayAndRecord;
+    AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(un_audio_override), &un_audio_override);
+
+    s_lock.Lock();
+    m_AudioBuffer = NULL;
+    m_AudioBuffer = (char*)malloc(kBufferSize * sizeof(char));
+    s_lock.UnLock();
+    
+    UInt32 un_flag = 1;
+    ret_status = AudioUnitSetProperty(g_audio_unit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, kOutputBus, &un_flag, sizeof(un_flag));
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    un_flag = 1;
+    
+    ret_status = AudioUnitSetProperty(g_audio_unit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, kInputBus, &un_flag, sizeof(un_flag));
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    un_flag = 0;
+    ret_status = AudioUnitSetProperty(g_audio_unit, kAudioUnitProperty_ShouldAllocateBuffer, kAudioUnitScope_Output, kInputBus, &un_flag, sizeof(un_flag));
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    g_audio_format.mSampleRate = 44100.0;
+    g_audio_format.mFormatID = kAudioFormatLinearPCM;
+    g_audio_format.mFormatFlags = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked;
+    g_audio_format.mFramesPerPacket = 1;
+    g_audio_format.mChannelsPerFrame = 2;
+    g_audio_format.mBitsPerChannel = 16;
+    g_audio_format.mBytesPerFrame = 4;
+    g_audio_format.mBytesPerPacket = 4;
+    
+    ret_status = AudioUnitSetProperty(g_audio_unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, kInputBus, &g_audio_format, sizeof(g_audio_format));
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    ret_status = AudioUnitSetProperty(g_audio_unit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, kOutputBus, &g_audio_format, sizeof(g_audio_format));
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    AURenderCallbackStruct callback_struct;
+    callback_struct.inputProc = recordCallback;
+    callback_struct.inputProcRefCon = this;
+    ret_status = AudioUnitSetProperty(g_audio_unit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global, kInputBus, &callback_struct, sizeof(callback_struct));
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    callback_struct.inputProc = playbackCallBack;
+    callback_struct.inputProcRefCon = this;
+    ret_status = AudioUnitSetProperty(g_audio_unit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, kOutputBus, &callback_struct, sizeof(callback_struct));
+    if (noErr != ret_status) {
+        return;
+    }
+    
+    m_EchoPara = arry_echo_para[SMALL_ROOM_EFFECT];
+    s_un_audio_size = 0;
+    s_f_volume = 0;
+    s_b_is_freesing = false;
+    s_b_notify = false;
+    g_audio_buf_list.mNumberBuffers = 0;
+    
+    m_pEchoProcessor = NULL;
+    m_fReplayVolume = 1.0;
+//    m_pNoiseProcessor = NULL;
+    m_bIsDecrease_noise = true;
+    m_nEscapeBytes = 12384;
+    
+    s_dispatchQueue = dispatch_queue_create("com.kwsing.onwavedatacomming", NULL);
+    
+    AudioUnitInitialize(g_audio_unit);
+}
+
+CAudioUnitRecorder::~CAudioUnitRecorder(){
+    s_un_audio_size = 0;
+    dispose();
+}
+
+bool CAudioUnitRecorder::initAudioUnit(NSString* str_record_path, bool b_is_decrease_noise){
+    m_bIsDecrease_noise = b_is_decrease_noise;
+//    if (!b_is_decrease_noise) {
+//        m_nEscapeBytes = 0;
+//    }
+    
+//    if ([[[UIDevice currentDevice] model] isEqualToString:@"iPod touch"] && (480 == [UIScreen mainScreen].bounds.size.height)) {
+//        m_nEscapeBytes = 76000;
+//    }
+    
+    AVAudioSession* audio_session = [AVAudioSession sharedInstance];
+    [audio_session setActive:YES error:nil];
+    
+    UInt32 un_audio_override = kAudioSessionCategory_PlayAndRecord;
+    AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(un_audio_override), &un_audio_override);
+    
+//    float f_buf_len = 0.05;
+//    AudioSessionSetProperty(kAudioSessionProperty_PreferredHardwareIOBufferDuration, sizeof(f_buf_len), &f_buf_len);
+    
+    CFURLRef file_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8*)[str_record_path UTF8String], [str_record_path length], NO);
+    OSStatus ret_status = ExtAudioFileCreateWithURL(file_url, kAudioFileWAVEType, &g_audio_format, NULL, kAudioFileFlags_EraseFile, &m_ExtAudioFile);
+    
+    CFRelease(file_url);
+    if (noErr != ret_status) {
+        kuwoClientLog(@"%s---%ld", "Audio Record File Create failed! error code is ", ret_status);
+        return false;
+    }
+    
+    ExtAudioFileSetProperty(m_ExtAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(g_audio_format), &g_audio_format);
+    
+    g_audio_buf_list.mNumberBuffers = 0;
+    
+    if (s_b_is_freesing) {
+        m_pEchoProcessor = new freeverb(&m_EchoPara);
+    }
+    
+    
+    //****************Noise Decrease Init*************************//
+//    m_pNoiseProcessor = speex_preprocess_state_init(kBufferSize / 2, 44100);
+//    int n_flag = 1;
+//    speex_preprocess_ctl(m_pNoiseProcessor, SPEEX_PREPROCESS_SET_DENOISE, &n_flag);
+//    n_flag = -10;
+//    speex_preprocess_ctl(m_pNoiseProcessor, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &n_flag);
+    
+    return true;
+}
+
+OSStatus CAudioUnitRecorder::startRecord(){
+    for (int n_buf_num = 0; n_buf_num < g_audio_buf_list.mNumberBuffers; ++n_buf_num) {
+        memset(g_audio_buf_list.mBuffers[n_buf_num].mData, 0, g_audio_buf_list.mBuffers[n_buf_num].mDataByteSize);
+    }
+
+    UInt32 un_audio_override = kAudioSessionCategory_PlayAndRecord;
+    AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(un_audio_override), &un_audio_override);
+    AVAudioSession* audio_session = [AVAudioSession sharedInstance];
+    [audio_session setActive:YES error:nil];
+//    NSLog(@"Record start 2");
+    return AudioOutputUnitStart(g_audio_unit);
+}
+
+OSStatus CAudioUnitRecorder::stopRecord(){
+    s_lock.Lock();
+    ExtAudioFileDispose(m_ExtAudioFile);
+    s_lock.UnLock();
+    s_b_is_freesing = false;
+
+    return AudioOutputUnitStop(g_audio_unit);
+}
+
+OSStatus CAudioUnitRecorder::pauseRecord(){
+    return AudioOutputUnitStop(g_audio_unit);
+}
+
+unsigned short CAudioUnitRecorder::getCurVolume(){
+//    float f_cur_volume(0.0);
+//    KwTools::CAutoLock auto_lock(&s_volume_lock);
+//    if (0 == m_fVolumeVec.size()) {
+//        return f_cur_volume;
+//    }
+//    for (std::vector<float>::iterator itr = m_fVolumeVec.begin(); itr != m_fVolumeVec.end(); ++itr){
+//        f_cur_volume += *itr;
+//    }
+//    return 100 * f_cur_volume / m_fVolumeVec.size();
+//    if (0.1 > s_f_volume) {
+//        return 0;
+//    }else {
+//        return 100 * s_f_volume;
+//    }
+    return (s_f_volume <= 0.1) ? 0 : (100 * s_f_volume);
+}
+
+int CAudioUnitRecorder::getCurrentTime(){
+    
+    return s_un_audio_size * 1000 / (44100 * 2 * 2);
+}
+
+void CAudioUnitRecorder::setRecordMode(bool b_is_freesing){
+    s_b_is_freesing = b_is_freesing;
+}
+
+bool CAudioUnitRecorder::SetEchoType(EAudioEchoEffect e_echo_type){
+    s_lock.Lock();
+    if (m_pEchoProcessor) {
+        delete m_pEchoProcessor;
+        m_pEchoProcessor = NULL;
+    }
+    if (NO_EFFECT != e_echo_type) {
+        m_EchoPara = arry_echo_para[e_echo_type];
+        m_pEchoProcessor = new freeverb(&m_EchoPara);
+    }
+    s_lock.UnLock();
+    
+    return true;
+}
+
+void CAudioUnitRecorder::dispose(){
+    stopRecord();
+    s_lock.Lock();
+    free(m_AudioBuffer);
+    g_audio_buf_list.mNumberBuffers=0;
+    s_b_notify = false;
+    m_AudioBuffer = NULL;
+    if (m_pEchoProcessor) {
+        delete m_pEchoProcessor;
+        m_pEchoProcessor = NULL;
+    }
+    s_lock.UnLock();
+    dispatch_release(s_dispatchQueue);
+    AudioUnitUninitialize(g_audio_unit);
+    AudioComponentInstanceDispose(g_audio_unit);
+//    if (m_pNoiseProcessor) {
+//        speex_preprocess_state_destroy(m_pNoiseProcessor);
+//        m_pNoiseProcessor = NULL;
+//    }
+    
+}
+
+OSStatus CAudioUnitRecorder::recordCallback(void *in_ref_con, AudioUnitRenderActionFlags *io_action_flags, const AudioTimeStamp *in_time_stamp, UInt32 un_bus_num, UInt32 un_frame_num, AudioBufferList *io_buf_list){
+    
+    CAudioUnitRecorder* p_this = (CAudioUnitRecorder*)in_ref_con;
+
+    g_audio_buf_list.mNumberBuffers = 1;
+    g_audio_buf_list.mBuffers[0].mData = p_this->m_AudioBuffer;
+    g_audio_buf_list.mBuffers[0].mDataByteSize = 4 * un_frame_num;
+    g_audio_buf_list.mBuffers[0].mNumberChannels = 2;
+
+    io_buf_list = &g_audio_buf_list;
+    
+    AudioUnitRender(g_audio_unit, io_action_flags, in_time_stamp, un_bus_num, un_frame_num, io_buf_list);
+    
+    s_un_audio_size += g_audio_buf_list.mBuffers[0].mDataByteSize;
+    
+    if (0 == g_audio_buf_list.mNumberBuffers) {
+        return noErr;
+    }
+    
+//    if (p_this->m_bIsDecrease_noise && NULL != p_this->m_pNoiseProcessor) {
+//        speex_preprocess_run(p_this->m_pNoiseProcessor, (short*)g_audio_buf_list.mBuffers[0].mData);
+//    }
+
+//    KS_BLOCK_DECLARE{
+    int n_data_len = g_audio_buf_list.mBuffers[0].mDataByteSize / 2;
+    short* audio_data = (short*)g_audio_buf_list.mBuffers[0].mData;
+    
+    CScore::GetInstance()->OnWavNewDataComing(audio_data, n_data_len);
+    
+    dispatch_async(s_dispatchQueue,^{
+
+        double f_volume = 0.;
+        for (int n_itr = 0; n_itr < n_data_len; n_itr += 2) {
+            double frame_amp = 0.;
+            for (int j = n_itr; j < n_itr + 2; ++j) {
+                frame_amp += audio_data[n_itr];
+            }
+            frame_amp /= 2;
+            f_volume += frame_amp * frame_amp;
+        }
+        
+        f_volume /= (n_data_len >> 1);
+        f_volume = ((f_volume > 1) ? log10(f_volume) : 0.) / 9;
+        
+        s_f_volume = (f_volume < 0.5) ? 0.0 : ((f_volume - 0.5) * 2);
+        
+        s_f_volume = s_f_volume * s_f_volume;
+    });
+    
+    s_lock.Lock();
+    if (!s_b_notify && s_un_audio_size > p_this->m_nEscapeBytes) {
+        ExtAudioFileWriteAsync(p_this->m_ExtAudioFile, un_frame_num, io_buf_list);
+    }
+   
+    
+//    KS_BLOCK_DECLARE{
+//        s_f_volume = 0.;
+//        for (int n_itr = 0; n_itr < n_data_len; n_itr += 2) {
+//            double frame_amp = 0.;
+//            for (int j = n_itr; j < n_itr + 2; ++j) {
+//                frame_amp += audio_data[n_itr];
+//            }
+//            frame_amp /= 2;
+//            s_f_volume += frame_amp * frame_amp;
+//        }
+//        
+//        s_f_volume /= (n_data_len / 2);
+//        s_f_volume = ((s_f_volume > 1) ? log10(s_f_volume) : 0.) / 9;
+//        
+//        s_f_volume = (s_f_volume < 0.5) ? 0.0 : ((s_f_volume - 0.5) * 2);
+//        s_volume_lock.Lock();
+//        if(5 < p_this->m_fVolumeVec.size()){
+//            p_this->m_fVolumeVec.erase(p_this->m_fVolumeVec.begin());
+//        }
+//
+//        p_this->m_fVolumeVec.push_back(f_temp_env);
+//        
+////        s_volume_lock.UnLock();
+//    }
+//    KS_BLOCK_RUN_THREAD();
+//
+    if (NULL != p_this->m_pEchoProcessor) {
+        p_this->m_pEchoProcessor->process(44100, 1, 2, g_audio_buf_list.mBuffers[0].mData, g_audio_buf_list.mBuffers[0].mDataByteSize / 2, false);
+    }
+    
+    s_lock.UnLock();
+    
+    if (s_b_is_freesing && !s_b_notify && kFreeSingAudioSize <= s_un_audio_size) {
+        s_b_notify = true;
+        ASYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::FreeSingFinish,0);
+    }
+    
+    return noErr;
+}
+
+OSStatus CAudioUnitRecorder::playbackCallBack(void *in_ref_con, AudioUnitRenderActionFlags *io_action_flags, const AudioTimeStamp *in_time_stamp, UInt32 un_bus_num, UInt32 un_frame_num, AudioBufferList *io_buf_list){
+    
+    if (b_headphone_in) {
+        for (int n_itr = 0; n_itr < io_buf_list->mNumberBuffers; ++n_itr) {
+            AudioBuffer buffer = io_buf_list->mBuffers[n_itr];
+            UInt32* frame_buffer = (UInt32*)buffer.mData;
+            
+            int n_buf_len = g_audio_buf_list.mBuffers[n_itr].mDataByteSize / 4;
+            
+            for (int i = 0; i < n_buf_len; ++i) {
+                frame_buffer[i] = ((UInt32*)(g_audio_buf_list.mBuffers[n_itr].mData))[i];
+            }
+        }
+    }else {
+        for (int n_itr = 0; n_itr < io_buf_list->mNumberBuffers; ++n_itr) {
+            AudioBuffer buffer = io_buf_list->mBuffers[n_itr];
+            UInt32* frame_buffer = (UInt32*)buffer.mData;
+            for (int i = 0; i < un_frame_num; ++i) {
+                frame_buffer[i] = 0;
+            }
+        }
+    }
+
+    return noErr;
+}
+
+void CAudioUnitRecorder::setHeadStatus(bool b_has_headset){
+    b_headphone_in = b_has_headset;
+}
+
+bool CAudioUnitRecorder::SetReplayVolume(float f_volume){
+    m_fReplayVolume = f_volume;
+    
+    return true;
+}

@@ -1,0 +1,383 @@
+//
+//  MainView.mm
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-7-30.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "MainViewController.h"
+#include "KSWebView.h"
+#include "KSViewController.h"
+#include "GlobalWebViewActDelegate.h"
+#include "SettingViewController.h"
+#include "MusicLibViewController.h"
+#include "SquareViewController.h"
+#include "KwConfig.h"
+#include "KwTools.h"
+#include "AppInit.h"
+#include "WelcomeView.h"
+#include "iToast.h"
+#include "IObserverApp.h"
+#include "MessageManager.h"
+#include "ImageMgr.h"
+#include "MobClick.h"
+#include "RanksListRequest.h"
+#include "MusicListRequest.h"
+#include "ArtistListRequest.h"
+#include "globalm.h"
+#include "MyPageViewController.h"
+#include "MyTidingsViewController.h"
+#include "HttpRequest.h"
+#include "KwConfig.h"
+#include "KwConfigElements.h"
+#include "KSongViewController.h"
+#include "KSAppDelegate.h"
+
+enum {
+    PAGE_TYPE_FIRST
+    ,PAGE_TYPE_EMIGRATED
+    ,PAGE_TYPE_SINGNOW
+    ,PAGE_TYPE_HOME
+    ,PAGE_TYPE_SETTING
+    ,PAGE_TYPE_NUM
+};
+
+#define UPDATE_ALERT_TAG    51
+#define COMMENT_ALERT_ATG   52
+
+@interface KSMainViewController()<KSFooterTabBarDelegate,UIAlertViewDelegate,IObserverApp,IMusicLibObserver>
+{
+    KSFooterTabBar* pTabBar;
+    UIView* pSubViewContainer;
+    UIViewController* pSubviews[PAGE_TYPE_NUM];
+    GlobalWebViewActDelegate* pGlobalWebViewActDelegate;
+}
+
+- (void)viewDidLoad;
+- (void)viewDidUnload;
+- (void)createPageWithIdx:(unsigned)idx;
+- (void)didFooterTabBarSelected:(unsigned)idx;
+
+- (void)checkAppUpdate;
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex;
+
+-(void)IObserverApp_NetWorkStatusChanged:(KSNetworkStatus)enumStatus;
+-(void)IObserverApp_MemoryWarning;
+@end
+
+@implementation KSMainViewController
+
++ (KSMainViewController*)getInstance
+{
+    static KSMainViewController* sInstance(NULL);
+    if (!sInstance) {
+        sInstance=[[KSMainViewController alloc] init];
+    }
+    return sInstance;
+}
+
+- (id)init{
+    self = [super init];
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_APP,IObserverApp);
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_MUSICLIB,IMusicLibObserver);
+    
+    return self;
+}
+
+- (void)dealloc{
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_APP,IObserverApp);
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_MUSICLIB,IMusicLibObserver);
+    [super dealloc];
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    NSLog(@"self view:%@",[self.view description]);
+    pGlobalWebViewActDelegate=[[GlobalWebViewActDelegate alloc] init];
+    [KSWebView setGlobalDelegate:pGlobalWebViewActDelegate];
+    
+//    UIImage* pBkgImg=CImageMgr::GetBackGroundImage();
+//    UIImageView *background=[[[UIImageView alloc] initWithImage:pBkgImg]autorelease];
+//    [background setFrame:CGRectMake(0, 44, pBkgImg.size.width, pBkgImg.size.height)];
+//    [self.view addSubview:background];
+    [self.view setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    
+    CGRect rcSub = self.view.bounds;
+    rcSub.size.height-=FOOTER_TABBAR_HEIGHT;
+    pSubViewContainer=[[[UIView alloc] initWithFrame:rcSub] autorelease];
+    [self.view addSubview:pSubViewContainer];
+    
+    pSubViewContainer.backgroundColor = UIColorFromRGBValue(0xededed);
+    
+    pTabBar=[[KSFooterTabBar alloc] initWithSuperView:self.view];
+    [pTabBar setDeletate:self];
+    
+    for (int i=0; i<PAGE_TYPE_NUM; ++i) {
+        pSubviews[i]=nil;
+    }
+    
+    [self showSubView:0];
+    
+    [self checkAppUpdate];
+    
+    if (CAppInit::GetInstance()->IsFirstStart()) {
+        CGRect rc=[UIScreen mainScreen].bounds;
+        WelcomeView* pWelcome=[[WelcomeView alloc] initWithFrame:rc];
+        [[[[UIApplication sharedApplication] delegate] window] addSubview:pWelcome];
+    }
+    if(CHttpRequest::GetNetWorkStatus() == NETSTATUS_NONE){
+        [[[iToast makeText:NSLocalizedString(@"您的网络不太给力，检查一下吧！", @"")] setGravity:iToastGravityCenter] show];
+    }
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    [self becomeFirstResponder];
+}
+
+- (BOOL)canBecomeFirstResponder{
+    return YES;
+}
+
+- (void) remoteControlReceivedWithEvent:(UIEvent*)event
+{
+    return;
+}
+
+- (void)viewDidUnload
+{
+    for (int i=0; i<PAGE_TYPE_NUM; ++i) {
+        [pSubviews[i] release];
+    }
+    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+    [self resignFirstResponder];
+    [pGlobalWebViewActDelegate release];
+}
+
+-(void)IObserverApp_NetWorkStatusChanged:(KSNetworkStatus)enumStatus
+{
+    if(enumStatus == NETSTATUS_NONE)
+    {
+        [[[iToast makeText:NSLocalizedString(@"网络中断，请检查您的网络连接", @"")] setGravity:iToastGravityCenter] show];
+    }
+}
+
+- (unsigned)getSelectedSubViewIdx
+{
+    return [pTabBar getSelectedIdx];
+}
+
+-(UIViewController *)getSubViewWithIndex:(unsigned)index
+{
+    if (index>=PAGE_TYPE_NUM) {
+        return nil;
+    }
+    return pSubviews[index];
+}
+
+- (void)selectSubView:(unsigned)idx
+{
+    [pTabBar selectIdx:idx];
+}
+
+- (void)showSubView:(unsigned)idx
+{
+    [self createPageWithIdx:idx];
+    for (int i=0;i<PAGE_TYPE_NUM; ++i) {
+        if (i==idx) {
+            pSubviews[i].view.hidden=NO;
+            [MobClick beginLogPageView:[NSString stringWithUTF8String:object_getClassName(pSubviews[i])]];
+        } else if (pSubviews[i] && !pSubviews[i].view.hidden) {
+            pSubviews[i].view.hidden=YES;
+            [MobClick endLogPageView:[NSString stringWithUTF8String:object_getClassName(pSubviews[i])]];
+        }
+    }
+}
+
+- (void)didFooterTabBarSelected:(unsigned)idx
+{
+    if (idx==PAGE_TYPE_SINGNOW) {
+        [self createPageWithIdx:PAGE_TYPE_SINGNOW];
+        UIView* pView=pSubviews[idx].view;
+        [pSubViewContainer bringSubviewToFront:pView];
+        pView.hidden=NO;
+        CGRect dstFrame=[pView bounds];
+        CGRect startFrame=dstFrame;
+        startFrame.origin.y=startFrame.origin.y+startFrame.size.height;
+        [pView setFrame:startFrame];
+        
+        [UIView animateWithDuration:0.3 animations:^{
+            [pView setFrame:dstFrame];
+        } completion:^(BOOL finished) {
+            [self showSubView:PAGE_TYPE_SINGNOW];
+        }];
+        
+        //提示求打分
+        if (CHttpRequest::GetNetWorkStatus()== NETSTATUS_NONE) {
+            return;
+        }
+        bool isCommentEnable(false);
+        KwConfig::GetConfigureInstance()->GetConfigBoolValue(SECTION_COMMENT, BOOL_COMMENT_ENABLE, isCommentEnable, false);
+        if (isCommentEnable) {
+            bool need_prompt(false);
+            KwConfig::GetConfigureInstance()->GetConfigBoolValue(SECTION_COMMENT, BOOL_NEED_PROMPT, need_prompt, true);
+            if (need_prompt) {
+                int critical_prompt_times(0);
+                int saved_times(0);
+                KwConfig::GetConfigureInstance()->GetConfigIntValue(SECTION_COMMENT, NUM_CRITICAL_PROMPT_TIMES, critical_prompt_times);
+                KwConfig::GetConfigureInstance()->GetConfigIntValue(SECTION_COMMENT, NUM_SAVED_TIMES, saved_times);
+                if (saved_times >= critical_prompt_times) {
+                    UIAlertView *commentAlertView=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"春花秋月何时了，给个评价好不好" delegate:self cancelButtonTitle:nil otherButtonTitles:@"好的",@"不好",@"下次再说", nil] autorelease];
+                    [commentAlertView setTag:COMMENT_ALERT_ATG];
+                    [commentAlertView show];
+                }
+            }
+        }
+        
+
+    } else {
+        [self showSubView:idx];
+    }
+}
+
+- (void)createPageWithIdx:(unsigned)idx
+{
+    if (idx<PAGE_TYPE_NUM && !pSubviews[idx]) {
+        CGRect frame=[pSubViewContainer bounds];
+        KSViewController* page(nil);
+        switch (idx) {
+            case PAGE_TYPE_FIRST:
+                page=[[KSSquareViewController alloc] initWithFrame:frame];
+                break;
+            case PAGE_TYPE_EMIGRATED:
+                page=[[MyTidingsViewController alloc] initWithFrame:frame];
+                break;
+            case PAGE_TYPE_SINGNOW:
+                page=[[KSMusicLibViewController alloc] initWithFrame:frame];
+                break;
+            case PAGE_TYPE_HOME:
+                page=[[MyPageViewController alloc] initWithFrame:frame];
+                break;
+            case PAGE_TYPE_SETTING:
+                page=[[KSSettingViewController alloc] initWithFrame:frame];
+                break;
+        }
+        [pSubViewContainer addSubview:page.view];
+        pSubviews[idx]=page;
+    }
+}
+
+-(void)IObserverApp_MemoryWarning
+{
+    for (int i=0; i<PAGE_TYPE_NUM; ++i) {
+        if (pSubviews[i] && pSubviews[i].view.hidden) {
+            [pSubviews[i].view removeFromSuperview];
+            [pSubviews[i] release];
+            pSubviews[i]=NULL;
+        }
+    }
+}
+
+enum UpdateNotifyType
+{
+    NOTIFY_EVERY_START = 0
+    ,NOTIFY_ONCE_ADAY = 1
+};
+- (void)checkAppUpdate
+{
+    int nTime=[NSDate timeIntervalSinceReferenceDate];
+    int nValue(0);
+    KwConfig::GetConfigureInstance()->GetConfigIntValue("Update", "firstcheckupdatetime", nValue);
+    if (nValue==0) {
+        KwConfig::GetConfigureInstance()->SetConfigIntValue("Update", "firstcheckupdatetime", nTime);
+        return;
+    }
+    if (nTime-nValue<48*60*60) {
+        return;
+    }
+    nValue=0;
+    KwConfig::GetConfigureInstance()->GetConfigIntValue("Update", "type", nValue);
+    if (nValue==(int)NOTIFY_ONCE_ADAY) {
+        nValue=0;
+        KwConfig::GetConfigureInstance()->GetConfigIntValue("Update", "lastnotifyupdatetime", nValue);
+        if (nTime-nValue<24*60*60) {
+            return;
+        }
+    }
+    
+    std::string strTitle,strMessage;
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("Update", "title", strTitle);
+    if (strTitle.empty()) {
+        return;
+    }
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("Update", "message", strMessage);
+    if (strMessage.empty()) {
+        return;
+    }
+    NSString* pStrTitle=[NSString stringWithUTF8String:strTitle.c_str()];
+    std::vector<std::string> vecMessages;
+    KwTools::StringUtility::TokenizeEx(strMessage, "\\r\\n", vecMessages);
+    strMessage=vecMessages[0];
+    for (int i=1; i<vecMessages.size(); ++i) {
+        strMessage+="\r\n";
+        strMessage+=vecMessages[i];
+    }
+    NSString* pStrMessage=[NSString stringWithUTF8String:strMessage.c_str()];
+    
+    KS_BLOCK_DECLARE
+    {
+        UIAlertView* pAlert=[[[UIAlertView alloc] initWithTitle:pStrTitle message:pStrMessage delegate:self cancelButtonTitle:@"稍后再说" otherButtonTitles:@"马上升级",nil] autorelease];
+        [pAlert setTag:UPDATE_ALERT_TAG];
+        [pAlert show];
+    }
+    KS_BLOCK_ASYNRUN(3000)
+    
+    KwConfig::GetConfigureInstance()->SetConfigIntValue("Update", "lastnotifyupdatetime", nTime);
+    KwConfig::GetConfigureInstance()->SaveConfig();
+}
+
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    //NSLog(@"%d",buttonIndex);
+    if (alertView.tag == COMMENT_ALERT_ATG) {
+        if (0 == buttonIndex) {
+            string commentURL;
+            KwConfig::GetConfigureInstance()->GetConfigStringValue(SECTION_COMMENT, STR_COMMENT_ULR, commentURL);
+            if (commentURL != "") {
+                NSString *strURL=[NSString stringWithUTF8String:commentURL.c_str()];
+                NSURL *url=[NSURL URLWithString:strURL];
+                [[UIApplication sharedApplication] openURL:url];
+            }
+            KwConfig::GetConfigureInstance()->SetConfigBoolValue(SECTION_COMMENT, BOOL_NEED_PROMPT, false);
+        }
+        else if (1 == buttonIndex){
+            KwConfig::GetConfigureInstance()->SetConfigBoolValue(SECTION_COMMENT, BOOL_NEED_PROMPT, false);
+        }
+        else{
+            KwConfig::GetConfigureInstance()->SetConfigIntValue(SECTION_COMMENT, NUM_SAVED_TIMES, 0);
+        }
+    }
+    else if (alertView.tag == UPDATE_ALERT_TAG){
+        if (buttonIndex==1) {
+            std::string strUpdateUrl;
+            KwConfig::GetConfigureInstance()->GetConfigStringValue("Update", "url", strUpdateUrl);
+            if (!strUpdateUrl.empty()) {
+                NSString* str=[NSString stringWithUTF8String:strUpdateUrl.c_str()];
+                NSURL* url=[NSURL URLWithString:str];
+                [[UIApplication sharedApplication]openURL:url];
+            }
+        }
+    }
+}
+
+-(void)IObMusicLib_RecordMusic:(NSString*)strRid
+{
+    std::string strRecordId = [strRid UTF8String];
+    KSKSongViewController * ksongView = [[KSKSongViewController alloc]init];
+    [ksongView SetRecordId:strRecordId Record: true Video:false];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:ksongView animated:YES];
+    [ksongView release];
+}
+
+@end
+
+

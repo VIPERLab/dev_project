@@ -1,0 +1,794 @@
+//
+//  MusicListViewController.m
+//  KwSing
+//
+//  Created by Hu Qian on 12-11-30.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "MusicListViewController.h"
+#include <QuartzCore/QuartzCore.h>
+#include "MusicListRequest.h"
+#include "MessageManager.h"
+#include "ImageMgr.h"
+#include "LocalMusicRequest.h"
+#include "IMusicLibObserver.h"
+#include "KSMusicLibDelegate.h"
+#include "globalm.h"
+#include "KSProgressView.h"
+#include "KSAppDelegate.h"
+#include "FindSameSongViewController.h"
+#include "KSongViewController.h"
+#include "RecordTask.h"
+#include "KwConfig.h"
+#include "KwConfigElements.h"
+
+
+const int TagTableView = 100;
+const int TagCellLoading = 101;
+const int TagListButton = 102;
+const int TagListLabelArtist = 103;
+const int TagListLabelName = 104;
+const int TagListProgress = 105;
+const int TagListArrow = 106;
+
+@interface MusicListViewController ()<UITableViewDataSource,UITableViewDelegate,IMusicLibObserver>
+{
+    CMusicListRequest *m_pRequest;
+    int m_nCurPage;
+    SONG_LIST m_vecSong;
+    bool hasMore;
+    bool loadingMore;
+    ListInfo listinfo;
+    
+    UIView *viewLoadMusic;
+    KSProgressView *progressLoadMusic;
+    UIImageView *viewLoadDone;
+    UIImageView *viewLoadFail;
+    UILabel *labelSongAndArtist;
+    UIButton *btnRetKuwo;
+    UIButton *btnSingOrChange;
+    BOOL isSingTheSong;         //指示btnSingOrChange当前的状态
+    
+    BOOL _isHrbActivity;
+    BOOL _isOtherActivity;
+}
+@property (copy ,nonatomic) NSString *songName;
+@property (copy,nonatomic) NSString *songRid;
+@property (copy,nonatomic) NSString *artistName;
+
+
+@end
+
+@implementation MusicListViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+-(id)initwithListInfo : (ListInfo) info
+{
+    self = [super init];
+    if (self) {
+        // Custom initialization
+        listinfo = info;
+        std::string strHrbId;
+        std::string strTeleId;
+        KwConfig::GetConfigureInstance()->GetConfigStringValue(ACTIVITY_GROUP, HRB_ID, strHrbId);
+        if (listinfo.strID == strHrbId) {
+            _isHrbActivity = true;
+            CRecordTask::GetInstance()->m_bIsHrbActivity  = _isHrbActivity;
+            if ([(KSAppDelegate *)[[UIApplication sharedApplication] delegate] fromKuwoMusic]) {
+                [self setShowPopView];
+            }
+        }
+        else if(__isActivity(listinfo.strID)){
+            _isHrbActivity=false;
+            _isOtherActivity=true;
+            CRecordTask::GetInstance()->m_bIsOtherActivity = _isOtherActivity;
+            CRecordTask::GetInstance()->activityId = listinfo.strID;
+        }
+        else{
+            _isOtherActivity=false;
+            _isHrbActivity=false;
+        }
+    }
+    
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_MUSICLIB,IMusicLibObserver);
+    
+    return self;
+}
+bool __isActivity(string strId)
+{
+    NSArray *array = CRecordTask::GetInstance()->m_ActivityArray;
+    for (NSDictionary *actiInfo in array) {
+        NSString *bangId = [actiInfo objectForKey:@"bangId"];
+        if (bangId!=nil && strId == [bangId UTF8String]) {
+            return true;
+        }
+    }
+    return false;
+}
+-(void)setShowPopView
+{
+    [self setSongName:[(KSAppDelegate *)[[UIApplication  sharedApplication] delegate]songName]];
+    [self setSongRid:[(KSAppDelegate *)[[UIApplication sharedApplication] delegate]songRid]];
+    [self setArtistName:[(KSAppDelegate *)[[UIApplication sharedApplication] delegate]artistName]];
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    
+    UITableView * resultView = [[[UITableView alloc]init]autorelease];
+    resultView.tag = TagTableView;
+    resultView.frame = CGRectMake(0, 44, 320, self.view.frame.size.height-44);
+    resultView.delegate = self;
+    resultView.dataSource = self;
+    resultView.backgroundColor = UIColorFromRGBValue(0xededed);
+    resultView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    [[self view] addSubview:resultView];
+    
+    UIView * shadowview = (UIView*)[self.view viewWithTag:TagShadow];
+    [self.view bringSubviewToFront:shadowview];
+    
+    m_pRequest = new CMusicListRequest(listinfo);
+    
+    [self LoadMuisic];
+    
+    if ([(KSAppDelegate *)[[UIApplication  sharedApplication] delegate] fromKuwoMusic]) {
+        [self InitLoadMusicView];
+        [self shartDownloadMusic];
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+-(void)dealloc
+{
+    [super dealloc];
+    
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_MUSICLIB,IMusicLibObserver);
+    
+     delete m_pRequest;
+    m_pRequest = NULL;
+}
+
+-(void) ReturnBtnClick:(id)sender
+{
+    CRecordTask::GetInstance()->m_bIsHrbActivity = false;
+    CRecordTask::GetInstance()->m_bIsOtherActivity=false;
+    [super ReturnBtnClick:sender];
+}
+
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    if(m_bNetFail && !m_bReLoading)
+    {
+        m_bReLoading = true;
+        [self LoadMuisic];
+    }
+}
+
+
+-(void)LoadMuisic
+{
+    UIActivityIndicatorView * loading = (UIActivityIndicatorView *)[self.view viewWithTag:TagLoading];
+    if (loading != nil) {
+        loading.hidden = false;
+        [loading startAnimating];
+        [self.view bringSubviewToFront:loading];
+    }
+    m_nCurPage = 0;
+
+    KS_BLOCK_DECLARE
+    {
+        if(m_pRequest->RequestPage(0))
+        {
+            KS_BLOCK_DECLARE
+            {
+                if(m_bNetFail)
+                {
+                    UIImageView * netfailview = (UIImageView*)[self.view viewWithTag:TagNetFailView];
+                    netfailview.hidden = true;
+                    UIImageView * loadfailview = (UIImageView*)[self.view viewWithTag:TagLoadFailView];
+                    loadfailview.hidden = true;
+                }
+                m_bNetFail = false;
+                m_bReLoading = false;
+                if(m_pRequest->GetCurPage() == 0)
+                {
+                    m_vecSong.clear();
+                    m_vecSong = m_pRequest->GetSongList();
+                    listinfo.nCount = m_pRequest->GetTotalSongNum();
+                    UIActivityIndicatorView * loading = (UIActivityIndicatorView *)[self.view viewWithTag:TagLoading];
+                    [loading stopAnimating];
+                    loading.hidden = true;
+                    UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+                    [tableview reloadData];
+                    if(m_vecSong.size() < listinfo.nCount)
+                        hasMore = true;
+                    else
+                        hasMore = false;
+                }
+                
+            }
+            KS_BLOCK_SYNRUN()
+        }
+        else{
+            KS_BLOCK_DECLARE
+            {
+                m_bNetFail = true;
+                m_bReLoading = false;
+                if(CHttpRequest::GetNetWorkStatus() == NETSTATUS_NONE)
+                {
+                    UIImageView * netfailview = (UIImageView*)[self.view viewWithTag:TagNetFailView];
+                    netfailview.hidden = false;
+                    [self.view bringSubviewToFront:netfailview];
+                }
+                else
+                {
+                    UIImageView * loadfailview = (UIImageView*)[self.view viewWithTag:TagLoadFailView];
+                    loadfailview.hidden = false;
+                    [self.view bringSubviewToFront:loadfailview];
+                }
+                
+                UIActivityIndicatorView * loading = (UIActivityIndicatorView *)[self.view viewWithTag:TagLoading];
+                [loading stopAnimating];
+                loading.hidden = true;
+            }
+            KS_BLOCK_SYNRUN()
+            
+        }
+    }
+    KS_BLOCK_RUN_THREAD();
+}
+
+-(void)LoadNextPage
+{
+    loadingMore = true;
+    m_nCurPage ++;
+    KS_BLOCK_DECLARE
+    {
+        if(m_pRequest->RequestNextPage())
+        {
+            KS_BLOCK_DECLARE
+            {
+                if(m_pRequest->GetCurPage() == m_nCurPage)
+                {
+                    SONG_LIST vecsong = m_pRequest->GetSongList();
+                    for (size_t i = 0; i < vecsong.size(); i++) {
+                        m_vecSong.push_back(vecsong[i]);
+                    }
+                    
+//                    if (500 < m_vecSong.size() && 1000 >= m_vecSong.size()) {
+//                        for (size_t i = 0; i < vecsong.size(); i++) {
+//                            NSLog(@"Song Name: %@-----RID: %@\n", [NSString stringWithUTF8String:vecsong[i].strSongName.c_str()], [NSString stringWithUTF8String:vecsong[i].strRid.c_str()]);
+//                        }
+//                    }
+                    
+                    if(m_vecSong.size() < listinfo.nCount)
+                        hasMore = true;
+                    else
+                        hasMore = false;
+                    UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+                    [tableview reloadData];
+                    loadingMore = false;
+                }
+            }
+            KS_BLOCK_SYNRUN()
+        }
+        else
+        {
+            
+        }
+    }
+    KS_BLOCK_RUN_THREAD();
+}
+
+-(void)onKSongClick :(id)sender
+{
+    UITableView * musicList = (UITableView*)[self.view viewWithTag:TagTableView];
+    UITableViewCell* cell = nil;
+    if (NSOrderedSame == [[[UIDevice currentDevice] systemVersion] compare:@"7.0"]) {
+        cell = (UITableViewCell*)[[[(UIButton*)sender superview]superview] superview];
+    }else {
+        cell = (UITableViewCell*)[[(UIButton*)sender superview]superview];
+    }
+    
+    NSIndexPath *indexPath = [musicList indexPathForCell:cell];
+    if(indexPath == nil)
+        return;
+    int row = indexPath.row;
+    if(row < m_vecSong.size())
+    {
+        [(KSMusicLibDelegate*)musiclibDelegate KSong:&m_vecSong[row]];
+        UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+        UITableViewCell *oneCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:row inSection:0]];
+        [self RefreshOneCell:oneCell Rid:m_vecSong[row].strRid];
+    }
+}
+
+-(int)GetSongRow :(std::string)strRid
+{
+    for (size_t i = 0; i < m_vecSong.size(); i++) {
+        if(m_vecSong[i].strRid == strRid)
+            return i;
+    }
+    return -1;
+}
+
+-(void)RefreshOneCell:(UITableViewCell *)cell Rid:(std::string)strrid
+{
+    if(cell == nil)
+        return;
+    UIButton*btn = (UIButton*)[cell.contentView viewWithTag:TagListButton];
+    KSProgressView *progressview = (KSProgressView*)[cell.contentView viewWithTag:TagListProgress];
+    CSongInfoBase * songinfo = CLocalMusicRequest::GetInstance()->GetLocalMusic(strrid);
+    if(songinfo)
+    {
+        if(((CLocalTask*)songinfo)->taskStatus == TaskStatus_Finish)
+        {
+            [btn setBackgroundImage:CImageMgr::GetImageEx("KsongReadyBtnNormal.png") forState:UIControlStateNormal];
+            [btn setBackgroundImage:CImageMgr::GetImageEx("KsongReadyBtnDown.png") forState:UIControlStateHighlighted];
+            [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+            [btn setTitle:@"演唱" forState:UIControlStateNormal];
+            progressview.hidden = true;
+        }
+        else
+        {
+            [btn setBackgroundImage:nil forState:UIControlStateNormal];
+            [btn setBackgroundImage:nil forState:UIControlStateHighlighted];
+            [btn setTitleColor:UIColorFromRGBValue(0xf2ca0e) forState:UIControlStateNormal];
+        
+            if(((CLocalTask*)songinfo)->taskStatus == TaskStatus_Pause)
+            {
+                progressview.hidden = false;
+                float percent = CLocalMusicRequest::GetInstance()->GetTaskRadio(songinfo);
+                int radio = percent*100;
+                progressview.progress = percent;
+                [btn setTitle:[NSString stringWithFormat:@"暂停%d%%",radio] forState:UIControlStateNormal];
+            }
+            else if(((CLocalTask*)songinfo)->taskStatus == TaskStatus_Downing){
+                progressview.hidden = false;
+                float percent = CLocalMusicRequest::GetInstance()->GetTaskRadio(songinfo);
+                int radio = percent*100;
+                progressview.progress = percent;
+                [btn setTitle:[NSString stringWithFormat:@"%d%%",radio] forState:UIControlStateNormal];
+            }
+            else{
+                progressview.hidden = true;
+                [btn setTitleColor:UIColorFromRGB(51,120,185) forState:UIControlStateNormal];
+                [btn setBackgroundImage:CImageMgr::GetImageEx("KsongBtn.png") forState:UIControlStateNormal];
+                [btn setBackgroundImage:CImageMgr::GetImageEx("KsongBtnDown.png") forState:UIControlStateHighlighted];
+                [btn setTitle:@"点歌" forState:UIControlStateNormal];
+            }
+        }
+    }
+    else
+    {
+        progressview.hidden = true;
+        [btn setTitleColor:UIColorFromRGB(51,120,185) forState:UIControlStateNormal];
+        [btn setBackgroundImage:CImageMgr::GetImageEx("KsongBtn.png") forState:UIControlStateNormal];
+        [btn setBackgroundImage:CImageMgr::GetImageEx("KsongBtnDown.png") forState:UIControlStateHighlighted];
+        [btn setTitle:@"点歌" forState:UIControlStateNormal];
+    }
+    
+}
+
+
+#pragma mark - IMusicLibObserver
+-(void)IObMusicLib_StartTask:(NSString*)strRid
+{
+    int nrow = [self GetSongRow:[strRid UTF8String]];
+    if(nrow != -1)
+    {
+        UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+        UITableViewCell *oneCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:nrow inSection:0]];
+        [self RefreshOneCell:oneCell Rid:[strRid UTF8String]];
+    }
+}
+
+
+
+-(void)IObMusicLib_DownTaskFinish:(NSString*)strRid
+{
+    int nrow = [self GetSongRow:[strRid UTF8String]];
+    if(nrow != -1)
+    {
+        UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+        UITableViewCell *oneCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:nrow inSection:0]];
+        [self RefreshOneCell:oneCell Rid:[strRid UTF8String]];
+    }
+    if (viewLoadMusic && !viewLoadMusic.hidden) {
+        [self downLoadDoneOrFail:true];
+    }
+}
+
+-(void)IObMusicLib_DeleteTask:(NSString*)strRid
+{
+    int nrow = [self GetSongRow:[strRid UTF8String]];
+    if(nrow != -1)
+    {
+        UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+        UITableViewCell *oneCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:nrow inSection:0]];
+        [self RefreshOneCell:oneCell Rid:[strRid UTF8String]];
+    }
+}
+
+-(void)IObMusicLib_TaskProgress:(NSString*)strRid:(float)fPercent
+{
+    int nrow = [self GetSongRow:[strRid UTF8String]];
+    if(nrow != -1)
+    {
+        UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+        UITableViewCell *oneCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:nrow inSection:0]];
+        [self RefreshOneCell:oneCell Rid:[strRid UTF8String]];
+    }
+    if (viewLoadMusic && !viewLoadMusic.hidden) {
+        [progressLoadMusic setProgress:fPercent];
+    }
+}
+
+-(void)IObMusicLib_PauseTask:(NSString*)strRid
+{
+    int nrow = [self GetSongRow:[strRid UTF8String]];
+    if(nrow != -1)
+    {
+        UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+        UITableViewCell *oneCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:nrow inSection:0]];
+        [self RefreshOneCell:oneCell Rid:[strRid UTF8String]];
+    }
+}
+
+-(void)IObMusicLib_TaskFail:(NSString*)strRid
+{
+    int nrow = [self GetSongRow:[strRid UTF8String]];
+    if(nrow != -1)
+    {
+        UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+        UITableViewCell *oneCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:nrow inSection:0]];
+        [self RefreshOneCell:oneCell Rid:[strRid UTF8String]];
+    }
+    if (viewLoadMusic && !viewLoadMusic.hidden) {
+        [self downLoadDoneOrFail:false];
+    }
+}
+
+#pragma mark -TableView DataSource and Delegate
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    if(m_vecSong.size() == 0)
+        return 0;
+    if(m_vecSong.size() < listinfo.nCount)
+        return m_vecSong.size()+1;
+    else
+        return m_vecSong.size();
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 0;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 55;
+}
+
+- (BOOL)tableView:(UITableView *)tableView shouldHighlightRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return YES;
+}
+
+-(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *s_commontableIdentifier = @"commonIdentifier";
+    static NSString *s_loadingtableIdentifier = @"loadingIdentifier";
+    NSInteger row = [indexPath row];
+    
+    UITableViewCell* cell = nil;
+    if(row < m_vecSong.size())
+    {
+        cell= [tableView dequeueReusableCellWithIdentifier:s_commontableIdentifier];
+        if(cell == nil)
+        {
+            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:s_commontableIdentifier] autorelease];
+            
+            int cellheight = [self tableView:tableView heightForRowAtIndexPath:indexPath];
+            UIImageView * bkimage = [[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, 320, cellheight)]autorelease];
+            bkimage.image = CImageMgr::GetImageEx("listbk_5_1.png");
+            [cell.contentView addSubview:bkimage];
+            
+            UILabel *textLabel = [[[UILabel alloc]initWithFrame:CGRectMake(12, 8, 230, 17)]autorelease];
+            textLabel.font= [UIFont systemFontOfSize:17];
+            //textLabel.textColor = [UIColor whiteColor];
+            [textLabel setShadowColor:UIColorFromRGBValue(0xffffff)];
+            [textLabel setShadowOffset:CGSizeMake(0, 1)];
+            textLabel.lineBreakMode = UILineBreakModeTailTruncation;
+            textLabel.backgroundColor = [UIColor clearColor];
+            [textLabel setTag:TagListLabelName];
+            [cell.contentView addSubview:textLabel];
+            
+            UILabel *detailTextLabel = [[[UILabel alloc]initWithFrame:CGRectMake(12, 34, 230, 13)]autorelease];
+            detailTextLabel.textColor = UIColorFromRGBValue(0x969696);
+            [detailTextLabel setShadowColor:UIColorFromRGBValue(0xffffff)];
+            [detailTextLabel setShadowOffset:CGSizeMake(0, 1)];
+            detailTextLabel.font = [UIFont systemFontOfSize:13];
+            detailTextLabel.lineBreakMode = UILineBreakModeTailTruncation;
+            detailTextLabel.backgroundColor = [UIColor clearColor];
+            [detailTextLabel setTag:TagListLabelArtist];
+            [cell.contentView addSubview:detailTextLabel];
+            
+            KSProgressView * progress = [[[KSProgressView alloc]initWithFrame:CGRectMake(244, 14.5, 64, 29)]autorelease];
+            progress.bkImage = CImageMgr::GetImageEx("KsongDownloadBtn.png");
+            progress.trackImage = CImageMgr::GetImageEx("KsongProgress.png");
+            progress.hidden = true;
+            progress.tag = TagListProgress;
+            [cell.contentView addSubview:progress];
+            
+            UIButton *button=[UIButton buttonWithType:UIButtonTypeCustom];
+            [button setTag:TagListButton];
+            [button setFrame:CGRectMake(244, 14.5, 64, 29)];
+            [button setTitleColor:[UIColor blackColor] forState:UIControlStateNormal];
+            button.titleLabel.font = [UIFont systemFontOfSize:13];
+            [button addTarget:self action:@selector(onKSongClick:) forControlEvents:UIControlEventTouchUpInside];
+            [cell.contentView addSubview:button];
+            
+            cell.selectionStyle=UITableViewCellSelectionStyleBlue;
+        }
+        
+        CSongInfoBase * netsonginfo = &m_vecSong[row];
+        UILabel *textLabel = (UILabel*)[cell viewWithTag:TagListLabelName];
+        [textLabel setText:[NSString stringWithUTF8String:netsonginfo->strSongName.c_str()]];
+        UILabel *detailTextLabel = (UILabel*)[cell viewWithTag:TagListLabelArtist];
+        [detailTextLabel setText:[NSString stringWithUTF8String:netsonginfo->strArtist.c_str()]];
+        
+        [self RefreshOneCell:cell Rid: netsonginfo->strRid];
+        
+    }
+    else
+    {
+        cell= [tableView dequeueReusableCellWithIdentifier:s_loadingtableIdentifier];
+        if(cell == nil)
+        {
+            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:s_loadingtableIdentifier] autorelease];
+            
+            int cellheight = [self tableView:tableView heightForRowAtIndexPath:indexPath];
+            UIImageView * bkimage = [[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, 320, cellheight)]autorelease];
+            bkimage.image = CImageMgr::GetImageEx("listbk_5_1.png");
+            [cell.contentView addSubview:bkimage];
+            
+            UIImage * image = CImageMgr::GetImageEx("blackArrow.png");
+            UIImageView* imageview = [[[UIImageView alloc]initWithImage:image]autorelease];
+            imageview.frame = CGRectMake(10, 10, image.size.width, image.size.height);
+            imageview.tag = TagListArrow;
+            [cell.contentView addSubview:imageview];
+            imageview.transform = CGAffineTransformMakeRotation(180 *M_PI / 180.0);
+            
+            UILabel *textLabel = [[[UILabel alloc]initWithFrame:CGRectMake(35, 17, 95, 17)]autorelease];
+            textLabel.font= [UIFont systemFontOfSize:13];
+            textLabel.textColor = UIColorFromRGBValue(0x969696);
+            textLabel.backgroundColor = [UIColor clearColor];
+            [textLabel setTag:TagListLabelName];
+            [cell.contentView addSubview:textLabel];
+
+            UIActivityIndicatorView *activiter = [[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleGray] autorelease];
+            activiter.center = CGPointMake(130, 22);
+            
+            activiter.tag = TagCellLoading;
+            activiter.hidden = true;
+            [cell addSubview:activiter];
+            cell.selectionStyle = UITableViewCellSelectionStyleNone;
+        }
+        UILabel *textLabel = (UILabel*)[cell viewWithTag:TagListLabelName];
+        [textLabel setText:@"上拉加载更多"];
+    }
+    
+    
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+//    NSLog(@"select song:%s",m_vecSong[indexPath.row].strRid.c_str());
+    FindSameSongViewController * sameViewController=[[[FindSameSongViewController alloc] init] autorelease];
+    [sameViewController setRankRid:[NSString stringWithFormat:@"%s",m_vecSong[indexPath.row].strRid.c_str()]];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:sameViewController animated:true];
+}
+
+#pragma mark - scroll View Delegate
+
+
+- (void)scrollViewDidScroll:(UIScrollView *)scrollView{
+    if(!hasMore)
+        return;
+    UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+    if(tableview != scrollView)
+        return;
+    if (scrollView.contentOffset.y > (scrollView.contentSize.height - scrollView.frame.size.height + 30) && scrollView.isTracking) {
+        
+        UITableViewCell *moreCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:m_vecSong.size() inSection:0]];
+        
+        if (!loadingMore && moreCell) {
+            
+            UIImageView * imageview = (UIImageView*) [moreCell viewWithTag:TagListArrow];
+
+            [UIView animateWithDuration:0.2 animations:^{
+                    imageview.transform = CGAffineTransformMakeRotation(0);
+            } ];
+            
+            UILabel *textLabel = (UILabel*)[moreCell viewWithTag:TagListLabelName];
+            [textLabel setText:@"松开即可更新"];
+
+        }
+	}
+    
+}
+
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate{
+    if(!hasMore)
+        return;
+    UITableView * tableview = (UITableView*)[self.view viewWithTag:TagTableView];
+    if(tableview != scrollView)
+        return;
+    if (loadingMore || !hasMore) {
+		return;
+	}
+
+    if (scrollView.contentOffset.y > (scrollView.contentSize.height - tableview.frame.size.height + 5)) {
+        
+        UITableViewCell *moreCell = [tableview cellForRowAtIndexPath:[NSIndexPath indexPathForRow:m_vecSong.size() inSection:0]];
+        
+        if (!loadingMore && moreCell) {
+            UIActivityIndicatorView	*activiter = (UIActivityIndicatorView*)[moreCell viewWithTag:TagCellLoading];
+            if (activiter != nil) {
+                [activiter startAnimating];
+                activiter.hidden = false;
+            }
+            UIImageView * imageview = (UIImageView*) [moreCell viewWithTag:TagListArrow];
+            [UIView animateWithDuration:0.2 animations:^{
+                imageview.transform = CGAffineTransformMakeRotation(180 *M_PI / 180.0);
+            } ];
+            
+            UILabel *textLabel = (UILabel*)[moreCell viewWithTag:TagListLabelName];
+            [textLabel setText:@"正在加载数据"];
+
+        }
+        
+        [self LoadNextPage];
+	}
+    
+}
+
+#pragma mark 
+#pragma mark show pop view
+-(void)InitLoadMusicView
+{
+    [(KSAppDelegate *)[[UIApplication  sharedApplication] delegate] setFromKuwoMusic:false];
+    if(viewLoadMusic == nil)
+    {
+        viewLoadMusic = [[[UIView alloc]initWithFrame:self.view.bounds]autorelease];
+        viewLoadMusic.backgroundColor = UIColorFromRGBAValue(0x000000,80);
+        [[self view]addSubview:viewLoadMusic];
+        
+        CGRect rc = CenterRect(self.view.bounds, 250, 150);
+        rc.origin.y -= 20;
+        
+        UIImageView * bkview = [[[UIImageView alloc]initWithFrame:rc]autorelease];
+        [bkview setImage:CImageMgr::GetImageEx("SingEffectFrame.png")];
+        [viewLoadMusic addSubview:bkview];
+        
+        labelSongAndArtist  = [[[UILabel alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(21, 22, 208, 30) fromView:bkview]] autorelease];
+        [labelSongAndArtist setTextAlignment:UITextAlignmentCenter];
+        [labelSongAndArtist setBackgroundColor:[UIColor clearColor]];
+        [labelSongAndArtist setTextColor:[UIColor blackColor]];
+        [labelSongAndArtist setFont:[UIFont systemFontOfSize:22]];
+        [labelSongAndArtist setLineBreakMode:NSLineBreakByTruncatingMiddle];
+        [viewLoadMusic addSubview:labelSongAndArtist];
+        
+        progressLoadMusic = [[[KSProgressView alloc]initWithFrame:[viewLoadMusic convertRect:CGRectMake(27, 62, 197, 17) fromView:bkview]]autorelease];
+        progressLoadMusic.bkImage = CImageMgr::GetImageEx("proBack.png");
+        progressLoadMusic.trackImage = CImageMgr::GetImageEx("proTrack.png");
+        [progressLoadMusic setOuterColor: [UIColor whiteColor]] ;
+        [progressLoadMusic setInnerColor: [UIColor whiteColor]];
+        [viewLoadMusic addSubview:progressLoadMusic];
+        
+        viewLoadDone = [[[UIImageView alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(84, 62, 76, 18) fromView:bkview]] autorelease];
+        [viewLoadDone setImage:CImageMgr::GetImageEx("donwLoadDone.png")];
+        [viewLoadMusic addSubview:viewLoadDone];
+        [viewLoadDone setHidden:true];
+        
+        viewLoadFail = [[[UIImageView alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(84, 62, 76, 18) fromView:bkview]] autorelease];
+        [viewLoadFail setImage:CImageMgr::GetImageEx("downLoadFail.png")];
+        [viewLoadMusic addSubview:viewLoadFail];
+        [viewLoadFail setHidden:true];
+        
+        isSingTheSong=false;
+        btnSingOrChange = [[[UIButton alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(78, 98, 94, 31) fromView:bkview]] autorelease];
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("changeSong.png") forState:UIControlStateNormal];
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("changSongDown.png") forState:UIControlStateHighlighted];
+        [btnSingOrChange addTarget:self action:@selector(onSingSong:) forControlEvents:UIControlEventTouchUpInside];
+        [viewLoadMusic addSubview:btnSingOrChange];
+        
+    }
+    labelSongAndArtist.text = [NSString stringWithFormat:@"%@ - %@",self.songName,self.artistName];
+    [progressLoadMusic setProgress:0];
+}
+-(void)shartDownloadMusic
+{
+    std::string strRid=[self.songRid UTF8String];
+    if (strRid == "") {
+        [self closeWaitingView];
+        UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"数据传送错误" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil] autorelease];
+        [alert show];
+        return;
+    }
+    CSongInfoBase *songInfo = CLocalMusicRequest::GetInstance()->GetLocalMusic(strRid);
+    if (songInfo && ((CLocalTask*)songInfo)->taskStatus == TaskStatus_Finish) {
+        [self downLoadDoneOrFail:true];
+        return;
+    }
+    if (songInfo) {
+        CLocalMusicRequest::GetInstance()->DownTaskImmediately(songInfo);
+        return;
+    }
+    songInfo=new CSongInfoBase();
+    songInfo->strRid=strRid;
+    
+    //NSStringEncoding enc=CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingGB_18030_2000);
+    songInfo->strSongName=[self.songName cStringUsingEncoding:NSUTF8StringEncoding];
+    songInfo->strArtist=[self.artistName cStringUsingEncoding:NSUTF8StringEncoding];
+    CLocalMusicRequest::GetInstance()->DownTaskImmediately(songInfo);
+}
+-(void)closeWaitingView
+{
+    [viewLoadMusic removeFromSuperview];
+    viewLoadMusic=nil;
+}
+-(void)onSingSong:(id)sender
+{
+    if (isSingTheSong) {
+        [self closeWaitingView];
+        [self PopRecordView];
+    }
+    else{
+        [self closeWaitingView];
+    }
+}
+-(void)PopRecordView
+{
+    std::string strRecordId =[[self songRid]  UTF8String];
+    CRecordTask::GetInstance()->m_bIsHrbActivity = _isHrbActivity;
+    KSKSongViewController * ksongView = [[[KSKSongViewController alloc]init]autorelease];
+    [ksongView SetRecordId:strRecordId Record: true Video:false];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:ksongView animated:YES];
+}
+//下载完成需要完成的工作
+-(void)downLoadDoneOrFail:(bool)isDone
+{
+    [progressLoadMusic setHidden:true];
+    if (isDone) {
+        isSingTheSong=true;
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("singNow.png") forState:UIControlStateNormal];
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("singNowDown.png") forState:UIControlStateHighlighted];
+
+        [viewLoadDone setHidden:false];
+    }
+    else{
+        [viewLoadFail setHidden:false];
+    }
+}
+
+@end

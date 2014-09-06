@@ -1,0 +1,97 @@
+//
+//  HttpRequest.h
+//  KwSing
+//
+//  Created by 海平 翟 on 12-7-19.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#ifndef KwSing_HttpRequest_h
+#define KwSing_HttpRequest_h
+
+#import <string>
+#import "IHttpNotify.h"
+#import "IObserverApp.h"
+#import "AFDownloadRequestOperation.h"
+
+#ifndef IN
+#define IN
+#endif
+#ifndef OUT
+#define OUT
+#endif
+
+
+
+class CHttpRequest
+{
+public:
+    //网络状态，就一个函数，不值得单独到外面
+    static KSNetworkStatus GetNetWorkStatus();
+    static std::string GetNetWorkProviderName();
+    
+    //换取防盗链
+    typedef struct
+    {
+        std::string strRid;
+        std::string strBitrate;
+        std::string strContinueSig;
+        BOOL bOnlyMusic;//伴奏
+    }CONVERT_URL_PARA;
+    
+    static void startMonitorNetwork();
+    
+    static BOOL ConvertUrl(IN const CONVERT_URL_PARA& para
+                           ,OUT std::string& strFormat
+                           ,OUT std::string& strBitrate
+                           ,OUT std::string& strUrl
+                           ,OUT std::string& strSig);
+    
+    
+    //简便用法，适合不关心返回body的场合，需要body内容请用下面的三步用法
+    
+    //同步Get
+    static BOOL QuickSyncGet(IN const std::string& strUrl
+                             ,OUT std::string& strOut);
+    
+    //同步Get,pData请传空指针变量，返回的数据外面用完需要自己delete[]
+    static BOOL QuickSyncGet(IN const std::string& strUrl
+                             ,OUT void*&pData
+                             ,OUT unsigned& len);
+     
+    
+    //三步用法：declare---SendRequest---ReadData/response notify
+    //***记得异步请求不要放在栈上，否则出了作用域析构的时候会cancle掉***
+    //***异步接受通知的线程一定要有RunLoop，否则通知没有机会被执行***
+    //strKey不为空，Post请求将以FormRequest方式进行（模拟网页Post提交）
+    
+    //Get
+    CHttpRequest(const std::string& strUrl, const std::string& str_dest_path);
+    
+    //异步请求通过回调通知，可以指定在哪个线程里执行回调(默认为主线程)，便于省掉加锁操作。
+    //NSThread对象可以通过在对应线程里调用[NSThread currentThread]等api来获取，要求Thread有RunLoop
+    //NSThread引用计数会加一，Http对象析构之后会减一
+    BOOL AsyncSendRequest(IHttpRequestNotify* pNotify = NULL);
+    
+    void PauseRequest();
+    
+    void ResumeRequest();
+    
+    void StopRequest();
+    
+    BOOL IsFinished() const;
+    
+    BOOL IsSuccess() const;
+    
+public:
+    ~CHttpRequest();
+    
+private:
+    void Init(const std::string& strUrl);
+    BOOL CheckWriteFile(const std::string& strFile,BOOL bAllowContinue);
+    bool m_bSuccessed;
+    bool m_bFinished;
+    AFDownloadRequestOperation* m_pHttp;
+};
+
+#endif

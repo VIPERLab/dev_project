@@ -1,0 +1,70 @@
+body,html{
+	background-color: #e8f3f9;
+	padding: 0;
+	margin: 0;
+}
+
+.clearfix:after {visibility:hidden;display:block;font-size:0;content:" ";clear:both;height:0;}
+.clearfix {zoom:1;}
+
+
+.card{
+	border-top	: 1px solid #e0e0e0;
+	border-bottom	: 1px solid #e0e0e0;
+	background-color: #fff;
+	margin-bottom: 20px;
+}
+.card:first-child{
+	border-top	: none;
+}
+.card .title{
+	border-bottom	: 1px solid #e0e0e0;
+	height: 40px;
+	line-height: 40px;
+	margin-left: 10px;
+	padding-left: 4px;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+.card .title .cn{
+	font-size: 18px;
+	color: #2caa7a;
+}
+.card .title .en{
+	font-size: 14px;
+	color: #9ea3ab;
+	margin-left: 5px;
+}
+
+.card .list{
+	padding:7px 10px;
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+}
+
+.card .list .item{
+	-moz-box-sizing: border-box;
+	-webkit-box-sizing: border-box;
+	box-sizing: border-box;
+	width:50%;
+	float: left;
+	height: 30px;
+	line-height: 30px;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	color: #9ea3ab;
+}
+
+.card .list .item .cn{
+	font-size: 16px;
+	color: #444;
+}
+
+.card .list .item .en{
+	font-size: 14px;
+	color: #9ea3ab;
+	margin-left: 3px;
+}

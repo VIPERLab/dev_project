@@ -1,0 +1,24 @@
+//
+//  FooterTabBar.h
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+#define FOOTER_TABBAR_HEIGHT 48
+#define FOOTER_TABBAR_BTN_WIDTH 64
+#define FOOTER_TABBAR_BTN_HEIGHT 48
+#define FOOTER_TABBAR_CENTERBTN_WIDTH 64
+#define FOOTER_TABBAR_CENTERBTN_HEIGHT 64
+
+@protocol FooterTabBarDelegate
+- (void)didFooterTabBarSelected:(unsigned)index;
+@end
+
+@interface FooterTabBar : UIView
+@property (nonatomic , weak) id<FooterTabBarDelegate> delegate;
+-(id)initWithSuperView:(UIView *)superView;
+@end

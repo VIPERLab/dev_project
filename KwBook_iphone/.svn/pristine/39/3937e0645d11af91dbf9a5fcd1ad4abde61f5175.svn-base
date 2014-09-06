@@ -1,0 +1,244 @@
+//
+//  AudioPlayerManager.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "AudioPlayerManager.h"
+#include "MessageManager.h"
+#include "HttpRequest.h"
+#include <sstream>
+#include "KwTools.h"
+#include "LocalBookRequest.h"
+
+CAudioPlayerManager::CAudioPlayerManager(){
+    m_pLocalPlayer = [[KBLocalAudioPlayer alloc] init];
+    m_pNetPlayer = [[KBNetAudioPlayer alloc] init];
+    m_bBackground = false;
+    _bgTaskId = UIBackgroundTaskInvalid;
+    m_PlayState = E_AUDIO_PLAY_NONE;
+    
+    GLOBAL_ATTACH_MESSAGE(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState);
+    GLOBAL_ATTACH_MESSAGE(OBSERVER_ID_APP, IObserverApp);
+}
+
+CAudioPlayerManager::~CAudioPlayerManager(){
+    m_pLocalPlayer = nil;
+    m_pNetPlayer = nil;
+    
+    GLOBAL_DETACH_MESSAGE(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState);
+}
+
+CAudioPlayerManager* CAudioPlayerManager::getInstance(){
+    static CAudioPlayerManager s_player_manager;
+    
+    return &s_player_manager;
+}
+
+void CAudioPlayerManager::play(){
+    
+    if (m_bLocalChapter && m_pLocalPlayer && E_AUDIO_PLAY_PLAYING == m_PlayState) {
+        [m_pLocalPlayer stop];
+    }
+//    m_pLocalPlayer = nil;
+//    m_pNetPlayer = nil;
+//    m_bLocalChapter = false;
+    
+    CChapterInfo* cur_chapter = CPlayBookList::getInstance()->getCurChapter();
+    cur_chapter->m_strLocalPath = [KwTools::Dir::GetPath(KwTools::Dir::PATH_LOCALMUSIC) UTF8String];
+    cur_chapter->m_strLocalPath += [[NSString stringWithFormat:@"/%d.m4a", cur_chapter->m_unRid] UTF8String];
+    int n_cur_pos = CPlayBookList::getInstance()->getCurPos();
+    if (KwTools::Dir::IsExistFile(cur_chapter->m_strLocalPath)) {
+        if (!m_bLocalChapter &&m_pNetPlayer && E_AUDIO_PLAY_PLAYING == m_PlayState) {
+            [m_pNetPlayer pause];
+        }
+        m_bLocalChapter = true;
+        [m_pLocalPlayer resetPlayer:cur_chapter];
+        if (n_cur_pos) {
+            [m_pLocalPlayer seek:(n_cur_pos / 1000.0)];
+        }
+    }else {
+        if (0 == cur_chapter->m_strUrl.size()) {
+            std::stringstream str_from_int;
+            str_from_int << cur_chapter->m_unRid;
+            
+            std::string strParam="type=convert_url2&network=";
+            strParam += CHttpRequest::GetNetWorkStatus()==NETSTATUS_WIFI?"WIFI":"3G";
+            //        strParam += "&format=mp3&mode=audition&rid="+para.strRid;
+            strParam += "&format=aac&mode=download&br=48kaac&rid=";
+            strParam += str_from_int.str();
+            
+            std::string strEncryptParam=KwTools::Encrypt::CreateDesUrl(strParam);
+            
+            std::string strData;
+            if ( !CHttpRequest::QuickSyncGet(strEncryptParam, strData) || strData.empty()) {
+                return;
+            }
+            std::map<std::string,std::string> mapDatas;
+            KwTools::StringUtility::TokenizeKeyValueEx(strData,mapDatas,"\r\n");
+            if (mapDatas.empty()) {
+                return;
+            }
+            cur_chapter->m_strUrl=mapDatas["url"];
+        }
+        cur_chapter->m_strLocalPath = [KwTools::Dir::GetPath(KwTools::Dir::PATH_LOCALMUSIC) UTF8String];
+        cur_chapter->m_strLocalPath += [[NSString stringWithFormat:@"%d.aac", cur_chapter->m_unRid] UTF8String];
+
+        m_bLocalChapter = false;
+        [m_pNetPlayer resetPlayer:cur_chapter];
+        if (0 != n_cur_pos) {
+            [m_pNetPlayer seek:(n_cur_pos / 1000.0)];
+        }
+    }
+
+    savePlaylist();
+}
+
+void CAudioPlayerManager::pause(){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer pause];
+    }else {
+        [m_pNetPlayer pause];
+    }
+    
+    savePlaylist();
+}
+
+void CAudioPlayerManager::resume(){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer resume];
+    }else {
+        [m_pNetPlayer resume];
+    }
+}
+
+void CAudioPlayerManager::stop(){
+//    if (m_bLocalChapter) {
+//        [m_pLocalPlayer stop];
+//    }else {
+//        [m_pNetPlayer stop];
+//    }
+    
+    savePlaylist();
+    
+    m_bLocalChapter = false;
+//    m_pNetPlayer = nil;
+//    m_pLocalPlayer = nil;
+}
+
+void CAudioPlayerManager::seek(float f_time_sec){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer seek:f_time_sec];
+    }else {
+        [m_pNetPlayer seek:f_time_sec];
+    }
+}
+
+float CAudioPlayerManager::currentTime()const{
+    if (m_bLocalChapter) {
+        return [m_pLocalPlayer currentTime];
+    }else {
+        return [m_pNetPlayer currentTime];
+    }
+}
+
+float CAudioPlayerManager::duration()const{
+    if (m_bLocalChapter) {
+        return [m_pLocalPlayer duration];
+    }else {
+        return [m_pNetPlayer duration];
+    }
+}
+
+void CAudioPlayerManager::IObserverAudioPlayStateChanged(AudioPlayState enumStatus){
+    if (E_AUDIO_PLAY_FINISH == enumStatus) {
+        unsigned un_index = CPlayBookList::getInstance()->getCurPlayIndex();
+        ++un_index;
+        if (un_index >= CPlayBookList::getInstance()->getChapterCount()) {
+            return;
+        }
+        
+        CPlayBookList::getInstance()->setCurPlayIndex(un_index);
+        
+        play();
+    }else if(E_AUDIO_PLAY_PLAYING == enumStatus){
+        beginBackgroundTask();
+        m_PlayState = E_AUDIO_PLAY_PLAYING;
+    }
+}
+
+void CAudioPlayerManager::IObserverApp_ResignActive(){
+    if (E_AUDIO_PLAY_PLAYING == m_PlayState) {
+        pause();
+        m_PlayState = E_AUDIO_PLAY_PAUSE;
+    }
+}
+
+void CAudioPlayerManager::IObserverApp_BecomeActive(){
+    if (E_AUDIO_PLAY_PAUSE == m_PlayState) {
+        resume();
+        m_PlayState = E_AUDIO_PLAY_PLAYING;
+    }
+}
+
+void CAudioPlayerManager::IObserverApp_EnterBackground(){
+    m_bBackground = true;
+    beginBackgroundTask();
+}
+
+void CAudioPlayerManager::IObserverApp_EnterForeground(){
+    m_bBackground = false;
+    endBackgroundTask();
+}
+
+void CAudioPlayerManager::IObserverApp_HeadsetStatusChanged(BOOL bHasHeadset){
+    if (!bHasHeadset) {
+        pause();
+        m_PlayState = E_AUDIO_PLAY_PAUSE;
+    }
+}
+
+void CAudioPlayerManager::beginBackgroundTask(){
+    if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)] && [[UIDevice currentDevice] isMultitaskingSupported]) {
+        UIBackgroundTaskIdentifier lastId = _bgTaskId;
+		_bgTaskId = [[UIApplication sharedApplication] beginBackgroundTaskWithExpirationHandler:^(void) {
+			UIBackgroundTaskIdentifier lastId = _bgTaskId;
+			
+            beginBackgroundTask();
+            
+			if (lastId != UIBackgroundTaskInvalid) {
+                //                fprintf(stderr, "end last task a: %d\n", lastId);
+				[[UIApplication sharedApplication] endBackgroundTask:lastId];
+			}
+		}];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (_bgTaskId == UIBackgroundTaskInvalid) {
+                NSTimeInterval remain = [[UIApplication sharedApplication] backgroundTimeRemaining];
+            }
+            
+            //        fprintf(stderr, "background task: %d\n", _bgTaskId);
+            if (lastId != UIBackgroundTaskInvalid) {
+                //            fprintf(stderr, "end last task b: %d\n", lastId);
+                [[UIApplication sharedApplication] endBackgroundTask:lastId];
+            }
+        });
+	}
+}
+
+void CAudioPlayerManager::endBackgroundTask(){
+    
+    if ([[UIDevice currentDevice] respondsToSelector:@selector(isMultitaskingSupported)] && [[UIDevice currentDevice] isMultitaskingSupported]) {
+		if (_bgTaskId != UIBackgroundTaskInvalid) {
+			[[UIApplication sharedApplication] endBackgroundTask:_bgTaskId];
+			_bgTaskId = UIBackgroundTaskInvalid;
+		}
+	}
+}
+
+void CAudioPlayerManager::savePlaylist(){
+    CPlayBookList::getInstance()->setCurPos(currentTime() * 1000);
+    CPlayBookList::getInstance()->SavePlaylist();
+}
+

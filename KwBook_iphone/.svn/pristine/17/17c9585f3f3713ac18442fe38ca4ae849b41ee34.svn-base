@@ -1,0 +1,30 @@
+//
+//  KBDatabaseManagement.h
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-5.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+#ifndef kwbook_BookInfo_h
+#include "BookInfo.h"
+#endif
+
+#ifndef kwbook_ChapterInfo_h
+#include "ChapterInfo.h"
+#endif
+
+@interface KBDatabaseManagement : NSObject
+
++(KBDatabaseManagement*)sharedInstance;
+
+-(void)addBook : (CBookInfo*) book_info;
+-(void)deleteBook : (std::string)str_book_id;
+
+-(void)addChapter : (CChapterInfo*)chapter_info;
+-(void)deleteChapter : (unsigned)n_rid;
+-(void)updateChapter : (CChapterInfo*)chapter_info;
+
+@end

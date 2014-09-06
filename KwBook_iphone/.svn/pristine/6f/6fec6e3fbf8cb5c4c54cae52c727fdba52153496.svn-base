@@ -1,0 +1,61 @@
+//
+//  PlayControlViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-5.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "PlayControlViewController.h"
+
+@interface PlayControlViewController ()
+@property (nonatomic , strong) UIView *contentView;
+@end
+
+@implementation PlayControlViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    [[self view] setBackgroundColor:[UIColor clearColor]];
+    
+    self.contentView = ({
+        UIView *contentView = [[UIView alloc] initWithFrame:CGRectMake(128, 536, 64, 64)];
+        [contentView setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:0.8]];
+        contentView;
+    });
+    [[self view] addSubview:self.contentView];
+    [self showAnimation];
+}
+-(void)showAnimation
+{
+    self.contentView.frame = CGRectMake(128, 536, 64, 64);
+    self.contentView.alpha = 0;
+    [UIView animateWithDuration:0.5f animations:^{
+        self.contentView.frame = CGRectMake(10, 118 , 300, 300);
+        self.contentView.alpha = 1;
+    } completion:^(BOOL finished) {
+    }];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [self willMoveToParentViewController:nil];
+    [self removeFromParentViewController];
+    [self.view removeFromSuperview];
+}
+@end

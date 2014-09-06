@@ -1,0 +1,84 @@
+//
+//  PlayBookList.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "PlayBookList.h"
+
+CPlayBookList* CPlayBookList::getInstance(){
+    static CPlayBookList s_play_list;
+    
+    return &s_play_list;
+}
+
+BOOL CPlayBookList::addChapters(NSArray* arry_chapters){
+    int n_count = [arry_chapters count];
+    for (int n_index = 0; n_index < n_count; ++n_index) {
+        CChapterInfo* chapter_info = (__bridge CChapterInfo*)[arry_chapters objectAtIndex:n_index];
+        CChapterInfo* temp_info = new CChapterInfo;
+        *((CChapterInfo*)temp_info) = *chapter_info;
+        
+        m_vecChapterList.push_back(temp_info);
+    }
+    
+    return YES;
+}
+
+BOOL CPlayBookList::addChapter(CChapterInfo* chapter_info){
+    CChapterInfo* temp_info = new CChapterInfo;
+    *((CChapterInfo*)temp_info) = *chapter_info;
+    
+    m_vecChapterList.push_back(temp_info);
+    
+    return YES;
+}
+
+CChapterInfo* CPlayBookList::getCurChapter()const{
+    if (m_unCurIndex >= m_vecChapterList.size()) {
+        return NULL;
+    }
+    
+    return m_vecChapterList[m_unCurIndex];
+}
+
+unsigned CPlayBookList::getChapterCount()const{
+    return m_vecChapterList.size();
+}
+
+unsigned CPlayBookList::getCurPlayIndex()const{
+
+    return m_unCurIndex;
+}
+
+bool CPlayBookList::setCurPlayIndex(const unsigned un_index){
+    if (un_index >= m_vecChapterList.size()) {
+        return false;
+    }
+    
+    m_unCurIndex = un_index;
+    
+    return true;
+}
+
+unsigned CPlayBookList::getCurPos()const{
+    return m_unCurPos;
+}
+
+bool CPlayBookList::setCurPos(const unsigned un_pos_mil_sec){
+    m_unCurPos = un_pos_mil_sec;
+    
+    return true;
+}
+
+void CPlayBookList::resetPlayList(){
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecChapterList.begin(); iter!= m_vecChapterList.end(); iter++){
+        CChapterInfo* chapter_info = (CChapterInfo*)(*iter);
+        delete chapter_info;
+        chapter_info = NULL;
+    }
+    
+    m_vecChapterList.clear();
+}

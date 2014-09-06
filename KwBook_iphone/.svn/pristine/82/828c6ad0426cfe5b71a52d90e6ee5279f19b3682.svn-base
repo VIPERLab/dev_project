@@ -1,0 +1,62 @@
+//
+//  NewRecoViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "NewRecoViewController.h"
+#import "KBUrls.h"
+
+@interface NewRecoViewController ()<UITableViewDataSource,UITableViewDelegate>
+@property (nonatomic , strong) UITableView *tableView;
+@end
+
+@implementation NewRecoViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    self.tableView = ({
+        UITableView *tableView = [[UITableView alloc] initWithFrame:self.view.bounds];
+        [tableView setBackgroundColor:[UIColor clearColor]];
+        [tableView setDelegate:self];
+        [tableView setDataSource:self];
+        tableView;
+    });
+    [[self view] addSubview:self.tableView];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark
+#pragma mark table view data source
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 20;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *newCellIdentifier = @"newCellIdentifier";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:newCellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:newCellIdentifier];
+        [cell.textLabel setText:[NSString stringWithFormat:@"%d",indexPath.row]];
+    }
+    return cell;
+}
+@end

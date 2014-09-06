@@ -1,0 +1,14 @@
+//
+//  CollectBookList.h
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-9.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#ifndef __kwbook__CollectBookList__
+#define __kwbook__CollectBookList__
+
+#include <iostream>
+
+#endif /* defined(__kwbook__CollectBookList__) */

@@ -1,0 +1,42 @@
+//
+//  KSViewController.m
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-8-23.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "KSViewController.h"
+
+@interface KSViewController ()
+{
+    BOOL bInitWithFrame;
+    CGRect frame;
+}
+@end
+
+@implementation KSViewController
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    if(bInitWithFrame)self.view.frame=frame;
+}
+
+- (id)initWithFrame:(CGRect)rc
+{
+    self=[super init];
+    frame=rc;
+    bInitWithFrame=YES;
+    return self;
+}
+
+- (BOOL) shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)toInterfaceOrientation{
+    return NO;
+}
+
+- (BOOL) shouldAutorotate{
+    return NO;
+}
+
+@end

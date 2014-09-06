@@ -1,0 +1,370 @@
+//
+//  AudioPlayerManager.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "AudioPlayerManager.h"
+#include "MessageManager.h"
+#include "HttpRequest.h"
+#include <sstream>
+#include "KwTools.h"
+#include "LocalBookRequest.h"
+#include "RecentBookList.h"
+#include "CollectBookList.h"
+#import "iToast.h"
+#include "BookInfoList.h"
+
+static bool s_b_interrupted = false;
+static int s_n_chapter_timming = 0;
+
+CAudioPlayerManager::CAudioPlayerManager(){
+    m_pLocalPlayer = [[KBLocalAudioPlayer alloc] init];
+    m_pNetPlayer = [[KBNetAudioPlayer alloc] init];
+    m_bBackground = false;
+    _bgTaskId = UIBackgroundTaskInvalid;
+    m_PlayState = E_AUDIO_PLAY_NONE;
+    s_b_interrupted = false;
+    s_n_chapter_timming = 0;
+    m_bChapterTiming = false;
+    
+    GLOBAL_ATTACH_MESSAGE(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState);
+    GLOBAL_ATTACH_MESSAGE(OBSERVER_ID_APP, IObserverApp);
+}
+
+CAudioPlayerManager::~CAudioPlayerManager(){
+    m_pLocalPlayer = nil;
+    m_pNetPlayer = nil;
+    
+    GLOBAL_DETACH_MESSAGE(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState);
+}
+
+CAudioPlayerManager* CAudioPlayerManager::getInstance(){
+    static CAudioPlayerManager s_player_manager;
+    
+    return &s_player_manager;
+}
+
+bool CAudioPlayerManager::play(){
+    if (m_bLocalChapter && m_pLocalPlayer && E_AUDIO_PLAY_PLAYING == m_PlayState) {
+        [m_pLocalPlayer stop];
+    }
+    
+    if(m_pNetPlayer && (E_AUDIO_PLAY_PLAYING == m_PlayState || E_AUDIO_PLAY_PAUSE == m_PlayState))
+    {
+        [m_pNetPlayer resetPlayer];
+    }
+//    m_pLocalPlayer = nil;
+//    m_pNetPlayer = nil;
+//    m_bLocalChapter = false;
+    
+    CChapterInfo* cur_chapter = CPlayBookList::getInstance()->getCurChapter();
+    
+    if (cur_chapter) {
+        CRecentBookInfo recent_book = *(CRecentBookInfo*)(CBookInfoList::getInstance()->getBookInfo(cur_chapter->m_strBookId));
+        recent_book.m_unIndex = CPlayBookList::getInstance()->getCurPlayIndex();
+        recent_book.m_unPosMilSec = CPlayBookList::getInstance()->getCurPos();
+        CRecentBookList::GetInstance()->AddBookInfo(&recent_book);
+    }
+    
+    cur_chapter->m_strLocalPath = [KwTools::Dir::GetPath(KwTools::Dir::PATH_LOCALMUSIC) UTF8String];
+    cur_chapter->m_strLocalPath += [[NSString stringWithFormat:@"/%d.m4a", cur_chapter->m_unRid] UTF8String];
+    int n_cur_pos = CPlayBookList::getInstance()->getCurPos();
+    if (KwTools::Dir::IsExistFile(cur_chapter->m_strLocalPath)) {
+        if (!m_bLocalChapter &&m_pNetPlayer && E_AUDIO_PLAY_PLAYING == m_PlayState) {
+            [m_pNetPlayer pause];
+        }
+        m_bLocalChapter = true;
+        [m_pLocalPlayer resetPlayer:cur_chapter];
+        if (n_cur_pos) {
+            [m_pLocalPlayer seek:(n_cur_pos / 1000.0)];
+        }
+        
+//        UInt32 session_category = kAudioSessionCategory_MediaPlayback;
+//        AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(session_category), &session_category);
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+        AudioSessionSetActive(YES);
+        
+        savePlaylist();
+    }else {
+        std::stringstream str_from_int;
+        str_from_int << cur_chapter->m_unRid;
+        
+        std::string strParam="type=convert_url2&network=";
+        strParam += CHttpRequest::GetNetWorkStatus()==NETSTATUS_WIFI?"WIFI":"3G";
+        //        strParam += "&format=mp3&mode=audition&rid="+para.strRid;
+        strParam += "&format=aac&mode=download&br=48kaac&rid=";
+        strParam += str_from_int.str();
+        
+        __block std::string strEncryptParam=KwTools::Encrypt::CreateDesUrl(strParam);
+
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            std::string strData;
+            if (!CHttpRequest::QuickSyncGet(strEncryptParam, strData) || strData.empty()) {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    [iToast defaultShow:@"网络似乎断开了，请检查网络连接"];
+                });
+                
+                SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_NONE);
+                return;
+            }
+            std::map<std::string,std::string> mapDatas;
+            KwTools::StringUtility::TokenizeKeyValueEx(strData,mapDatas,"\r\n");
+            if (mapDatas.empty()) {
+                SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_NONE);
+                return;
+            }
+            cur_chapter->m_strUrl=mapDatas["url"];
+            cur_chapter->m_strLocalPath = [KwTools::Dir::GetPath(KwTools::Dir::PATH_LOCALMUSIC) UTF8String];
+            cur_chapter->m_strLocalPath += [[NSString stringWithFormat:@"/%d.aac", cur_chapter->m_unRid] UTF8String];
+            
+            if (0 == cur_chapter->m_strUrl.size()) {
+                SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_NONE);
+                return;
+            }
+            
+            m_bLocalChapter = false;
+            dispatch_sync(dispatch_get_main_queue(), ^{
+                [m_pNetPlayer resetPlayer:cur_chapter atTime:(n_cur_pos / 1000.0)];
+//                if (0 != n_cur_pos) {
+//                    [m_pNetPlayer seek:(n_cur_pos / 1000.0)];
+//                }
+                
+                [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayback error:nil];
+//                UInt32 session_category = kAudioSessionCategory_MediaPlayback;
+//                AudioSessionSetProperty(kAudioSessionProperty_AudioCategory, sizeof(session_category), &session_category);
+                AudioSessionSetActive(YES);
+            });
+            
+            
+            savePlaylist();
+        });
+    }
+    
+    return true;
+}
+
+void CAudioPlayerManager::pause(){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer pause];
+    }else {
+        [m_pNetPlayer pause];
+    }
+    m_PlayState = E_AUDIO_PLAY_PAUSE;
+    
+    savePlaylist();
+}
+
+void CAudioPlayerManager::resume(){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer resume];
+    }else {
+        [m_pNetPlayer resume];
+    }
+    
+    m_PlayState = E_AUDIO_PLAY_PLAYING;
+}
+
+void CAudioPlayerManager::stop(){
+    savePlaylist();
+    if (E_AUDIO_PLAY_PLAYING == m_PlayState || E_AUDIO_PLAY_BUFFERING == m_PlayState || E_AUDIO_PLAY_PAUSE == m_PlayState) {
+        if (m_bLocalChapter) {
+            if (m_pLocalPlayer) {
+                [m_pLocalPlayer stop];
+            }
+        }else{
+            if (m_pNetPlayer) {
+                [m_pNetPlayer pause];
+            }
+        }
+    }
+//    if (m_bLocalChapter) {
+//        [m_pLocalPlayer stop];
+//    }else {
+//        [m_pNetPlayer stop];
+//    }
+    
+    m_bLocalChapter = false;
+    m_PlayState = E_AUDIO_PLAY_NONE;
+//    m_pNetPlayer = nil;
+//    m_pLocalPlayer = nil;
+}
+
+void CAudioPlayerManager::seek(float f_time_sec){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer seek:f_time_sec];
+    }else {
+        [m_pNetPlayer seek:f_time_sec];
+    }
+}
+
+float CAudioPlayerManager::currentTime()const{
+    if (m_bLocalChapter) {
+        return [m_pLocalPlayer currentTime];
+    }else {
+        return [m_pNetPlayer currentTime];
+    }
+}
+
+float CAudioPlayerManager::duration()const{
+    if (m_bLocalChapter) {
+        return [m_pLocalPlayer duration];
+    }else {
+        return [m_pNetPlayer duration];
+    }
+}
+
+float CAudioPlayerManager::bufferRation()const{
+    if (m_bLocalChapter) {
+        return 1.0;
+    }else {
+        return [m_pNetPlayer bufferRatio];
+    }
+}
+
+AudioPlayState CAudioPlayerManager::getCurPlayState()const{
+    return m_PlayState;
+}
+
+void CAudioPlayerManager::setChapterTimming(const int n_chapter_timming){
+    s_n_chapter_timming = n_chapter_timming;
+    m_bChapterTiming = true;
+}
+
+void CAudioPlayerManager::playNextChapter(){
+    
+    if (CPlayBookList::getInstance()->setCurPlayIndex(CPlayBookList::getInstance()->getCurPlayIndex() + 1)) {
+        CPlayBookList::getInstance()->setCurPos(0);
+        
+        if(!play()){
+            CPlayBookList::getInstance()->setCurPlayIndex(CPlayBookList::getInstance()->getCurPlayIndex() - 1);
+        }
+    }else {
+        CPlayBookList::getInstance()->setCurPos(0);
+        stop();
+        [iToast defaultShow:@"当前播放已是最后一回"];
+    }
+    
+    
+}
+
+void CAudioPlayerManager::playPreChapter(){
+    CPlayBookList::getInstance()->setCurPlayIndex(CPlayBookList::getInstance()->getCurPlayIndex() - 1);
+    CPlayBookList::getInstance()->setCurPos(0);
+    
+    if(!play()){
+        CPlayBookList::getInstance()->setCurPlayIndex(CPlayBookList::getInstance()->getCurPlayIndex() + 1);
+    }
+}
+
+void CAudioPlayerManager::IObserverAudioPlayStateChanged(AudioPlayState enumStatus){
+    if (E_AUDIO_PLAY_FINISH == enumStatus) {
+        if (m_bChapterTiming) {
+            SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::ChapterLeft, --s_n_chapter_timming);
+            if (s_n_chapter_timming) {
+                playNextChapter();
+            }else {
+                CPlayBookList::getInstance()->setCurPlayIndex(CPlayBookList::getInstance()->getCurPlayIndex() + 1);
+                CPlayBookList::getInstance()->setCurPos(0);
+                stop();
+                m_bChapterTiming = false;
+            }
+        }else {
+            playNextChapter();
+        }
+        
+        
+    }else if(E_AUDIO_PLAY_PLAYING == enumStatus){
+        m_PlayState = E_AUDIO_PLAY_PLAYING;
+    }else if(E_AUDIO_PLAY_NONE == enumStatus){
+        m_PlayState = E_AUDIO_PLAY_NONE;
+    }
+}
+
+void CAudioPlayerManager::IObserverApp_EnterBackground(){
+    [[UIApplication sharedApplication] setKeepAliveTimeout:600 handler:^{
+        beginBackgroundTask();
+    }];
+    
+    beginBackgroundTask();
+    
+    m_bBackground = true;
+}
+
+void CAudioPlayerManager::IObserverApp_EnterForeground(){
+    endBackgroundTask();
+    m_bBackground = false;
+}
+
+void CAudioPlayerManager::IObserverApp_HeadsetStatusChanged(BOOL bHasHeadset){
+    if (!bHasHeadset) {
+        pause();
+        m_PlayState = E_AUDIO_PLAY_PAUSE;
+    }
+}
+
+void CAudioPlayerManager::IObserverApp_CallDialing(){
+    if (E_AUDIO_PLAY_PLAYING == m_PlayState) {
+        s_b_interrupted = true;
+        pause();
+    }
+}
+
+void CAudioPlayerManager::IObserverApp_CallDisconnected(){
+    if (s_b_interrupted) {
+        resume();
+        s_b_interrupted = true;
+    }
+}
+
+void CAudioPlayerManager::beginBackgroundTask(){
+    UIApplication* app = [UIApplication sharedApplication];
+    _bgTaskId = [app beginBackgroundTaskWithExpirationHandler:^(void) {
+        [app endBackgroundTask:_bgTaskId];
+        _bgTaskId = UIBackgroundTaskInvalid;
+    }];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        while (1) {
+            if (_bgTaskId == UIBackgroundTaskInvalid) {
+                break;
+            }
+            NSLog(@"again");
+            sleep(5);
+        }
+    });
+}
+
+void CAudioPlayerManager::endBackgroundTask() {
+		if (_bgTaskId && _bgTaskId != UIBackgroundTaskInvalid) {
+            fprintf(stderr, "end background task: %d\n", _bgTaskId);
+			[[UIApplication sharedApplication] endBackgroundTask:_bgTaskId];
+			_bgTaskId = 0;
+		}
+}
+
+void CAudioPlayerManager::savePlaylist(){
+    CPlayBookList::getInstance()->setCurPos(currentTime() * 1000);
+    CPlayBookList::getInstance()->SavePlaylist();
+    
+    CChapterInfo* chapter_info = CPlayBookList::getInstance()->getCurChapter();
+    
+    if (!chapter_info) {
+        return;
+    }
+    
+    CCollectBookInfo* book_info = CCollectBookList::GetInstance()->GetCurBook([[NSString stringWithUTF8String:chapter_info->m_strBookId.c_str()] intValue]);
+    if (book_info) {
+        book_info->m_unRid = chapter_info->m_unRid;
+        book_info->m_unIndex = CPlayBookList::getInstance()->getCurPlayIndex();
+        book_info->m_unPosMilSec = currentTime() * 1000;
+    }
+    
+    CRecentBookInfo* recent_book_info = CRecentBookList::GetInstance()->GetCurBook([[NSString stringWithUTF8String:chapter_info->m_strBookId.c_str()] intValue]);
+    if (recent_book_info) {
+        recent_book_info->m_unRid = chapter_info->m_unRid;
+        recent_book_info->m_unIndex = CPlayBookList::getInstance()->getCurPlayIndex();
+        recent_book_info->m_unPosMilSec = currentTime() * 1000;
+    }
+}

@@ -1,0 +1,16 @@
+//
+//  KBBookDetailViewController.h
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-9.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "KBViewController.h"
+#include "BookInfo.h"
+
+@interface KBBookDetailViewController : KBViewController
+
+-(id)initWithBookInfo : (CBookInfo*)book_info;
+
+@end

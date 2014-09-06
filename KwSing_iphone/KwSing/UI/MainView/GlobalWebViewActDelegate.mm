@@ -1,0 +1,155 @@
+//
+//  GlobalWebViewActDelegate.mm
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-8-1.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "GlobalWebViewActDelegate.h"
+#include "KuwoConstants.h"
+#include "KWTools.h"
+#include "MessageManager.h"
+#include "KsAppDelegate.h"
+#include "NowPlayViewController.h"
+#include "BaseWebViewController.h"
+#include "User.h"
+#include "iToast.h"
+#include "HttpRequest.h"
+#include "LoginViewController.h"
+#include "KwConfig.h"
+#include "KwConfigElements.h"
+
+NSString* STR_ACTION_ENCRYPTREQUEST=@"EncryptRequest";
+NSString* STR_ACTION_PLAYSONG=@"playsong";
+NSString* STR_ACTION_NEWPAGE=@"NewPage";
+NSString* STR_ACTION_LOGIN=@"showNeedLogin";
+NSString* STR_ACTION_LOCATION=@"getLocation";
+
+NSString* STR_RETURN_ENCRYPT_FUNC=@"onEncryptRequest";
+
+
+NSString* STR_KEY_DATA=@"data";
+NSString* STR_KEY_RID=@"rid";
+
+NSString* STR_KEY_TYPE=@"type";
+NSString* STR_KEY_TITLE=@"title";
+NSString* STR_KEY_URL=@"url";
+
+NSString* STR_ACTION_USERINFO=@"getUserID";
+
+@interface GlobalWebViewActDelegate()
+
+- (void)encryptRequest:(KSWebView*)view param:(NSString*)data;
+- (void)playSong:(KSWebView*)view param:(NSDictionary*)paras;
+
+@end
+
+@implementation GlobalWebViewActDelegate
+
+
+- (BOOL)webViewRunActionWithParam:(KSWebView*)view action:(NSString*)act parameter:(NSDictionary*)paras
+{
+//    NSLog(@"act:%@",act);
+    if ([act isEqualToString:STR_ACTION_ENCRYPTREQUEST]) {
+        NSString* data=[paras objectForKey:STR_KEY_DATA];
+        if (data) {
+            [self encryptRequest:view param:data];
+        }
+        return YES;
+    } else if([act isEqualToString:STR_ACTION_PLAYSONG]) {
+        [self playSong:view param:paras];
+        return YES;
+    }
+    else if([act isEqualToString:STR_ACTION_NEWPAGE]) 
+    {
+        //NSLog(@"para:%@",[paras description]);
+        [self NewPage:view param:paras];
+        return NO;
+    }
+    else if ([act isEqualToString:STR_ACTION_USERINFO])
+    {
+        if (!User::GetUserInstance()->isOnline()) {
+            [view executeJavaScriptFunc:@"onGetUserID" parameter:NULL];
+        }
+        else {
+            //NSLog(@"getuserid:%@",[NSString stringWithFormat:@"id=%@&loginid=%@&sid=%@&uname=%@&head=%@",User::GetUserInstance()->getUserId(),User::GetUserInstance()->getUserId(),User::GetUserInstance()->getSid(),User::GetUserInstance()->getNickName(),User::GetUserInstance()->getHeadPic()]);
+            [view executeJavaScriptFunc:@"onGetUserID" parameter:[NSString stringWithFormat:@"id=%@&loginid=%@&sid=%@&uname=%@&head=%@",User::GetUserInstance()->getUserId(),User::GetUserInstance()->getUserId(),User::GetUserInstance()->getSid(),User::GetUserInstance()->getNickName(),User::GetUserInstance()->getHeadPic()]];
+        }
+        return YES;
+    }
+    else if ([act isEqualToString:STR_ACTION_LOGIN]){
+        UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"您还未登录，是否立即登录?" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil] autorelease];
+        [alert show];
+    }
+    else if ([act isEqualToString:STR_ACTION_LOCATION]){
+        std::string strLocation;
+        KwConfig::GetConfigureInstance()->GetConfigStringValue(CURRENT_LOCATE, CITY_LOCATE, strLocation);
+        [view executeJavaScriptFunc:@"onGetLocation" parameter:[NSString stringWithUTF8String:strLocation.c_str()]];
+    }
+    return NO;
+}
+
+- (void)encryptRequest:(KSWebView*)view param:(NSString*)data
+{
+    std::string result=KwTools::Encrypt::CreateDesUrl([data UTF8String]);
+    [view executeJavaScriptFunc:STR_RETURN_ENCRYPT_FUNC parameter:[NSString stringWithUTF8String:result.c_str()]];
+}
+
+- (void)playSong:(KSWebView*)view param:(NSDictionary*)paras
+{
+    if ([paras count]<1) {
+        return;
+    }
+    NSString* data=[paras objectForKey:STR_KEY_RID];
+    if (!data || [data length]==0) {
+        return;
+    }
+    
+    if(CHttpRequest::GetNetWorkStatus() == NETSTATUS_WWAN)
+    {
+        static bool btip = false;
+        if(!btip)
+        {
+            [[[iToast makeText:NSLocalizedString(@"您当前使用的是2G/3G网络\r\n播放作品将产生一定的流量", @"")]setGravity:iToastGravityCenter]show];
+             btip = true;
+        }
+    }
+
+    NowPlayViewController * nowplay = [[[NowPlayViewController alloc]init]autorelease];
+    [nowplay setPlayType:false];
+    [nowplay setKid:data];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:nowplay animated:YES];
+//    [nowplay playId:data];
+}
+
+-(void)NewPage:(KSWebView*)view param:(NSDictionary*)paras
+{
+    if ([paras count]!=3) {
+        return;
+    }
+    NSString *type = [paras objectForKey:STR_KEY_TYPE];
+    NSString *title = [paras objectForKey:STR_KEY_TITLE];
+    NSString *url = [paras objectForKey:STR_KEY_URL];
+    if(type && title && url && [url length])
+    {
+        if([type isEqualToString:@"common"])
+        {
+            BaseWebViewController * temp = [[[BaseWebViewController alloc]init]autorelease];
+            temp.title = title;
+            temp.strUrl = url;
+            [ROOT_NAVAGATION_CONTROLLER pushViewController:temp animated:YES];
+        }
+    }
+}
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (buttonIndex == 1) {
+        KSLoginViewController *login=[[[KSLoginViewController alloc] init] autorelease];
+        [ROOT_NAVAGATION_CONTROLLER pushViewController:login animated:true];
+    }
+}
+@end
+
+
+

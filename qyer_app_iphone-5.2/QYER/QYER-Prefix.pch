@@ -1,0 +1,223 @@
+//
+//  Prefix header
+//
+//  The contents of this file are implicitly included at the beginning of every source file.
+//
+
+#import <Availability.h>
+
+#ifndef __IPHONE_3_0
+#warning "This project uses features only available in iOS SDK 3.0 and later."
+#endif
+
+
+#ifdef __OBJC__
+#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
+
+#import "MobClick.h"
+#import "Reachability.h"
+#import "NotReachableView.h"
+#import "GlobalObject.h"
+#import "AppDelegate.h"
+
+#endif
+
+
+
+#define appChannel_UMeng  @"App Store"
+
+
+#pragma mark -
+#pragma mark --- MYLog
+#ifdef DEBUG
+#define MYLog(format, ...)  NSLog(@"%s(%d行): " format, __PRETTY_FUNCTION__, __LINE__, ##__VA_ARGS__)
+#else
+#define MYLog(format, ...)
+#endif
+
+
+#pragma mark -
+#pragma mark --- QY_SAFE_RELEASE & QY_VIEW_RELEASE
+#define QY_SAFE_RELEASE(obj)              [obj release]; obj = nil;
+#define QY_VIEW_RELEASE(obj)              [obj removeFromSuperview]; [obj release]; obj = nil;
+#define QY_MUTABLERECEPTACLE_RELEASE(obj) [obj removeAllObjects]; [obj release]; obj = nil;
+
+
+#pragma mark -
+#pragma mark --- domainName
+//#define dataFrom231Server YES
+#ifdef  dataFrom231Server
+#define DomainName  @"http://t.m.qyer.com"      //测试环境
+#else
+#define DomainName  @"http://open.qyer.com"     //正式环境
+#endif
+
+#pragma mark -
+#pragma mark --- APPID
+#define APPID                   @"66"        //在QYER的服务器端定义的appid,和应用唯一对应
+#define APPSTOREAPPLICATIONID   563467866    //appstore上的appid,和应用唯一对应
+
+
+#pragma mark -
+#pragma mark --- API_Version
+#define API_version             @"1"
+
+
+#pragma mark -
+#pragma mark ---  ClientId_QY  &  ClientSecret_QY
+#define ClientId_QY         @"qyer_ios"
+#define ClientSecret_QY     @"cd254439208ab658ddf9"
+//#define ClientId_QY       @"qyer_guide_ios"           //老锦囊用的
+//#define ClientSecret_QY   @"19bb4fd3044573e6aa88"     //老锦囊用的
+
+#define WeixinAppID         @"wxe743a0da9581b82b"
+#define WeixinAppSecret     @"77604de413c553331b16628122859877"
+
+#define IsEmpty(str) (![str respondsToSelector:@selector(isEqualToString:)] || [str isEqualToString:@""])
+
+#pragma mark -
+#pragma mark --- 判断是否为ios7
+#define ios7 ([[[UIDevice currentDevice] systemVersion] floatValue] - 7. >= 0 ? YES : NO)
+
+
+#pragma mark -
+#pragma mark --- 判断是否为ios5
+#define ios5 ([[[UIDevice currentDevice] systemVersion] floatValue] - 6. < 0 ? YES : NO)
+
+
+#pragma mark -
+#pragma mark --- 判断是否为iPhone5
+#define iPhone5 ([UIScreen instancesRespondToSelector:@selector(currentMode)] ? CGSizeEqualToSize(CGSizeMake(640, 1136), [[UIScreen mainScreen] currentMode].size) : NO)
+
+#pragma mark -
+#pragma mark --- iOS7高度的20像素
+#define iOS7Adap(num) ((ios7) ? (num) : (num - 20))
+
+#pragma mark -
+#pragma mark ---屏幕的宽度
+#define UIScreenWidth [UIScreen mainScreen].bounds.size.width
+
+#pragma mark -
+#pragma mark --- 最新锦囊／推荐锦囊的数量
+#define newsetGuideNumber       12
+#define recommendGuideNumber    15
+
+
+#define positionY_button_guideVC    0  //*** 全部 / 已下载
+
+#define height_offset_tableView     positionY_button_guideVC+76/2+positionY_button_guideVC
+
+
+#define TheNumberOfPagesReadStr     @"read_pages_guide_"
+
+#define RGB(x,y,z) [UIColor colorWithRed:x/255.0 green:y/255.0 blue:z/255.0 alpha:1.0]
+
+
+#define positionX_SpecialGuideDetailCell                    8
+#define positionX_content_SpecialGuideDetailCell            8
+#define SpecialGuideDetailCell_titleDetailLabel_height      25
+#define SpecialGuideDetailCell_titleDetailLabel_positionX   9
+#define SpecialGuideDetailCell_titleDetailLabel_positionY   9
+#define SpecialGuideDetailCell_titleDetailLabel_sizeW       (320-SpecialGuideDetailCell_titleDetailLabel_positionY*2)
+#define SpecialGuideDetailCell_titleDetailLabel_font        12
+#define SpecialGuideDetailCell_contentLabel_positionInterval       9
+#define SpecialGuideDetailCell_contentLabel_sizeW           (SpecialGuideDetailCell_titleDetailLabel_sizeW-positionX_content_SpecialGuideDetailCell*2)
+
+
+
+#define     fontName_CatalogCell                @"HiraKakuProN-W3"
+#define     fontSize_CatalogCell                14
+#define     fixedWidth_CatalogCell              230
+#define     minHeight_CatalogCell               30
+#define     positionY_label_pageNumber          (ios7 ? 5:8)
+#define     positionY_label_catalogName         (ios7 ? 5:8)
+#define     height_catalogName_default          30
+#define     height_titlelabel                   (ios7 ? (30) : 34)
+
+
+#define guideAuthorDetailCellTitleLabelFrame         CGRectMake(10, 10, 88, 30)
+#define guideAuthorDetailCellIconViewLabelFrame      CGRectMake(12,41,58,58)
+#define guideAuthorDetailCellIntroductionLabelFrame  CGRectMake(80,65,225,0)
+#define guideAuthorDetailCellNameLabelFrame          CGRectMake(80,40,130,25)
+#define guideAuthorDetailCellIconBackViewFram        CGRectMake(10,39,62,62)
+
+
+
+#define guideCommentCellUserIconViewFrame       CGRectMake(10, 10, 58, 58)
+#define guideCommentCellNameLabelFrame          CGRectMake(10+58+10, 10, 160, 24)
+#define guideCommentCellIntroductionLabelFrame  CGRectMake(10+58+10, 10+24, 230, 0)
+#define guideCommentCellImageViewHorizontal     CGRectMake(0, 0, 320, 2)
+
+
+#define guideDetailCellTitleLabelFrame         CGRectMake(10, 10, 300, 30)
+#define guideDetailCellguideDetailLabelFrame   CGRectMake(10, 40, 300, 10)
+
+
+#define GuideCoverImageviewHeight           220
+#define RootViewControllerFootViewHeight    50
+#define guideDetailCellOffsetY              5  //文字内容与分割线之间的距离
+#define GuideAuthorDetailCellOffsetY        5  //文字内容与分割线之间的距离
+
+
+#define poiImageViewHeight                  75       //gridview中poi图片的大小
+#define poiImageViewHeightOnServer          180180   //从服务器端取的小图片的尺寸
+#define showPoiImageViewHeightOnServer      670      //从服务器端取的大图片的尺寸
+
+#define showImageViewOnNavigationbar        0
+
+#define poiImageNumberOfOneLine             4   //每行poi图片的个数
+#define getImageNumberOneTime               28  //一次获取image的个数(普通)
+#define getImageNumberOneTime2              200 //一次获取image的个数(当获取全部image时)
+
+
+#define   height_imageView_user     313/2
+#define   height_imageView_map      348/2
+
+
+#define ApplicationCell_interval_height     5
+
+
+#define isNotReachable ([[Reachability reachabilityForInternetConnection] currentReachabilityStatus] == NotReachable)
+
+//*********** Insert By ZhangDong 2014.5.4 Start ************
+/**
+ *  请求失败类型
+ */
+enum QYRequestFailedType{
+    /**
+     *  没有网络
+     */
+    QYRequestFailedTypeNotReachable,
+    /**
+     *  请求超时
+     */
+    QYRequestFailedTypeTimeout,
+    /**
+     *  服务器错误
+     */
+    QYRequestFailedTypeServer,
+    /**
+     *  缓存中加载
+     */
+    QYRequestFailedTypeLoading
+};
+
+/**
+ *  箭扣APPKEY
+ */
+#define IMAppKey  @"2WcCvCk0FxNt50LnbCQ9SFcACItvuFNx"
+
+//*********** Insert By ZhangDong 2014.5.4 End ************
+
+//static int const IM_QUERY_COUNT = 10;
+#define IM_QUERY_COUNT  10
+
+
+//屏蔽NSLog
+#ifndef TARGET_IPHONE_SIMULATOR //__OPTIMIZE__
+#define NSLog(...) NSLog(__VA_ARGS__)
+#else
+#define NSLog(...) {}
+#endif
+

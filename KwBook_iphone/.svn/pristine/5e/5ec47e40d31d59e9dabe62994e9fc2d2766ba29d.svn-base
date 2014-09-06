@@ -1,0 +1,110 @@
+//
+//  FooterTabBar.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "FooterTabBar.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+
+#define NUM_OF_TABS 5
+
+@interface FooterTabBar ()
+{
+}
+@property (nonatomic , strong) NSArray *arrayBtns;
+@property (nonatomic , strong) UIButton *centerBtn;
+-(UIButton *)addCenterButtonWithSuperView:(UIView *)superView atRect:(CGRect)rect;
+- (UIButton*)addBtnWithFrame:(CGRect)frame imageName:(NSString*)strImg;
+-(void)onBtnClick:(id)sender;
+@end
+
+
+@implementation FooterTabBar
+
+-(id)initWithSuperView:(UIView *)superView
+{
+    CGRect footerRect = BottomRect(superView.bounds,FOOTER_TABBAR_BTN_HEIGHT,0);
+    self = [super initWithFrame:footerRect];
+    if (self) {
+        [superView addSubview:self];
+        CGRect rect1,rect2,rect3,rect4,rect5;
+        rect1 = CGRectMake(0, 0, FOOTER_TABBAR_BTN_WIDTH, FOOTER_TABBAR_BTN_HEIGHT);
+        rect2 = CGRectMake(FOOTER_TABBAR_BTN_WIDTH, 0, FOOTER_TABBAR_BTN_WIDTH, FOOTER_TABBAR_BTN_HEIGHT);
+        rect3 = CGRectMake(0, 0, FOOTER_TABBAR_CENTERBTN_WIDTH, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+        rect4 = CGRectMake(FOOTER_TABBAR_BTN_WIDTH *2 +FOOTER_TABBAR_CENTERBTN_WIDTH, 0,
+                           FOOTER_TABBAR_BTN_WIDTH, FOOTER_TABBAR_BTN_HEIGHT);
+        rect5 = CGRectMake(FOOTER_TABBAR_BTN_WIDTH *3 + FOOTER_TABBAR_CENTERBTN_WIDTH, 0,
+                           FOOTER_TABBAR_BTN_WIDTH, FOOTER_TABBAR_BTN_HEIGHT);
+        
+        UIButton *btn1 = [self addBtnWithFrame:rect1 imageName:@"FooterBtnCategory"];
+        UIButton *btn2 = [self addBtnWithFrame:rect2 imageName:@"FooterBtnRecommend"];
+        UIButton *btn4 = [self addBtnWithFrame:rect4 imageName:@"FooterBtnDownload"];
+        UIButton *btn5 = [self addBtnWithFrame:rect5 imageName:@"FooterBtnMine"];
+        
+        UIButton *btn3 = [self addCenterButtonWithSuperView:superView atRect:rect3];
+        [self setCenterBtn:btn3];
+        _arrayBtns = @[btn1,btn2,btn3,btn4,btn5];
+    }
+    return self;
+}
+- (void)drawRect:(CGRect)rect
+{
+    [super drawRect:rect];
+}
+-(UIButton *)addCenterButtonWithSuperView:(UIView *)superView atRect:(CGRect)rect
+{
+    UIButton *btnCenter = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btnCenter setFrame:rect];
+    [btnCenter setCenter:CGPointMake(superView.center.x, superView.bounds.size.height-FOOTER_TABBAR_CENTERBTN_HEIGHT/2)];
+    btnCenter.adjustsImageWhenHighlighted = NO;
+    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlay.png") forState:UIControlStateNormal];
+    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlayDown.png") forState:UIControlStateHighlighted];
+//    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlayDown.png") forState:UIControlStateSelected];
+    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlayDown.png") forState:UIControlStateDisabled];
+    [btnCenter addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [superView addSubview:btnCenter];
+    return btnCenter;
+}
+- (UIButton*)addBtnWithFrame:(CGRect)frame imageName:(NSString*)strImg
+{
+    UIButton* pButton=[UIButton buttonWithType:UIButtonTypeCustom];
+    [pButton setFrame:frame];
+    [self addSubview:pButton];
+    pButton.adjustsImageWhenHighlighted=FALSE;
+    [pButton setImage:CImageMgr::GetImageEx([[NSString stringWithFormat:@"%@.png",strImg] UTF8String]) forState:UIControlStateNormal];
+    [pButton setImage:CImageMgr::GetImageEx([[NSString stringWithFormat:@"%@Down.png",strImg] UTF8String]) forState:UIControlStateHighlighted];
+//    [pButton setImage:CImageMgr::GetImageEx([[NSString stringWithFormat:@"%@Down.png",strImg] UTF8String]) forState:UIControlStateSelected];
+    [pButton setImage:CImageMgr::GetImageEx([[NSString stringWithFormat:@"%@Down.png",strImg] UTF8String]) forState:UIControlStateDisabled];
+    [pButton addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [self addSubview:pButton];
+    return pButton;
+}
+-(void)onBtnClick:(id)sender
+{
+    UIButton *button = (UIButton *)sender;
+    if (button == self.centerBtn) {
+        [self.delegate didFooterTabBarSelected:2];
+        return;
+    }
+    for (int i=0; i<NUM_OF_TABS; ++i) {
+        UIButton *btn = self.arrayBtns[i];
+        if (button == btn) {
+            [btn setEnabled:NO];
+            [self.delegate didFooterTabBarSelected:i];
+        }
+        else{
+            [btn setEnabled:YES];
+        }
+    }
+}
+
+-(void)setSelectedIndex:(NSUInteger)selectedIndex
+{
+    [self onBtnClick:self.arrayBtns[selectedIndex]];
+}
+
+@end

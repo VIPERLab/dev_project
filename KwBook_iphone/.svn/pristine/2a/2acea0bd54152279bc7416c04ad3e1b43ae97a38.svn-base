@@ -1,0 +1,359 @@
+//
+//  MainViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "MainViewController.h"
+#import "FooterTabBar.h"
+#import "ImageMgr.h"
+#import "iToast.h"
+#import "CategoryViewController.h"
+#import "RecommendViewController.h"
+#import "DownloadViewController.h"
+#import "MineViewController.h"
+#import "PlayControlViewController.h"
+#import "IObserverApp.h"
+#import "IObserverDownTaskStatus.h"
+#import "IObserverAudioPlayState.h"
+#import "MessageManager.h"
+#import "HttpRequest.h"
+
+#include "KwConfig.h"
+#include "KwTools.h"
+#include "KwConfigElements.h"
+#include "IObserverFlowProtect.h"
+#include "LocalBookRequest.h"
+
+#include "AudioPlayerManager.h"
+
+#define UPDATE_ALERT_TAG    51
+
+
+enum{
+    PAGE_RECOMMEND,
+    PAGE_CATEFORY,
+    PAGE_PLAY,      //play在这仅仅占着位置
+    PAGE_DOWNLOAD,
+    PAGE_MINE,
+    PAGE_NUM
+};
+
+@interface MainViewController ()<FooterTabBarDelegate, UIAlertViewDelegate, IObserverAudioPlayState, IObserverFlowProtect>
+{
+    UIViewController* _subVC[PAGE_NUM];
+    UIView          *_subContainerView;
+    
+    BOOL             _isFootHidden;
+}
+@property (nonatomic , strong) FooterTabBar *footerTabBar;
+-(void)showSubView:(NSUInteger)index;
+@end
+
+@implementation MainViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_DOWN_STATE, IObserverDownTaskStatus);
+        GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_APP,IObserverApp);
+        GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState);
+        _isFootHidden = NO;
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    for (int i=0; i<PAGE_NUM; ++i) {
+        _subVC[i] = nil;
+    }
+    CGRect containerRect = self.view.bounds;
+    //containerRect.size.height -= FOOTER_TABBAR_HEIGHT;
+    _subContainerView = [[UIView alloc] initWithFrame:containerRect];
+    [_subContainerView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    [[self view] addSubview:_subContainerView];
+    
+    self.footerTabBar = ({
+        FooterTabBar *footBar = [[FooterTabBar alloc] initWithSuperView:self.view];
+        [footBar setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        [footBar setDelegate:self];
+        footBar;
+    });
+    
+    [self.footerTabBar setSelectedIndex:PAGE_RECOMMEND];
+    [self showSubView:PAGE_RECOMMEND];
+    
+    KS_BLOCK_DECLARE{
+        [self showWWLanTips];
+    }
+    KS_BLOCK_ASYNRUN(2000);
+    
+    [self checkAppUpdate];
+    
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_FLOW_PROTECT, IObserverFlowProtect);
+}
+-(void)showWWLanTips
+{
+    if (CHttpRequest::GetNetWorkStatus() == NETSTATUS_WWAN) {
+        [iToast defaultShow:@"运营商网络下，注意你的流量喔"];
+    }
+    if (CHttpRequest::GetNetWorkStatus() == NETSTATUS_NONE) {
+        [iToast defaultShow:@"网络似乎断开了，请检查连接"];
+    }
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    for (int i = 0; i<PAGE_NUM; ++i) {
+        if (_subVC[i] && _subVC[i].view.hidden) {
+            if (PAGE_DOWNLOAD == i) {
+                [((DownloadViewController*)_subVC[i]) detachObservers];
+            }
+            [_subVC[i] willMoveToParentViewController:nil];
+            [_subVC[i].view removeFromSuperview];
+            [_subVC[i] removeFromParentViewController];
+            _subVC[i] = nil;
+        }
+    }
+}
+-(void)showSubView:(NSUInteger)index
+{
+    if (index == PAGE_PLAY) {
+        return;
+    }
+    [self createViewControllerWithIndex:index];
+    for (int i = 0; i<PAGE_NUM; ++i) {
+        if (index == i) {
+            _subVC[i].view.hidden = NO;
+        }
+        else if (_subVC[i] && !_subVC[i].view.hidden){
+            _subVC[i].view.hidden = YES;
+        }
+    }
+}
+-(void)createViewControllerWithIndex:(NSUInteger)index
+{
+    if (index == PAGE_PLAY) {
+        return;
+    }
+    if (index < PAGE_NUM && !_subVC[index]) {
+        CGRect rect = _subContainerView.bounds;
+        rect.size.height -= FOOTER_TABBAR_HEIGHT;
+        KBViewController *viewController;
+        switch (index) {
+            case PAGE_RECOMMEND:
+                viewController = [[RecommendViewController alloc] initWithFrame:rect];
+                break;
+            case PAGE_CATEFORY:
+                viewController = [[CategoryViewController alloc] initWithFrame:rect];
+                
+                break;
+            case PAGE_DOWNLOAD:
+                viewController = [[DownloadViewController alloc] initWithFrame:rect];
+                break;
+            case PAGE_MINE:
+                viewController = [[MineViewController alloc] initWithFrame:rect];
+                break;
+            default:
+                break;
+        }
+        [viewController setFootDelegate:self.footerTabBar];
+        [self addChildViewController:viewController];
+        [_subContainerView addSubview:viewController.view];
+        [viewController didMoveToParentViewController:self];
+        _subVC[index] = viewController;
+    }
+}
+
+enum UpdateNotifyType
+{
+    NOTIFY_EVERY_START = 0
+    ,NOTIFY_ONCE_ADAY = 1
+};
+
+- (void)checkAppUpdate
+{
+    int nTime=[NSDate timeIntervalSinceReferenceDate];
+    int nValue(0);
+    KwConfig::GetConfigureInstance()->GetConfigIntValue("Update", "firstcheckupdatetime", nValue);
+    if (nValue==0) {
+        KwConfig::GetConfigureInstance()->SetConfigIntValue("Update", "firstcheckupdatetime", nTime);
+        return;
+    }
+    if (nTime-nValue<48*60*60) {
+        return;
+    }
+    nValue=0;
+    KwConfig::GetConfigureInstance()->GetConfigIntValue("Update", "type", nValue);
+    if (nValue==(int)NOTIFY_EVERY_START) {
+        nValue=0;
+        KwConfig::GetConfigureInstance()->GetConfigIntValue("Update", "lastnotifyupdatetime", nValue);
+        if (nTime-nValue<24*60*60) {
+            return;
+        }
+    }
+    
+    std::string strTitle,strMessage;
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("Update", "title", strTitle);
+    if (strTitle.empty()) {
+        return;
+    }
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("Update", "message", strMessage);
+    if (strMessage.empty()) {
+        return;
+    }
+    NSString* pStrTitle=[NSString stringWithUTF8String:strTitle.c_str()];
+    std::vector<std::string> vecMessages;
+    KwTools::StringUtility::TokenizeEx(strMessage, "\\r\\n", vecMessages);
+    strMessage=vecMessages[0];
+    for (int i=1; i<vecMessages.size(); ++i) {
+        strMessage+="\r\n";
+        strMessage+=vecMessages[i];
+    }
+    NSString* pStrMessage=[NSString stringWithUTF8String:strMessage.c_str()];
+    
+    KS_BLOCK_DECLARE
+    {
+        UIAlertView* pAlert=[[UIAlertView alloc] initWithTitle:pStrTitle message:pStrMessage delegate:self cancelButtonTitle:@"稍后再说" otherButtonTitles:@"马上升级",nil];
+        [pAlert setTag:UPDATE_ALERT_TAG];
+        [pAlert show];
+    }
+    KS_BLOCK_ASYNRUN(3000)
+    
+    KwConfig::GetConfigureInstance()->SetConfigIntValue("Update", "lastnotifyupdatetime", nTime);
+    KwConfig::GetConfigureInstance()->SaveConfig();
+}
+
+-(UIStatusBarStyle)preferredStatusBarStyle
+{
+    return UIStatusBarStyleLightContent;
+}
+-(BOOL)prefersStatusBarHidden
+{
+    return NO;
+}
+#pragma mark
+#pragma mark FooterTabBar delegate
+- (void)didFooterTabBarSelected:(unsigned)index
+{
+    if (index == PAGE_DOWNLOAD) {
+        [self.footerTabBar removeTipsAtIndex:2];
+    }
+    if (index == PAGE_PLAY) {
+        PlayControlViewController *playControlVC = [[PlayControlViewController alloc] init];
+        [self addChildViewController:playControlVC];
+        [[self view] addSubview:playControlVC.view];
+        [playControlVC didMoveToParentViewController:self];
+        return;
+    }
+    [self showSubView:index];
+}
+#pragma mark
+#pragma mark download status delegate
+
+-(void)IObDownStatus_AddTask:(unsigned)un_rid
+{
+    [self.footerTabBar addTipsAtIndex:2];
+}
+-(void)IObDownStatus_AddTasksFinish{
+    [self.footerTabBar addTipsAtIndex:2];
+}
+-(void)IObserverApp_NetWorkStatusChanged:(KSNetworkStatus)enumStatus
+{
+    if (enumStatus == NETSTATUS_NONE) {
+        [iToast defaultShow:@"网络似乎断开了，请检查网络连接"];
+    }
+    if (enumStatus == NETSTATUS_WWAN) {
+        [iToast defaultShow:@"运营商网络下，请注意你的流量喔"];
+        
+        bool b_flow_protect = false;
+        KwConfig::GetConfigureInstance()->GetConfigBoolValue(FLOW_PROTECT_GROUP, FLOW_PROTECT_STATUS, b_flow_protect);
+        CChapterInfo* cur_chapter = CPlayBookList::getInstance()->getCurChapter();
+        if (b_flow_protect && cur_chapter && !CLocalBookRequest::GetInstance()->IsLocalChapter(cur_chapter->m_unRid) && E_AUDIO_PLAY_PLAYING == CAudioPlayerManager::getInstance()->getCurPlayState()) {
+            CAudioPlayerManager::getInstance()->pause();
+        }
+        
+    }
+}
+
+-(void)IObserverAudioPlayStateChanged:(AudioPlayState)enumStatus{
+    if (E_AUDIO_PLAY_FINISH == enumStatus) {
+        bool b_comment_need_prompt = false;
+        KwConfig::GetConfigureInstance()->GetConfigBoolValue(SECTION_COMMENT, BOOL_NEED_COMMENT, b_comment_need_prompt);
+        if (b_comment_need_prompt) {
+            int n_num_play_chapters = 0;
+            KwConfig::GetConfigureInstance()->GetConfigIntValue(SECTION_COMMENT, NUM_PLAY_CHAPTERS, n_num_play_chapters);
+            ++n_num_play_chapters;
+            
+            KwConfig::GetConfigureInstance()->SetConfigIntValue(SECTION_COMMENT, NUM_PLAY_CHAPTERS, n_num_play_chapters);
+            
+            int n_prompt_times = 0;
+            KwConfig::GetConfigureInstance()->GetConfigIntValue(SECTION_COMMENT, NUM_PROMPT_TIMES, n_prompt_times);
+            
+            if ((NETSTATUS_WIFI == CHttpRequest::GetNetWorkStatus()) && (5 <= n_num_play_chapters) && (UIApplicationStateActive == [[UIApplication sharedApplication] applicationState]) && (3 > n_prompt_times)) {
+                KwConfig::GetConfigureInstance()->SetConfigIntValue(SECTION_COMMENT, NUM_PROMPT_TIMES, ++n_prompt_times);
+                UIAlertView* alert_comment = [[UIAlertView alloc] initWithTitle:nil message:@"喜欢酷我听书吗？给个好评吧，我们一直在努力！" delegate:self cancelButtonTitle:@"不，再用用看" otherButtonTitles:@"现在评分", nil];
+                [alert_comment show];
+            }
+        }
+        
+        bool b_flow_protect = false;
+        KwConfig::GetConfigureInstance()->GetConfigBoolValue(FLOW_PROTECT_GROUP, FLOW_PROTECT_STATUS, b_flow_protect);
+        CChapterInfo* cur_chapter = CPlayBookList::getInstance()->getCurChapter();
+        if (b_flow_protect && cur_chapter && !CLocalBookRequest::GetInstance()->IsLocalChapter(cur_chapter->m_unRid) && E_AUDIO_PLAY_PLAYING == CAudioPlayerManager::getInstance()->getCurPlayState()) {
+            CAudioPlayerManager::getInstance()->pause();
+        }
+    }
+}
+
+#pragma mark
+#pragma mark alert view delegate
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    if (alertView.tag == UPDATE_ALERT_TAG){
+        if (buttonIndex==1) {
+            std::string strUpdateUrl;
+            KwConfig::GetConfigureInstance()->GetConfigStringValue("Update", "url", strUpdateUrl);
+            if (!strUpdateUrl.empty()) {
+                NSString* str=[NSString stringWithUTF8String:strUpdateUrl.c_str()];
+                NSURL* url=[NSURL URLWithString:str];
+                [[UIApplication sharedApplication]openURL:url];
+            }
+        }
+    }else {
+        if (buttonIndex==1) {
+            KwConfig::GetConfigureInstance()->SetConfigBoolValue(SECTION_COMMENT, BOOL_NEED_COMMENT, false);
+            KwConfig::GetConfigureInstance()->SetConfigIntValue(SECTION_COMMENT, NUM_PROMPT_TIMES, 0);
+            KwConfig::GetConfigureInstance()->SetConfigIntValue(SECTION_COMMENT, NUM_PLAY_CHAPTERS, 0);
+
+            if (7.0 > [[UIDevice currentDevice].systemVersion intValue]) {
+                [[UIApplication sharedApplication]openURL:[NSURL URLWithString:@"itms-apps://ax.itunes.apple.com/WebObjects/MZStore.woa/wa/viewContentsUserReviews?type=Purple+Software&id=797350587"]];
+            }else {
+                [[UIApplication sharedApplication]openURL:[NSURL URLWithString:@"itms-apps://itunes.apple.com/app/id797350587"]];
+            }
+        }else {
+            KwConfig::GetConfigureInstance()->SetConfigBoolValue(SECTION_COMMENT, BOOL_NEED_COMMENT, true);
+            KwConfig::GetConfigureInstance()->SetConfigIntValue(SECTION_COMMENT, NUM_PLAY_CHAPTERS, 0);
+        }
+    }
+}
+
+#pragma mark flow protect delegate
+
+- (void) IObserverFlowProtectStatusChanged:(bool)b_protect_on{
+    
+    CChapterInfo* cur_chapter = CPlayBookList::getInstance()->getCurChapter();
+    if (b_protect_on && cur_chapter && !CLocalBookRequest::GetInstance()->IsLocalChapter(cur_chapter->m_unRid) && E_AUDIO_PLAY_PLAYING == CAudioPlayerManager::getInstance()->getCurPlayState()) {
+        CAudioPlayerManager::getInstance()->pause();
+    }
+}
+
+
+
+@end

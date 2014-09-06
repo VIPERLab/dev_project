@@ -1,0 +1,50 @@
+//
+//  DataItem.h
+//  KwSing
+//
+//  Created by 熊 改 on 12-11-20.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@class DataItem;
+
+@protocol DataItemDelegate <NSObject>
+
+@required
+-(void)addItem:(DataItem*)addItem;
+
+@end
+
+
+@interface DataItem : NSObject<NSXMLParserDelegate>
+{
+    
+    NSString *uid;
+    NSString *title;
+    NSString *pic;
+    NSString *uname;
+    NSString *view;
+    NSString *comment;
+    NSString *flower;
+    NSString *sid;
+    
+    id<DataItemDelegate,NSXMLParserDelegate> parentParserDelegate;
+    
+    NSMutableString *currentString;
+}
+@property (retain,nonatomic) id parentParserDelegate;
+
+@property (retain,nonatomic) NSString *uid;
+@property (retain,nonatomic) NSString *title;
+@property (retain,nonatomic) NSString *pic;
+@property (retain,nonatomic) NSString *uname;
+@property (retain,nonatomic) NSString *view;
+@property (retain,nonatomic) NSString *conmment;
+@property (retain,nonatomic) NSString *flower;
+@property (retain,nonatomic) NSString *sid;
+@property (retain,nonatomic) NSString *type;    //0 to normal;1 to some other types like activties
+@property (retain,nonatomic) NSString *url;
+
+@end

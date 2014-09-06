@@ -1,0 +1,256 @@
+//
+//  UINavigationController+PushAddButton.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-19.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "UINavigationController+PushAddButton.h"
+#import "FooterTabBar.h"
+#import "ImageMgr.h"
+#import "PlayControlViewController.h"
+#import "globalm.h"
+#import "PlayBookList.h"
+#import "BookInfoList.h"
+#import "CacheMgr.h"
+#import "AudioPlayerManager.h"
+#import "IObserverAudioPlayState.h"
+#import <objc/runtime.h>
+
+static const void* kTopViewKey  = &kTopViewKey;
+
+#define TAG_CENTER_BTN      1001
+#define TAG_BOOK_IMAGE      1002
+#define TAG_BUTTON_VIEW     1003
+#define TAG_BUFFERING_VIEW  1004
+
+
+@implementation UINavigationController (PushAddButton)
+@dynamic topView;
+
+-(void)pushAddButtonViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+    [self pushViewController:viewController animated:animated];
+    [self addCenterBtn];
+}
+-(void)addCenterBtn
+{
+    UIView *topView = self.topViewController.view;
+    [self setTopView:topView];
+    
+    float y = [UIScreen mainScreen].bounds.size.height - FOOTER_TABBAR_CENTERBTN_HEIGHT;
+    float x = 128;//[UIScreen mainScreen].bounds.size.width - FOOTER_TABBAR_CENTERBTN_WIDTH-10;
+    float gap = 0.0f;
+    if (!isIOS7()) {
+        gap = 20.0f;
+    }
+    CGRect rect = CGRectMake(x, y-gap, FOOTER_TABBAR_CENTERBTN_WIDTH, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+    
+    UIView *centerBtnView = [[UIView alloc] initWithFrame:rect];
+    [centerBtnView setTag:TAG_BUTTON_VIEW];
+    [centerBtnView setUserInteractionEnabled:YES];
+    
+    CGRect backImageRect = CGRectMake(4.5, 4.5, FOOTER_TABBAR_CENTERBTN_WIDTH-9, FOOTER_TABBAR_CENTERBTN_HEIGHT-9);
+    UIImageView *bookImageView = [[UIImageView alloc] initWithFrame:backImageRect];
+    [bookImageView setImage:CImageMgr::GetImageEx("DefaultCenterBtn.png")];
+    [bookImageView setTag:TAG_BOOK_IMAGE];
+    [centerBtnView addSubview:bookImageView];
+    
+    UIActivityIndicatorView *bufferingView = [[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhiteLarge];
+    [bufferingView setCenter:CGPointMake(FOOTER_TABBAR_CENTERBTN_WIDTH/2, FOOTER_TABBAR_CENTERBTN_HEIGHT/2)];
+    [bufferingView setTag:TAG_BUFFERING_VIEW];
+    [centerBtnView addSubview:bufferingView];
+    
+    CGRect btnRect = CGRectMake(0, 0, FOOTER_TABBAR_CENTERBTN_WIDTH, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+    UIButton *btnCenter = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btnCenter setTag:TAG_CENTER_BTN];
+    [btnCenter setFrame:btnRect];
+    //btnCenter.adjustsImageWhenHighlighted = YES;//只是用来标志着button是否被显示,yes表示正在显示
+    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlay.png") forState:UIControlStateNormal];
+    [btnCenter addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [centerBtnView addSubview:btnCenter];
+    [centerBtnView bringSubviewToFront:btnCenter];
+    
+    [topView addSubview:centerBtnView];
+    [topView bringSubviewToFront:centerBtnView];
+    
+    [self setStatus:(AudioPlayControlState)CAudioPlayerManager::getInstance()->getCurPlayState()];
+    [self startLoadImage];
+}
+-(void)showCenterButton
+{
+    return;
+    UIView *topView = [self topView];
+    UIView *centerView = [topView viewWithTag:TAG_BUTTON_VIEW];
+
+    if (!centerView.userInteractionEnabled) {
+        NSLog(@"show animation");
+        centerView.userInteractionEnabled = YES;
+        float y = [UIScreen mainScreen].bounds.size.height - FOOTER_TABBAR_CENTERBTN_HEIGHT;
+        float x = 128;//[UIScreen mainScreen].bounds.size.width - FOOTER_TABBAR_CENTERBTN_WIDTH-10;
+        float gap = 0.0f;
+        if (!isIOS7()) {
+            gap = 20.0f;
+        }
+        CGRect endRect = CGRectMake(x, y-gap, FOOTER_TABBAR_CENTERBTN_WIDTH, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+        [centerView setHidden:NO];
+        [UIView animateWithDuration:0.5 animations:^{
+            [centerView setFrame:endRect];
+        } completion:^(BOOL finished) {
+            
+        }];
+    }
+}
+-(void)hideCenterButton
+{
+    return;
+    UIView *topView = [self topView];
+    UIView *centerView = [topView viewWithTag:TAG_BUTTON_VIEW];
+    
+    if (centerView.userInteractionEnabled) {
+        NSLog(@"hide animation");
+        centerView.userInteractionEnabled = NO;
+        [UIView animateWithDuration:0.5 animations:^{
+            float y = [UIScreen mainScreen].bounds.size.height;
+            float x = 128;//[UIScreen mainScreen].bounds.size.width - FOOTER_TABBAR_CENTERBTN_WIDTH-10;
+            float gap = 0.0f;
+            if (!isIOS7()) {
+                gap = 20.0f;
+            }
+            CGRect endRect    = CGRectMake(x, y-gap, FOOTER_TABBAR_CENTERBTN_WIDTH, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+            [centerView setFrame:endRect];
+            
+        } completion:^(BOOL finished) {
+            [centerView setHidden:YES];
+        }];
+    }
+}
+-(void)setStatus:(AudioPlayControlState)status
+{
+    UIView *topView = [self topView];
+    UIButton *centerBtn = (UIButton *)[topView viewWithTag:TAG_CENTER_BTN];
+    //[centerBtn setImageEdgeInsets:UIEdgeInsetsMake(10, 10, 10, 10)];
+    UIActivityIndicatorView *bufferingView = (UIActivityIndicatorView *)[topView viewWithTag:TAG_BUFFERING_VIEW];
+    
+    switch (status) {
+        case E_AUDIO_PLAY_CONTROL_PLAYING:
+            if (bufferingView.isAnimating) {
+                [bufferingView stopAnimating];
+            }
+            [self startLoadImage];
+            //[centerBtn setImage:CImageMgr::GetImageEx("PauseStatus.png") forState:UIControlStateNormal];
+            break;
+        case E_AUDIO_PLAY_CONTROL_PAUSE:
+            if (bufferingView.isAnimating) {
+                [bufferingView stopAnimating];
+            }
+            //[centerBtn setImage:CImageMgr::GetImageEx("PlayStaus.png") forState:UIControlStateNormal];
+            break;
+        case E_AUDIO_PLAY_CONTROL_BUFFERING:
+            if (!bufferingView.isAnimating) {
+                [bufferingView startAnimating];
+            }
+            //[centerBtn setImage:nil forState:UIControlStateNormal];
+            break;
+        case E_AUDIO_PLAY_CONTROL_NONE:
+            if (bufferingView.isAnimating) {
+                [bufferingView stopAnimating];
+            }
+            //[centerBtn setImage:CImageMgr::GetImageEx("PlayStaus.png") forState:UIControlStateNormal];
+            break;
+        case E_AUDIO_PLAY_CONTROL_FINISH:
+            if (bufferingView.isAnimating) {
+                [bufferingView stopAnimating];
+            }
+            //[centerBtn setImage:CImageMgr::GetImageEx("PlayStaus.png") forState:UIControlStateNormal];
+            break;
+        case E_AUDIO_PLAY_CONTROL_STOP:
+            if (bufferingView.isAnimating) {
+                [bufferingView stopAnimating];
+            }
+            //[centerBtn setImage:CImageMgr::GetImageEx("PlayStaus.png") forState:UIControlStateNormal];
+            break;
+        default:
+            break;
+    }
+}
+-(void)startLoadImage
+{
+    UIView *topView = [self topView];
+    UIImageView *bookImageView = (UIImageView *)[topView viewWithTag:TAG_BOOK_IMAGE];
+    
+    CChapterInfo* chapter_info = CPlayBookList::getInstance()->getCurChapter();
+    if (!chapter_info) {
+        [bookImageView setImage:CImageMgr::GetImageEx("DefaultCenterBtn.png")];
+        return;
+    }
+    std::string bookId = chapter_info->m_strBookId;
+    CBookInfo *bookInfo = CBookInfoList::getInstance()->getBookInfo(bookId);
+    
+    if (!bookInfo || 0 == bookInfo->m_strImgUrl.size()) {
+        [bookImageView setImage:CImageMgr::GetImageEx("DefaultCenterBtn.png")];
+        return;
+    }
+    NSLog(@"play book id:%s name:%s",bookId.c_str(),bookInfo->m_strBookTitle.c_str());
+    
+    NSString *imageURL = [NSString stringWithUTF8String:bookInfo->m_strImgUrl.c_str()];
+    
+    __block void* imageData = NULL;
+    __block unsigned length = 0;;
+    __block BOOL outOfDate;
+    if (CCacheMgr::GetInstance()->Read([imageURL UTF8String], imageData, length, outOfDate)) {
+        NSData *cacheImageData=[[NSData alloc] initWithBytesNoCopy:imageData length:length freeWhenDone:YES];
+        UIImage *image = nil;
+        if (cacheImageData) {
+            NSLog(@"load image from cache and success");
+            image = [[UIImage alloc] initWithData:cacheImageData];
+        }
+        else{
+            NSLog(@"load image from cache and fail");
+            image = CImageMgr::GetImageEx("DefaultCenterBtn.png");
+        }
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [bookImageView setImage:image];
+        });
+    }
+    else{
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:imageURL]];
+            if (imageData) {
+                NSLog(@"load image from web and success");
+                UIImage *image = [[UIImage alloc] initWithData:imageData];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [bookImageView setImage:image];
+                    CCacheMgr::GetInstance()->Cache(T_DAY, 3, [imageURL UTF8String], [imageData bytes], [imageData length]);
+                });
+            }
+            else{
+                NSLog(@"load image from web and fail");
+                UIImage *image = CImageMgr::GetImageEx("DefaultCenterBtn.png");
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [bookImageView setImage:image];
+                    CCacheMgr::GetInstance()->Cache(T_DAY, 3, [imageURL UTF8String], [imageData bytes], [imageData length]);
+                });
+            }
+        });
+    }
+    
+}
+-(void)onBtnClick:(id)sender
+{
+    PlayControlViewController *playControlVC = [[PlayControlViewController alloc] init];
+    [self addChildViewController:playControlVC];
+    [[self view] addSubview:playControlVC.view];
+    [playControlVC didMoveToParentViewController:self];
+}
+
+-(UIView *)topView
+{
+    return objc_getAssociatedObject(self, kTopViewKey);
+}
+-(void)setTopView:(UIView *)topView
+{
+    objc_setAssociatedObject(self, kTopViewKey, topView, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+@end

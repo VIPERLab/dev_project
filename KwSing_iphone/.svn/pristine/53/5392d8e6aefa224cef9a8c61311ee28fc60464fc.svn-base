@@ -1,0 +1,106 @@
+//
+//  MyMessageViewController.m
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-12-14.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "MyMessageViewController.h"
+#include "KSWebView.h"
+#include "globalm.h"
+#include "ImageMgr.h"
+#include "KSAppDelegate.h"
+#include "CommentViewController.h"
+
+#define MESSAGE_PAGE_URL @"http://changba.kuwo.cn/kge/webmobile/ios/news.html"
+
+@interface MyMessageViewController ()<KSWebViewDelegate>
+{
+    KSWebView* webView;
+}
+@end
+
+@implementation MyMessageViewController
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+
+    
+    [super viewDidLoad];
+	[self setTitle:@"消息"];
+    [[self view] setBackgroundColor:[UIColor whiteColor]];
+    
+    
+    UIImageView * imageView=[[UIImageView alloc] init];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER_BOUNDS];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    [imageView release];
+    
+    CGRect rcLabel=CGRectMake(0, 15, 320,18);
+    UILabel* lable = [[[UILabel alloc]initWithFrame:rcLabel] autorelease];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = [self title];
+    lable.Font = [UIFont systemFontOfSize:18];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    
+    UIButton* returnButton= [UIButton buttonWithType:UIButtonTypeCustom];
+    [returnButton setTag:1];
+    [returnButton setTitle:@"返回" forState: UIControlStateNormal];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    [returnButton.titleLabel setFont:[UIFont systemFontOfSize:14]];
+    [returnButton.titleLabel setShadowOffset:CGSizeMake(0, 1)];
+    [returnButton.titleLabel setShadowColor:[UIColor blackColor]];
+    returnButton.frame = CGRectMake(10, 9, 47,28);
+    [returnButton addTarget:self action:@selector(ReturnBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:returnButton];
+    
+    
+    UIImageView * topshadow=[[UIImageView alloc] init];
+    CGRect rcshadow=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y+=rcshadow.size.height;
+    rcshadow.size.height=5;
+    [topshadow setFrame:rcshadow];
+    [topshadow setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadow];
+    [topshadow release];
+    
+    CGRect rc=[self view].bounds;
+    CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    CGRect back=BottomRect(rc, rc.size.height-rcna.size.height, 0);
+
+    webView = [[[KSWebView alloc] initWithFrame:back allowBounce:TRUE useLoading:YES opaque:NO] autorelease];
+    [webView setDelegate:self];
+    [webView setBackgroundColor:UIColorFromRGBValue(0xededed)];
+    [[self view] addSubview:webView];
+    [webView loadUrl:[NSString stringWithFormat:@"%@?%d",MESSAGE_PAGE_URL,rand()]];
+}
+-(void)reloadPage
+{
+    [webView reload];
+}
+-(void)ReturnBtnClick:(id)sender
+{
+    [webView setDelegate:nil];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+- (void)webViewRunActionWithParam:(KSWebView*)view action:(NSString*)act parameter:(NSDictionary*)paras
+{
+    if ([act isEqualToString:@"goCmt"]) {
+        NSString *kid=[paras objectForKey:@"kid"];
+        NSString *ssid=[paras objectForKey:@"ssid"];
+        NSString *uid=[paras objectForKey:@"uid"];
+        CommentViewController *comment=[[[CommentViewController alloc] init] autorelease];
+        [comment SetMusicId:[kid UTF8String] subjectID:[ssid UTF8String] UserID:[uid UTF8String]];
+        [ROOT_NAVAGATION_CONTROLLER pushViewController:comment animated:YES];
+    }
+}
+@end

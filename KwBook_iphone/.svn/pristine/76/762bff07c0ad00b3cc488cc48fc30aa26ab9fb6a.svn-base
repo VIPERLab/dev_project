@@ -1,0 +1,282 @@
+//
+//  CategoryViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "CategoryViewController.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+#import "CacheMgr.h"
+#import "KBUrls.h"
+#import "SBJson4.h"
+#import "CategoryList.h"
+
+#define TAG_IMAGE           41
+#define TAG_BOOK_NAME       42
+#define TAG_ARTIST_NAME     43
+#define TAG_MUSIC_COUNT     44
+#define TAG_LISTEN_COUNT    45
+
+const std::string kCategoryListKey = "categoryListKey";
+
+@interface CategoryViewController ()<UITableViewDataSource,UITableViewDelegate,CateListDelegate>
+{
+    UIButton *_titleBtn;
+}
+@property (nonatomic , strong) UIView                   *topBar;
+@property (nonatomic , strong) UITableView              *tableView;
+@property (nonatomic , strong) CategoryList             *cateListView;
+@property (nonatomic , strong) NSMutableDictionary      *categoryDic;   //id:name
+-(void)fetchCategoryList;
+@end
+
+@implementation CategoryViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        _categoryDic = [NSMutableDictionary dictionary];
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    
+    [self fetchCategoryList];
+    
+    float gap = 0.0;
+    if (isIOS7()) {
+        gap = 20;
+    }
+    float width  = self.view.bounds.size.width;
+    float height = self.view.bounds.size.height;
+    self.topBar = ({
+        UIView *topBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44+gap)];
+        UIImageView *backView = [[UIImageView alloc] initWithFrame:topBar.bounds];
+        if (isIOS7()) {
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor7.png")];
+        }
+        else{
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor6.png")];
+        }
+        [topBar addSubview:backView];
+
+        UIButton *searchBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [searchBtn setFrame:CGRectMake(276, gap, 44, 44)];
+        [searchBtn setBackgroundImage:CImageMgr::GetImageEx("searchBtn.png") forState:UIControlStateNormal];
+        [searchBtn addTarget:self action:@selector(onSearchBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:searchBtn];
+        
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(70, gap, 180, 44)];
+        [titleLabel setText:@"青春误会"];
+        [titleLabel setTextAlignment:NSTextAlignmentCenter];
+        [titleLabel setTextColor:[UIColor whiteColor]];
+        [titleLabel setFont:[UIFont systemFontOfSize:20.0]];
+        [topBar addSubview:titleLabel];
+        
+        _titleBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [_titleBtn setFrame:CGRectMake(0, 0, 125, 44)];
+        [_titleBtn setImage:CImageMgr::GetImageEx("titleDown.png") forState:UIControlStateNormal];
+        [_titleBtn setImage:CImageMgr::GetImageEx("titleUp.png") forState:UIControlStateSelected];
+        [_titleBtn setCenter:CGPointMake(170, gap+22)];
+        [_titleBtn addTarget:self action:@selector(onShowBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:_titleBtn];
+        
+        topBar;
+    });
+    [[self view] addSubview:self.topBar];
+    
+    self.tableView = ({
+        UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.topBar.bounds.size.height, width, height-self.topBar.bounds.size.height)];
+        [tableView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        [tableView setDelegate:self];
+        [tableView setDataSource:self];
+        tableView;
+    });
+    [[self view] addSubview:self.tableView];
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark
+#pragma mark action methods
+-(void)onShowBtnClick
+{
+    [_titleBtn setSelected:!_titleBtn.selected];
+    if (_titleBtn.selected) {
+        [self showCateListView];
+    }
+    else{
+        [self hideCateListView];
+    }
+}
+-(void)onSearchBtnClick:(id)sender
+{
+    NSLog(@"search");
+}
+
+#pragma mark
+#pragma mark show and hidden animation
+-(void)showCateListView
+{
+    float fcount = self.categoryDic.count;
+    int  _numOfRows = ceil((fcount/4)) + 1;
+    self.cateListView.frame = TopRect(self.tableView.frame, 0, -(43*(_numOfRows-1)+24));
+    [self.cateListView setHidden:NO];
+    
+    [UIView animateWithDuration:0.5 animations:^{
+        [self.cateListView setFrame:self.tableView.frame];
+    }];
+}
+-(void)hideCateListView
+{
+    float fcount = self.categoryDic.count;
+    int  _numOfRows = ceil((fcount/4)) + 1;
+    
+    [UIView animateWithDuration:0.5 animations:^{
+        [self.cateListView setFrame:TopRect(self.tableView.frame, 0 , -(43*(_numOfRows-1)+24))];
+    } completion:^(BOOL finished) {
+        [self.cateListView setHidden:YES];
+    }];
+    
+}
+#pragma mark
+#pragma mark fetch list data
+-(void)fetchCategoryList
+{
+    __block void* jsonData = NULL;
+    __block unsigned length = 0;
+    __block NSData *cateData = nil;
+    __block BOOL outOfTime;
+    
+    SBJson4ValueBlock block = ^(id item, BOOL *stop){
+        NSDictionary *dic = item;
+        
+        NSArray *array = [dic objectForKey:@"list"];
+        for (NSDictionary *itemDic in array) {
+            NSString *cateId = [itemDic objectForKey:@"id"];
+            NSString *cateName = [itemDic objectForKey:@"name"];
+            [self.categoryDic setObject:cateName forKey:cateId];
+        }
+        NSLog(@"dic:%@",self.categoryDic);
+    };
+    SBJson4ErrorBlock eh = ^(NSError *error){
+        NSLog(@"parser json error:%@",error);
+    };
+    SBJson4Parser *parser = [SBJson4Parser parserWithBlock:block allowMultiRoot:NO unwrapRootArray:NO errorHandler:eh];
+    
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        if (CCacheMgr::GetInstance()->Read(kCategoryListKey, jsonData, length, outOfTime)) {
+            cateData =[NSData dataWithBytesNoCopy:jsonData length:length freeWhenDone:YES];
+        }
+        else{
+            NSString *strUrl = [NSString stringWithFormat:@"%@stype=json&srcver=storynew&type=story_list&id=2",BASE_URL];
+            cateData = [NSData dataWithContentsOfURL:[NSURL URLWithString:strUrl]];
+            CCacheMgr::GetInstance()->Cache(T_DAY, 3, kCategoryListKey, [cateData bytes], [cateData length]);
+        }
+        
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (cateData) {
+                [self.categoryDic removeAllObjects];
+                [parser parse:cateData];
+                self.cateListView = ({
+                    CategoryList *cateListView = [[CategoryList alloc] initWithCateList:self.categoryDic andFrame:self.tableView.frame];
+                    [cateListView setDelegate:self];
+                    [cateListView setHidden:YES];
+                    cateListView;
+                });
+                [[self view] addSubview:self.cateListView];
+                [[self view] bringSubviewToFront:self.topBar];
+            }
+        });
+    });
+}
+#pragma mark
+#pragma mark Cate list view delegate
+-(void)onHideCateListView
+{
+    [self onShowBtnClick];
+}
+#pragma mark
+#pragma mark table view data source
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 10;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *categoryCellIdentifier = @"categoryBookListIdentifier";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:categoryCellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:categoryCellIdentifier];
+        [cell.contentView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        
+        UIImageView *bookBack = [[UIImageView alloc] initWithFrame:CGRectMake(2.5, 2.5, 69, 69)];
+        [bookBack setImage:CImageMgr::GetImageEx("BookPicBack.png")];
+        [cell.contentView addSubview:bookBack];
+        
+        UIImageView *headPic = [[UIImageView alloc] initWithFrame:CGRectMake(7, 7, 60, 60)];
+        [headPic setTag:TAG_IMAGE];
+        [cell.contentView addSubview:headPic];
+        
+        UILabel *bookNameLabel = [[UILabel alloc] initWithFrame:CGRectMake(77, 18, 223, 17)];
+        [bookNameLabel setTag:TAG_BOOK_NAME];
+        [bookNameLabel setTextColor:defaultBlackColor()];
+        [bookNameLabel setFont:[UIFont systemFontOfSize:16.0]];
+        [cell.contentView addSubview:bookNameLabel];
+        
+        UILabel *artistLabel = [[UILabel alloc] initWithFrame:CGRectMake(77, 51, 80, 11)];
+        [artistLabel setTag:TAG_ARTIST_NAME];
+        [artistLabel setTextColor:defaultGrayColor()];
+        [artistLabel setFont:[UIFont systemFontOfSize:10.0]];
+        [cell.contentView addSubview:artistLabel];
+        
+        UILabel *musicCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(169, 51, 55, 11)];
+        [musicCountLabel setTag:TAG_MUSIC_COUNT];
+        [musicCountLabel setTextColor:defaultGrayColor()];
+        [musicCountLabel setFont:[UIFont systemFontOfSize:10.0]];
+        [cell.contentView addSubview:musicCountLabel];
+        
+        UILabel *listenCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(220, 51, 77, 11)];
+        [listenCountLabel setTag:TAG_LISTEN_COUNT];
+        [listenCountLabel setTextColor:defaultGrayColor()];
+        [listenCountLabel setFont:[UIFont systemFontOfSize:10.0]];
+        [cell.contentView addSubview:listenCountLabel];
+        
+        UIImageView *accessaryView = [[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("cellIndicator.png")];
+        [accessaryView setCenter:CGPointMake(300, 37.0)];
+        [cell.contentView addSubview:accessaryView];
+    }
+    UILabel *bookNameLabel = (UILabel *)[cell.contentView viewWithTag:TAG_BOOK_NAME];
+    [bookNameLabel setText:@"告诉你所不知道的蒋介石"];
+    
+    UILabel *artistLabel = (UILabel *)[cell.contentView viewWithTag:TAG_ARTIST_NAME];
+    [artistLabel setText:@"播讲人:赵薇"];
+    
+    UILabel *musicCountLabel = (UILabel *)[cell.contentView viewWithTag:TAG_MUSIC_COUNT];
+    [musicCountLabel setText:@"共250回"];
+    
+    UILabel *listenCountLabel = (UILabel *)[cell.contentView viewWithTag:TAG_LISTEN_COUNT];
+    [listenCountLabel setText:@"256人在听"];
+    
+    return cell;
+}
+#pragma mark
+#pragma mark table view delegate
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 74.0f;
+}
+
+@end

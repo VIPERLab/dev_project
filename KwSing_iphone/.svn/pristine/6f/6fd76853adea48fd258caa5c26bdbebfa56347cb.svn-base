@@ -1,0 +1,86 @@
+//
+//  BaseViewController.m
+//  KwSing
+//
+//  Created by Hu Qian on 12-11-22.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "BaseViewController.h"
+#include "ImageMgr.h"
+#include "globalm.h"
+
+@interface BaseViewController ()
+
+@end
+
+@implementation BaseViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    UIImageView * imageView = [[[UIImageView alloc]init]autorelease];
+    [imageView setFrame:self.navigationController.navigationBar.bounds];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    
+    UIImageView * topshadowView = [[[UIImageView alloc]init]autorelease];
+    CGRect rcshadow = self.navigationController.navigationBar.bounds;
+    rcshadow.origin.y += rcshadow.size.height;
+    rcshadow.size.height = 5;
+    [topshadowView setFrame:rcshadow];
+    [topshadowView setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadowView];
+    
+    UIButton* btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btn setTag:1];
+    [btn setTitle:@"返回" forState: UIControlStateNormal];
+    [[btn titleLabel] setShadowOffset:CGSizeMake(0, 1)];
+    [[btn titleLabel] setShadowColor:[UIColor blackColor]];
+    [btn setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+    [btn setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    btn.titleLabel.font = [UIFont systemFontOfSize:14];
+    btn.frame = CGRectMake(10, 9, 47,28);
+    [btn addTarget:self action:@selector(ReturnBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:btn];
+    
+    UILabel* lable = [[[UILabel alloc]initWithFrame:CGRectMake(60, 12, self.navigationController.navigationBar.bounds.size.width-120,20)]autorelease];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = [self title];
+    lable.Font = [UIFont systemFontOfSize:17];
+    [lable setShadowColor:UIColorFromRGBValue(0x2b2b2b)];
+    [lable setShadowOffset:CGSizeMake(0, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    
+    [[self view] addSubview:lable];
+
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+-(void) ReturnBtnClick:(id)sender
+{
+    [self CloseView];
+}
+
+-(void)CloseView
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+@end

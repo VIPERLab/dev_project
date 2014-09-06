@@ -1,0 +1,17 @@
+//
+//  ChapterInfo.h
+//  kwbook
+//
+//  Created by 单 永杰 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#ifndef kwbook_ChapterInfo_h
+#define kwbook_ChapterInfo_h
+
+class CChapterInfo {
+public:
+    
+};
+
+#endif

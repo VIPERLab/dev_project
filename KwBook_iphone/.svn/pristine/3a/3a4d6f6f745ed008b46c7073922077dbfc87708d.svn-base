@@ -1,0 +1,92 @@
+//
+//  AudioPlayerManager.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "AudioPlayerManager.h"
+
+CAudioPlayerManager::CAudioPlayerManager(){
+    m_pLocalPlayer = nil;
+    m_pNetPlayer = nil;
+}
+
+CAudioPlayerManager* CAudioPlayerManager::getInstance(){
+    static CAudioPlayerManager s_player_manager;
+    
+    return &s_player_manager;
+}
+
+void CAudioPlayerManager::play(){
+    m_pLocalPlayer = nil;
+    m_pNetPlayer = nil;
+    m_bLocalChapter = false;
+    
+    CChapterInfo* cur_chapter = CPlayBookList::getInstance()->getCurChapter();
+    if (NULL != cur_chapter) {
+        if (0 != cur_chapter->m_unFileSize && cur_chapter->m_unFileSize == cur_chapter->m_unLocalSize) {
+            m_bLocalChapter = true;
+            m_pLocalPlayer = [[KBLocalAudioPlayer alloc] init];
+            [m_pLocalPlayer resetPlayer:cur_chapter];
+        }else {
+            m_bLocalChapter = false;
+            m_pNetPlayer = [[KBNetAudioPlayer alloc] init];
+            [m_pNetPlayer resetPlayer:cur_chapter];
+        }
+    }
+}
+
+void CAudioPlayerManager::pause(){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer pause];
+    }else {
+        [m_pNetPlayer pause];
+    }
+}
+
+void CAudioPlayerManager::resume(){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer resume];
+    }else {
+        [m_pNetPlayer resume];
+    }
+}
+
+void CAudioPlayerManager::stop(){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer stop];
+    }else {
+        [m_pNetPlayer stop];
+    }
+    
+    m_bLocalChapter = false;
+    m_pNetPlayer = nil;
+    m_pLocalPlayer = nil;
+}
+
+void CAudioPlayerManager::seek(float f_time_sec){
+    if (m_bLocalChapter) {
+        [m_pLocalPlayer seek:f_time_sec];
+    }else {
+        [m_pNetPlayer seek:f_time_sec];
+    }
+}
+
+float CAudioPlayerManager::currentTime()const{
+    if (m_bLocalChapter) {
+        return [m_pLocalPlayer currentTime];
+    }else {
+        return [m_pNetPlayer currentTime];
+    }
+}
+
+float CAudioPlayerManager::duration()const{
+    if (m_bLocalChapter) {
+        return [m_pLocalPlayer duration];
+    }else {
+        return [m_pNetPlayer duration];
+    }
+}
+

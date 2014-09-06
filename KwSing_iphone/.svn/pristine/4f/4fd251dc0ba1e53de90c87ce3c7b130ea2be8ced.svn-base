@@ -1,0 +1,239 @@
+//
+//  MusicListRequest.cpp
+//  KwSing
+//
+//  Created by Hu Qian on 12-11-21.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "MusicListRequest.h"
+#include "KwTools.h"
+#include "MessageManager.h"
+#include "HttpRequest.h"
+#include "CacheMgr.h"
+#include <libxml/parser.h>
+#include "AutoPtr.h"
+#include "KuwoLog.h"
+#include "KwUMengElement.h"
+#include "UMengLog.h"
+
+CMusicListRequest::CMusicListRequest(ListInfo info):m_ListInfo(info),m_curpage(-1)
+{
+    InitSig();
+}
+
+std::string CMusicListRequest::GetUrl(unsigned npage)
+{
+    std::string strid;
+    std::string strparam;
+    if(m_ListInfo.type == eRankMusic)
+        strparam = KwTools::StringUtility::Format("type=subcatalog&id=%s&digest=%s&pn=%d&rn=%d&sig=%s",
+                                                          m_ListInfo.strID.c_str(),m_ListInfo.strDigest.c_str(),npage,NUM_ONE_PAGE,m_strSig.c_str());
+    else if(m_ListInfo.type == eArtistMusic)
+        strparam = KwTools::StringUtility::Format("filt=0&type=artist_music&id=%s&digest=%s&pn=%d&rn=%d&sig=%s",
+                                                  m_ListInfo.strID.c_str(),m_ListInfo.strDigest.c_str(),npage,NUM_ONE_PAGE,m_strSig.c_str());
+    std::string strUrl=KwTools::Encrypt::CreateDesUrl(strparam.c_str());
+    return strUrl;
+}
+
+std::string CMusicListRequest::GetCacheKey(unsigned npage)
+{
+    std::string strid;
+    std::string strparam;
+    if(m_ListInfo.type == eRankMusic)
+        strparam = KwTools::StringUtility::Format("type=subcatalog&id=%s&digest=%s&pn=%d&rn=%d",
+                                                          m_ListInfo.strID.c_str(),m_ListInfo.strDigest.c_str(),npage,NUM_ONE_PAGE);
+    else if(m_ListInfo.type == eArtistMusic)
+        strparam = KwTools::StringUtility::Format("type=artist_music&id=%s&digest=%s&pn=%d&rn=%d",
+                                                  m_ListInfo.strID.c_str(),m_ListInfo.strDigest.c_str(),npage,NUM_ONE_PAGE);
+    std::string strUrl=KwTools::Encrypt::CreateDesUrl(strparam.c_str());
+    return strUrl;
+}
+
+void CMusicListRequest::InitSig()
+{
+    std::string strkey = GetCacheKey(0);
+    m_strSig = "";
+    void* pData(NULL);
+    unsigned uiLen(0);
+    BOOL bouttime;
+    if(CCacheMgr::GetInstance()->Read(strkey, pData, uiLen,bouttime) && uiLen>0)
+    {
+        ((char*)pData)[uiLen] = '\0';
+        std::string strdata = (char*)pData;
+        std::string strtemp = strdata.substr(0,strdata.find("\r\n"));
+        if(strtemp.find("sig=") == 0)
+        {
+            m_strSig = strtemp.substr(4,-1);
+        }
+    }
+    if(pData)
+        delete[] (char*)pData;
+}
+
+BOOL CMusicListRequest::RequestPage(unsigned npage)
+{
+    if(npage == m_curpage)
+        return true;
+    std::string strUrl=GetUrl(npage);
+    std::string strData;
+    
+    bool breadcache = false;
+    std::string strCacheKey = GetCacheKey(npage);
+    NSDate *date = CCacheMgr::GetInstance()->GetSaveTime(strCacheKey);
+    double dtemp = [date timeIntervalSinceNow];
+    dtemp = -dtemp;
+    if(date && dtemp < CACHEOUTTIME)
+    {
+        breadcache = true;
+    }
+    else
+    {
+        CHttpRequest req(strUrl);
+        void* pData(NULL);
+        unsigned uiLen(0);
+        if(req.SyncSendRequest() && req.ReadAll(pData, uiLen))
+        {
+            ((char*)pData)[uiLen] = '\0';
+            strData = (char*)pData;
+            delete[] (char*)pData;
+            CCacheMgr::GetInstance()->Cache(T_YEAR, 1, strCacheKey,strData.c_str(),strData.length());
+            RTLog_DownloadSongList(AR_SUCCESS,CHttpRequest::GetNetWorkProviderName().c_str(),m_ListInfo.strName.c_str());
+            UMengLog(KS_DOWN_SONGLIST, "0");
+        }
+        else
+        {
+            unsigned retcode = req.GetRetCode();
+            if(retcode == 304)
+            {
+                CCacheMgr::GetInstance()->UpdateTimeToNow(strCacheKey);
+            }
+            else
+            {
+                RTLog_DownloadSongList(AR_FAIL,CHttpRequest::GetNetWorkProviderName().c_str(),m_ListInfo.strName.c_str());
+                UMengLog(KS_DOWN_SONGLIST, "1");
+            }
+            breadcache = true;
+        }
+    }
+    
+    if(breadcache)
+    {
+        void* pData(NULL);
+        unsigned uiLen(0);
+        BOOL bouttime;
+        if(CCacheMgr::GetInstance()->Read(strCacheKey, pData, uiLen,bouttime) && uiLen>0)
+        {
+            ((char*)pData)[uiLen] = '\0';
+            strData = (char*)pData;
+        }
+        else
+            return false;
+        if(pData)
+            delete[] (char*)pData;
+    }
+    
+    //NSLog(@"%@",[NSString stringWithUTF8String:strData.c_str()]);
+    
+    
+    KS_BLOCK_DECLARE
+    {
+        m_curpage = npage;
+        if(strData != "TP=None")
+            ParseMusicList(strData.c_str(), strData.length());
+    }
+    KS_BLOCK_SYNRUN();
+
+    return true;
+}
+
+BOOL CMusicListRequest::ParseMusicList(const char *buffer,int size)
+{
+    if(size < 2)
+        return false;
+    std::string strdata = buffer;
+    strdata = strdata.substr(strdata.find("\r\n") + 2,-1);
+    xmlDocPtr doc = xmlParseMemory(strdata.c_str(), strdata.size());
+	if (!doc)
+		return FALSE;
+	
+    BOOL bret = false;
+	if (xmlNodePtr root = xmlDocGetRootElement(doc))
+	{
+       	if (0 != strcmp((const char*)root->name, "root"))
+        {
+            return FALSE;
+        }
+        
+        for (xmlNodePtr node = root->children;
+             NULL != node; node = node->next)
+        {
+            if (node->type != XML_ELEMENT_NODE)
+                continue;
+            if (strcmp((const char*)node->name, "section") == 0)
+            {
+                CAutoXmlCharPtr value;
+                if ((value = xmlGetProp(node, BAD_CAST "type")) && strcmp((const char*)value, "music") == 0)
+                {
+                    value = xmlGetProp(node, BAD_CAST "total");
+                    m_ListInfo.nCount = atoi((const char*)value);
+                    bret = true;
+                    m_vecCurPageSong.clear();
+                    for (xmlNodePtr curNode = node->children;
+                         NULL != curNode; curNode = curNode->next)
+                    {
+                        if (curNode->type != XML_ELEMENT_NODE)
+                            continue;
+                        
+                        CSongInfoBase info;
+                        const char* name = (const char*)curNode->name;
+                        if (strcmp(name, "music") == 0)
+                        {
+                            if ((value = xmlGetProp(curNode, BAD_CAST "rid")))
+                            {
+                                info.strRid = (const char*)value;
+                            }
+                            if ((value = xmlGetProp(curNode, BAD_CAST "name")))
+                            {
+                                info.strSongName = (const char*)value;
+                            }
+                            if ((value = xmlGetProp(curNode, BAD_CAST "artist")))
+                            {
+                                info.strArtist = (const char*)value;
+                            }
+                            if ((value = xmlGetProp(curNode, BAD_CAST "album")))
+                            {
+                                info.strAlbum = (const char*)value;
+                            }
+                            if ((value = xmlGetProp(curNode, BAD_CAST "mvinfo"))) {
+                                info.hasMv = [[NSString stringWithFormat:@"%s", value.operator const char *()] boolValue];
+                            }
+                            if(info.strRid!="")
+                                m_vecCurPageSong.push_back(info);
+                        }
+                        
+                    }
+                }
+                
+            }
+        }
+	}
+	
+	xmlFreeDoc(doc);
+    return bret;
+
+}
+
+BOOL CMusicListRequest::RequestNextPage()
+{
+    return (RequestPage(m_curpage+1));
+}
+
+std::vector<CSongInfoBase>& CMusicListRequest::GetSongList()
+{
+    return m_vecCurPageSong;
+}
+
+
+
+

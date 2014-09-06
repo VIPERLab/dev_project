@@ -1,0 +1,32 @@
+//
+//  BookInfo.h
+//  kwbook
+//
+//  Created by 单 永杰 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#ifndef kwbook_BookInfo_h
+#define kwbook_BookInfo_h
+
+#include<string>
+
+class CBookInfo {
+public:
+    CBookInfo():m_strBookId(""), m_unCount(0), m_unHotIndex(0), m_unNewChapter(0){}
+    void LoadFromDict(NSDictionary* dict);
+    void SaveToDict(NSMutableDictionary* dict);
+    
+public:
+    std::string m_strBookId;
+    std::string m_strBookTitle;
+    std::string m_strArtist;
+    unsigned m_unCount;
+    unsigned m_unHotIndex;
+    std::string m_strImgUrl;
+    unsigned m_unNewChapter;
+    std::string m_strDigest;
+    std::string m_strSummary;
+};
+
+#endif

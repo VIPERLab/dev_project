@@ -1,0 +1,24 @@
+//
+//  KBDatabaseManagement.m
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-5.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#import "KBDatabaseManagement.h"
+
+@implementation KBDatabaseManagement
+
+static KBDatabaseManagement* s_shared_instance = nil;
+
++(KBDatabaseManagement*)sharedInstance{
+    @synchronized(self){
+        if (nil == s_shared_instance)
+            s_shared_instance = [[KBDatabaseManagement alloc] init];
+    }
+    
+    return s_shared_instance;
+}
+
+@end

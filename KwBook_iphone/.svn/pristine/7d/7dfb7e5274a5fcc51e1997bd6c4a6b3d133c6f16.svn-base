@@ -1,0 +1,390 @@
+//
+//  RankBookListViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-3.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "BookListViewController.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+#import "KBBookDetailViewController.h"
+#import "KBUrls.h"
+#import "HttpRequest.h"
+#import "SBJson4.h"
+#import "KwTools.h"
+#import "BookInfo.h"
+#import "iToast.h"
+#import "KBRefreshFootView.h"
+#import "KBAppDelegate.h"
+
+#define TAG_IMAGE           41
+#define TAG_BOOK_NAME       42
+#define TAG_ARTIST_NAME     43
+#define TAG_MUSIC_COUNT     44
+#define TAG_LISTEN_COUNT    45
+
+const int kNumOfBooksInOnePage = 30;
+
+@interface BookListViewController ()<UITableViewDataSource,UITableViewDelegate,KBRefreshBaseViewDelegate>
+{
+    NSUInteger              _totalNum;
+    NSUInteger              _currentPage;
+    std::vector<CBookInfo>  bookList;
+    UIView                  *_waitingView;
+    KBRefreshFootView       *_footView;
+    BOOL                    _isDraging;
+    float                   _lastOffset;
+}
+@property (nonatomic , strong) UIView           *topBar;
+@property (nonatomic , strong) UITableView      *tableView;
+@property (nonatomic , strong) NSString         *theID;
+@property (nonatomic , strong) NSString         *theName;
+@end
+
+@implementation BookListViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        _isDraging = NO;
+        _lastOffset = 0.0f;
+    }
+    return self;
+}
+-(instancetype)initWithBookListId:(NSString *)theID andName:(NSString *)theName
+{
+    self = [self initWithNibName:nil bundle:nil];
+    if (self) {
+        _theID = theID;
+        _theName = theName;
+    }
+    return self;
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    float gap = 0.0;
+    if (isIOS7()) {
+        gap = 20;
+    }
+    float width  = self.view.bounds.size.width;
+    float height = self.view.bounds.size.height;
+    self.topBar = ({
+        UIView *topBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44+gap)];
+        UIImageView *backView = [[UIImageView alloc] initWithFrame:topBar.bounds];
+        if (isIOS7()) {
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor7.png")];
+        }
+        else{
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor6.png")];
+        }
+        [topBar addSubview:backView];
+        UIButton *backBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [backBtn setImage:CImageMgr::GetImageEx("TopBackBtn.png") forState:UIControlStateNormal];
+        [backBtn setFrame:CGRectMake(0, gap, 44, 44)];
+        [backBtn addTarget:self action:@selector(onBackBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:backBtn];
+        
+        UIButton *searchBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [searchBtn setFrame:CGRectMake(276, gap, 44, 44)];
+        [searchBtn setBackgroundImage:CImageMgr::GetImageEx("searchBtn.png") forState:UIControlStateNormal];
+        [searchBtn addTarget:self action:@selector(onSearchBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:searchBtn];
+        
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(70, gap, 180, 44)];
+        [titleLabel setBackgroundColor:[UIColor clearColor]];
+        [titleLabel setText:self.theName];
+        [titleLabel setTextAlignment:NSTextAlignmentCenter];
+        [titleLabel setTextColor:[UIColor whiteColor]];
+        [titleLabel setFont:[UIFont systemFontOfSize:20.0]];
+        [topBar addSubview:titleLabel];
+        
+        topBar;
+    });
+    [[self view] addSubview:self.topBar];
+    
+    self.tableView = ({
+        UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.topBar.bounds.size.height, width, height-self.topBar.bounds.size.height)];
+        [tableView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        [tableView setDelegate:self];
+        [tableView setDataSource:self];
+        tableView;
+    });
+    [[self view] addSubview:self.tableView];
+    [self tableViewNeedChange];
+    
+    _footView = [KBRefreshFootView footer];
+    [_footView setScrollView:self.tableView];
+    [_footView setDelegate:self];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)onBackBtnClick:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+-(void)onSearchBtnClick:(id)sender
+{
+    NSLog(@"search");
+}
+-(void)tableViewNeedChange
+{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSData *jsonData = [self fetchJsonData];
+        [self parserJsonData:jsonData];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self reloadView];
+        });
+    });
+}
+#pragma mark
+#pragma mark get and parse json data
+
+-(NSData *)fetchJsonData
+{
+    __block void* jsonData = NULL;
+    __block unsigned length = 0;
+    
+    NSString *strUrl = [NSString stringWithFormat:@"%@stype=json&srcver=storynew&type=sub_list&id=%@",
+                        BASE_URL,self.theID];
+    CHttpRequest::QuickSyncGet([strUrl UTF8String],jsonData,length);
+    NSData* data=[NSData dataWithBytesNoCopy:jsonData length:length freeWhenDone:YES];
+    return data;
+}
+-(BOOL)parserJsonData:(NSData *)jsonData;
+{
+    if (jsonData == nil) {
+        return NO;
+    }
+    SBJson4ValueBlock block = ^(id item, BOOL *stop){
+        NSDictionary *dic = item;
+        
+        NSString *totalCount = [dic objectForKey:@"totalcount"];
+        _totalNum = [totalCount integerValue];
+        
+        NSArray *array = [dic objectForKey:@"album_list"];
+        for (NSDictionary *itemDic in array) {
+            CBookInfo info;
+            info.m_strBookId    = [[itemDic objectForKey:@"relid"] UTF8String];
+            info.m_strBookTitle = [KwTools::Encoding::UrlDecode([itemDic objectForKey:@"name"]) UTF8String];
+            info.m_strArtist    = [KwTools::Encoding::UrlDecode([itemDic objectForKey:@"artist"]) UTF8String];
+            info.m_unCount      = [[itemDic objectForKey:@"musiccnt"] intValue];
+            info.m_unListenCnt  = [[itemDic objectForKey:@"listencnt"] intValue];
+            info.m_unType       = [[itemDic objectForKey:@"type"] intValue];
+            info.m_strImgUrl    = [[itemDic objectForKey:@"pic"] UTF8String];
+            bookList.push_back(info);
+        }
+    };
+    SBJson4ErrorBlock eh = ^(NSError *error){
+        NSLog(@"parser json error:%@",error);
+    };
+    SBJson4Parser *parser = [SBJson4Parser parserWithBlock:block allowMultiRoot:NO unwrapRootArray:NO errorHandler:eh];
+    [parser parse:jsonData];
+    return YES;
+}
+#pragma mark
+#pragma mark load image
+-(void)loadImageAnIndex:(NSIndexPath *)indexPath
+{
+    UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+    if (cell) {
+        unsigned index = indexPath.row;
+        if (index < bookList.size()) {
+            CBookInfo info = bookList.at(index);
+            NSString *strURL = [NSString stringWithFormat:@"%s",info.m_strImgUrl.c_str()];
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                NSData *data = [NSData dataWithContentsOfURL:[NSURL URLWithString:strURL]];
+                UIImage *image = [UIImage imageWithData:data];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    UIImageView *imageView = (UIImageView *)[cell.contentView viewWithTag:TAG_IMAGE];
+                    [imageView setAlpha:0.0];
+                    [UIView animateWithDuration:0.5 animations:^{
+                        [imageView setImage:image];
+                        [imageView setAlpha:1.0];
+                    }];
+                });
+            });
+        }
+    }
+}
+#pragma mark
+#pragma mark foot refresh delegate
+- (void)refreshViewBeginRefreshing:(KBRefreshBaseView *)refreshView
+{
+    _currentPage++;
+    [self tableViewNeedChange];
+}
+-(void)reloadView
+{
+    if (NETSTATUS_NONE == CHttpRequest::GetNetWorkStatus()) {
+        [iToast defaultShow:@"网络连接不可用，请检查网络稍后再试"];
+    }
+    
+    [_footView performSelector:@selector(endRefreshing) withObject:nil afterDelay:1.0];
+    
+    if (bookList.size() >= _totalNum) {
+        [_footView setHidden:YES];
+    }
+    else{
+        [_footView setHidden:NO];
+    }
+    [self showLoadingPage:NO descript:nil];
+    [self.tableView reloadData];
+}
+#pragma mark
+#pragma mark waiting view
+- (void)showLoadingPage:(BOOL)bShow descript:(NSString*)strDescript
+{
+    if (bShow) {
+        if (!_waitingView) {
+            _waitingView=[[UIView alloc] initWithFrame:self.view.bounds];
+            [self.view addSubview:_waitingView];
+            
+            CGRect rc=CGRectMake(0, 0, 86, 86);
+            rc=CenterRectForBounds(rc,_waitingView.bounds);
+            UIView* pBlackFrameView=[[UIView alloc] initWithFrame:rc];
+            [pBlackFrameView setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:0.5]];
+            pBlackFrameView.layer.cornerRadius=10;
+            pBlackFrameView.layer.masksToBounds=YES;
+            [_waitingView addSubview:pBlackFrameView];
+            
+            UIActivityIndicatorView* pActIndView=[[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(26, 16, 34, 34)];
+            [pActIndView setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
+            [pBlackFrameView addSubview:pActIndView];
+            [pActIndView startAnimating];
+            
+            UILabel* text=[[UILabel alloc] initWithFrame:CGRectMake(0, 50, 86, 30)];
+            [text setBackgroundColor:[UIColor clearColor]];
+            [text setTextAlignment:NSTextAlignmentCenter];
+            [text setText:strDescript?strDescript:@"正在加载中"];
+            [text setTextColor:[UIColor whiteColor]];
+            [text setFont: [UIFont systemFontOfSize:13]];
+            [pBlackFrameView addSubview:text];
+        }
+        _waitingView.hidden=NO;
+    } else {
+        [_waitingView removeFromSuperview];
+        _waitingView=nil;
+    }
+}
+
+#pragma mark
+#pragma mark table view data source
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return bookList.size();
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *rankBookListIdentifier = @"rankBookListIdentifier";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:rankBookListIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:rankBookListIdentifier];
+        [cell.contentView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        if (isIOS7()) {
+            [cell setSeparatorInset:UIEdgeInsetsZero];
+        }
+        UIImageView *bookBack = [[UIImageView alloc] initWithFrame:CGRectMake(2.5, 2.5, 69, 69)];
+        [bookBack setImage:CImageMgr::GetImageEx("BookPicBack.png")];
+        [cell.contentView addSubview:bookBack];
+        
+        UIImageView *headPic = [[UIImageView alloc] initWithFrame:CGRectMake(7, 7, 60, 60)];
+        [headPic setImage:CImageMgr::GetImageEx("DefaultBookImageSmall.png")];
+        [headPic setTag:TAG_IMAGE];
+        [cell.contentView addSubview:headPic];
+        
+        UILabel *bookNameLabel = [[UILabel alloc] initWithFrame:CGRectMake(77, 18, 223, 17)];
+        [bookNameLabel setTag:TAG_BOOK_NAME];
+        [bookNameLabel setTextColor:defaultBlackColor()];
+        [bookNameLabel setBackgroundColor:[UIColor clearColor]];
+        [bookNameLabel setFont:[UIFont systemFontOfSize:16.0]];
+        [cell.contentView addSubview:bookNameLabel];
+        
+        UILabel *musicCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(77, 51, 55, 11)];
+        [musicCountLabel setTag:TAG_MUSIC_COUNT];
+        [musicCountLabel setTextColor:defaultGrayColor()];
+        [musicCountLabel setBackgroundColor:[UIColor clearColor]];
+        [musicCountLabel setFont:[UIFont systemFontOfSize:10.0]];
+        [cell.contentView addSubview:musicCountLabel];
+        
+        UILabel *listenCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(129, 51, 70, 11)];
+        [listenCountLabel setTag:TAG_LISTEN_COUNT];
+        [listenCountLabel setTextColor:defaultGrayColor()];
+        [listenCountLabel setBackgroundColor:[UIColor clearColor]];
+        [listenCountLabel setFont:[UIFont systemFontOfSize:10.0]];
+        [cell.contentView addSubview:listenCountLabel];
+        
+        UILabel *artistLabel = [[UILabel alloc] initWithFrame:CGRectMake(200, 51, 75, 11)];
+        [artistLabel setTag:TAG_ARTIST_NAME];
+        [artistLabel setTextColor:defaultGrayColor()];
+        [artistLabel setBackgroundColor:[UIColor clearColor]];
+        [artistLabel setFont:[UIFont systemFontOfSize:10.0]];
+        [cell.contentView addSubview:artistLabel];
+        
+        UIImageView *accessaryView = [[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("cellIndicator.png")];
+        [accessaryView setCenter:CGPointMake(300, 37.0)];
+        [cell.contentView addSubview:accessaryView];
+        
+        [self performSelector:@selector(loadImageAnIndex:) withObject:indexPath afterDelay:1.0];
+    }
+    unsigned row = indexPath.row;
+    if (row < bookList.size()) {
+        CBookInfo info = bookList.at(row);
+        UILabel *bookNameLabel = (UILabel *)[cell.contentView viewWithTag:TAG_BOOK_NAME];
+        [bookNameLabel setText:[NSString stringWithUTF8String:info.m_strBookTitle.c_str()]];
+        
+        UILabel *artistLabel = (UILabel *)[cell.contentView viewWithTag:TAG_ARTIST_NAME];
+        [artistLabel setText:[NSString stringWithFormat:@"播讲人:%@",[NSString stringWithUTF8String:info.m_strArtist.c_str()]]];
+        
+        UILabel *musicCountLabel = (UILabel *)[cell.contentView viewWithTag:TAG_MUSIC_COUNT];
+        [musicCountLabel setText:[NSString stringWithFormat:@"共%d回",info.m_unCount]];
+        
+        UILabel *listenCountLabel = (UILabel *)[cell.contentView viewWithTag:TAG_LISTEN_COUNT];
+        [listenCountLabel setText:[NSString stringWithFormat:@"%d人在听",info.m_unListenCnt]];
+    }
+    return cell;
+}
+#pragma mark
+#pragma mark table view delegate
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 74.0f;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    KBBookDetailViewController* book_detail = [[KBBookDetailViewController alloc] init];
+    [ROOT_NAVI_CONTROLLER pushAddButtonViewController:book_detail animated:YES];
+}
+#pragma mark
+#pragma mark scroll view delegate
+
+-(void)scrollViewDidScroll:(UIScrollView *)sender
+{
+    CGFloat thisOffset = sender.contentOffset.y;
+    if (_isDraging) {
+        if (thisOffset > _lastOffset) {
+            [ROOT_NAVI_CONTROLLER hideCenterButton];
+        }
+        else{
+            [ROOT_NAVI_CONTROLLER showCenterButton];
+        }
+    }
+    _lastOffset = thisOffset;
+}
+- (void)scrollViewWillBeginDragging:(UIScrollView *)scrollView
+{
+    _isDraging = YES;
+}
+- (void)scrollViewDidEndDragging:(UIScrollView *)scrollView willDecelerate:(BOOL)decelerate
+{
+    _isDraging = NO;
+}
+@end

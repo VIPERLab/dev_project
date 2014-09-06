@@ -1,0 +1,25 @@
+//
+//  PlaySourceType.h
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-3.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#ifndef kwbook_PlaySourceType_h
+#define kwbook_PlaySourceType_h
+
+#include <string>
+
+enum PLAY_SOURCE_TYPE {
+    E_SOURCE_NEW,
+    E_SOURCE_HOT,
+    E_SOURCE_RANK,
+    E_SOURCE_CATEGORY,
+    E_SOURCE_SEARCH,
+    E_SOURCE_DOWNLOAD,
+    E_SOURCE_COLLECT,
+    E_SOURCE_HISTORY
+};
+
+#endif

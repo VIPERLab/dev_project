@@ -1,0 +1,126 @@
+//
+//  LocalBookRequest.h
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#ifndef __kwbook__LocalBookRequest__
+#define __kwbook__LocalBookRequest__
+
+#include <iostream>
+#include <string>
+#include <vector>
+#include "ChapterInfo.h"
+#include "IHttpNotify.h"
+#include "HttpRequest.h"
+
+enum TaskStatus
+{
+    TaskStatus_Null = 0,
+    TaskStatus_Downing,
+    TaskStatus_Finish,
+    TaskStatus_Pause,
+    TaskStatus_Fail
+};
+
+enum DowningStatus
+{
+    Status_DowningNull = 0,
+    Status_DowningBook,
+};
+
+class CLocalTask : public CChapterInfo
+{
+public:
+    TaskStatus taskStatus;
+    DowningStatus downStatus;
+    CHttpRequest * pRequest;
+    int nRetryCount;
+    
+    virtual void LoadFromDict(NSDictionary* dict);
+    virtual void SaveToDict(NSMutableDictionary* dict);
+    
+    CLocalTask()
+    {
+        taskStatus = TaskStatus_Null;
+        downStatus = Status_DowningNull;
+        pRequest = NULL;
+        nRetryCount = 0;
+    }
+    
+    ~CLocalTask()
+    {
+        if(pRequest)
+            delete pRequest;
+    }
+    
+};
+
+class CLocalBookRequest : public IHttpRequestNotify, public IObserverApp
+{
+public:
+    ~CLocalBookRequest();
+    
+    static CLocalBookRequest * GetInstance();
+    
+    // 开始下载歌曲伴唱及其歌词的任务（加入到下载队列中，并不实际开始下载）songInfo中必备信息有：rid，歌曲名，歌手名
+    BOOL StartDownTask(CChapterInfo * chapterInfo);
+    // 当前是否有正在下载的任务
+    BOOL HasDowningTask();
+    // 开始下载歌曲伴唱及其歌词的任务 (插入到下载队列对最前面，立即开始下载)songInfo中必备信息有：rid，歌曲名，歌手名
+    BOOL DownTaskImmediately(CChapterInfo * chapterInfo);
+    // 获取列表中某个id对应对歌曲任务
+    CChapterInfo * GetLocalBook(const unsigned & strRid);
+    void AddChapterInfo(CChapterInfo* chapter_info);
+    // 获取任务列表
+    std::vector<CChapterInfo*>& GetLocalBookVec()
+    {
+        
+        return m_vecLocalTask;
+    }
+    // 各种对任务的操作接口
+    BOOL StartAllTask();
+    BOOL SaveAllTask();
+    BOOL LoadAllTask();
+    BOOL DeleteTask(const unsigned & unRid);
+    BOOL PauseDownTask(const unsigned & unRid);
+    BOOL PauseAllTasks();
+    
+    float GetTaskRadio(CChapterInfo* pTask);
+    // 关于任务的描述（曲库中与web的交互中会用到，其他地方不用）
+    NSString * GetDowningTaskListString();
+    NSString * GetLocalBookListString();
+    
+public:
+    virtual void IHttpNotify_DownStart(CHttpRequest* pRequest,long lTotalSize);
+    
+    virtual void IHttpNotify_Process(CHttpRequest* pRequest,long lTotalSize,long lCurrentSize,long lSpeed);
+    
+    virtual void IHttpNotify_Stop(CHttpRequest* pRequest,BOOL bSuccess);
+    
+    virtual void IObserverApp_EnterBackground();
+    
+    virtual void IObserverApp_EnterForeground();
+    
+    virtual void IObserverApp_NetWorkStatusChanged(KSNetworkStatus enumStatus);
+    
+protected:
+    void DownTaskThread(CChapterInfo * pSongInfo);
+    
+    void UpdateDownTask();
+    
+protected:
+    std::vector<CChapterInfo *> m_vecLocalTask;
+    std::vector<CChapterInfo *> m_vecDowningTask;      // 记录在下载队列中的任务
+    
+    CLocalTask * m_pCurrentTask;                        // 记录当前
+    bool m_bChangeData;
+    
+private:
+    CLocalBookRequest();
+};
+
+
+#endif /* defined(__kwbook__LocalBookRequest__) */

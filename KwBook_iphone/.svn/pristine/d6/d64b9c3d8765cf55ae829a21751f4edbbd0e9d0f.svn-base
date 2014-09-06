@@ -1,0 +1,39 @@
+//
+//  AudioPlayerManager.h
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#ifndef __kwbook__AudioPlayerManager__
+#define __kwbook__AudioPlayerManager__
+
+#include <iostream>
+#include "PlayBookList.h"
+#include "KBLocalAudioPlayer.h"
+#include "KBNetAudioPlayer.h"
+
+class CAudioPlayerManager {
+public:
+    virtual ~CAudioPlayerManager(){}
+    
+    static CAudioPlayerManager* getInstance();
+    
+    void play();
+    void pause();
+    void resume();
+    void stop();
+    void seek(float f_time_sec);
+    float currentTime()const;
+    float duration()const;
+    
+private:
+    CAudioPlayerManager();
+private:
+    KBLocalAudioPlayer* m_pLocalPlayer;
+    KBNetAudioPlayer* m_pNetPlayer;
+    bool m_bLocalChapter;
+};
+
+#endif /* defined(__kwbook__AudioPlayerManager__) */

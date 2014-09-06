@@ -1,0 +1,591 @@
+﻿//
+//  KSMySongsViewController.m
+//  KwSing
+//
+//  Created by 改 熊 on 12-8-16.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+#import "MySongsViewController.h"
+#import "SegmentControl.h"
+#import "ImageMgr.h"
+#import "globalm.h"
+#import "MyOpusData.h"
+#import "SongInfo.h"
+#import "MessageManager.h"
+#import "IMyOpusObserver.h"
+#import "IUserStatusObserver.h"
+#import "NowPlayViewController.h"
+#import "KSAppDelegate.h"
+#import "FooterTabBar.h"
+#import "User.h"
+#import "LoginViewController.h"
+#import "ShareViewController.h"
+#import "KSOtherLoginViewController.h"
+#import "iToast.h"
+#include <vector>
+using std::vector;
+
+@implementation MyModalAlertView
+
+-(int)showModal
+{
+    self.delegate=self;
+    self.tag=-1;
+    [self show];
+    CFRunLoopRun();
+    return self.tag;
+}
+-(void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex
+{
+    alertView.tag=buttonIndex;
+    alertView.delegate=nil;
+    CFRunLoopStop(CFRunLoopGetCurrent());
+}
+@end
+
+
+
+#pragma mark
+#pragma mark mySongsViewController
+
+#define ALERT_TAG_SHARE 1
+#define ALERT_TAG_LOGIN 2
+
+#define MBUTTON_TAG       11
+#define MLABEL_NAME_TAG   12
+#define MLABEL_DETAIL_TAG 13
+#define MLABEL_SCORE_TAG  14
+
+#define MIN_UPLOAD_TIME   60000
+
+
+@interface KSMySongsViewController()<UITableViewDataSource,UITableViewDelegate,UIAlertViewDelegate,IMyOpusObserver,UIActionSheetDelegate>
+{
+    UITableView * mySongsList;
+    BOOL isDelete;
+    UILabel *noSongTip;
+    int nUploadIndex;
+}
+@end
+
+
+@implementation KSMySongsViewController
+
+-(id)initWithFrame:(CGRect)frame{
+    self = [super initWithFrame:frame];
+    
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_MYOPUS,IMyOpusObserver);
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS, IUserStatusObserver);
+    
+    return self;
+}
+
+-(void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    CGRect rc=[self view].bounds;
+    //rc.size.height-=93;
+    mySongsList=[[[UITableView alloc] initWithFrame:rc] autorelease];
+    [mySongsList setDelegate:self];
+    [mySongsList setDataSource:self];
+    [[self view] addSubview:mySongsList];
+    mySongsList.separatorStyle = UITableViewCellSeparatorStyleNone;
+    mySongsList.backgroundColor=UIColorFromRGBValue(0xededed);
+    //mySongsList.separatorColor=UIColorFromRGBAValue(0xffffff,26);
+    CGRect showRec=rc;
+    showRec.size.height-=FOOTER_TABBAR_HEIGHT;
+     noSongTip=[[[UILabel alloc] init] autorelease];
+    CGRect noSongRect=CenterRect(self.view.bounds,200,30);
+    noSongRect.origin.y-=30;
+    [noSongTip setFrame:noSongRect];
+    [noSongTip setBackgroundColor:[UIColor clearColor]];
+    [noSongTip setTextAlignment:UITextAlignmentCenter];
+    [noSongTip setTextColor:[UIColor blackColor]];
+    [noSongTip setText:@"你还没有保存过作品哦!"];
+    [[self view] addSubview:noSongTip];
+    if(CMyOpusData::GetInstance()->GetSongNum() == 0){
+        [noSongTip setHidden:NO];
+    }
+    else{
+        [noSongTip setHidden:YES];
+    }
+    nUploadIndex = -1;
+}
+
+-(void)viewDidUnLoad
+{
+    [super viewDidUnload];
+}
+
+- (void)dealloc{
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_MYOPUS,IMyOpusObserver);
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS, IUserStatusObserver);
+    
+    [super dealloc];
+}
+
+-(void)onCellButtonClick:(UIButton*)sender
+{
+    if (!User::GetUserInstance()->isOnline()) {
+        UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"需要登录才能进行的操作，是否立即登录" delegate:self cancelButtonTitle:@"否" otherButtonTitles:@"是", nil] autorelease];
+        [alert setTag:ALERT_TAG_LOGIN];
+        [alert show];
+        return;
+    }
+
+    UITableViewCell *cell = nil;
+    if (NSOrderedSame == [[[UIDevice currentDevice] systemVersion] compare:@"7.0"]){
+        cell = (UITableViewCell*)[[[sender superview] superview] superview];
+    }else {
+        cell = (UITableViewCell*)[[sender superview] superview];
+    }
+    NSIndexPath *indexPath=[mySongsList indexPathForCell:cell];
+    NSInteger row=indexPath.row;
+    
+    std::vector<CRecoSongInfo*> vec;
+    CMyOpusData::GetInstance()->GetAllSongs(vec);
+
+    CRecoSongInfo *songinfo=vec[row];
+    
+    if (songinfo->recoRes.uiDuration <MIN_UPLOAD_TIME ) {
+        UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"作品时长少于60秒，不能上传" delegate:nil cancelButtonTitle:@"确定" otherButtonTitles:nil, nil] autorelease];
+        [alert show];
+        return;
+    }
+    if (songinfo->eumLocalState == CRecoSongInfo::STATE_NOUPLOAD) {
+        //上传
+        ShareViewController *share=[[[ShareViewController alloc] init] autorelease];
+        [share setIsShare:false];
+        [share setShareSongInfo:songinfo index:row];
+        [ROOT_NAVAGATION_CONTROLLER pushViewController:share animated:YES];
+    }
+    else if(songinfo->eumLocalState == CRecoSongInfo::STATE_UPLOADED){
+        //分享
+        ShareViewController *share=[[[ShareViewController alloc] init] autorelease];
+        [share setIsShare:true];
+        if(songinfo->strRid !=""){
+            share.shareText = [NSString stringWithFormat:@"我用#酷我K歌#iPhone版演唱了《%@》，得到%d分，击败了全国%d%%的网友哦，大家快来听听吧！"
+                               ,[NSString stringWithUTF8String:songinfo->strSongName.c_str()]
+                               ,songinfo->uiPoints
+                               ,songinfo->uiDefeat
+                               ];
+            share.shareURL=[NSString stringWithFormat:@"http://kzone.kuwo.cn/mlog/u%@/kge_%s.htm"
+                            ,User::GetUserInstance()->getUserId()
+                            ,songinfo->strKid.c_str()];
+        }
+        else{
+            share.shareText=[NSString stringWithFormat:@"我用#酷我K歌#iPhone版清唱了一首歌，大家快来听听吧!"];
+            share.shareURL=[NSString stringWithFormat:@"http://kzone.kuwo.cn/mlog/u%@/kge_%s.htm"
+                            ,User::GetUserInstance()->getUserId()
+                            ,songinfo->strKid.c_str()];
+        }
+        [ROOT_NAVAGATION_CONTROLLER pushViewController:share animated:YES];
+    }
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+-(bool)hasSongs
+{
+    return [mySongsList numberOfRowsInSection:0]>0;
+}
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    NSInteger num=CMyOpusData::GetInstance()->GetSongNum();
+    return num;
+}
+-(UITableViewCell*)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *s_simpletableIdentifier = @"simpleIdentifier";
+    UITableViewCell *cell=[tableView dequeueReusableCellWithIdentifier:s_simpletableIdentifier];
+    if (cell == nil) {
+        cell=[[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:s_simpletableIdentifier] autorelease];
+        int cellheight = [self tableView:tableView heightForRowAtIndexPath:indexPath];
+        UIImageView * bkimage = [[[UIImageView alloc]initWithFrame:CGRectMake(0, 0, 320, cellheight)]autorelease];
+        bkimage.image = CImageMgr::GetImageEx("listbk_5_1.png");
+        //[cell.contentView addSubview:bkimage];
+        cell.backgroundView=bkimage;
+        UILabel *textLabel = [[[UILabel alloc]initWithFrame:CGRectMake(12, 8, 165, 17)]autorelease];
+        textLabel.font= [UIFont systemFontOfSize:17];
+        //textLabel.textColor = [UIColor whiteColor];
+        textLabel.shadowColor=UIColorFromRGBValue(0xffffff);
+        textLabel.shadowOffset=CGSizeMake(0, 1);
+        textLabel.lineBreakMode = UILineBreakModeTailTruncation;
+        textLabel.backgroundColor = [UIColor clearColor];
+        [textLabel setTag:MLABEL_NAME_TAG];
+        [cell.contentView addSubview:textLabel];
+        
+        UILabel *scoreLabel=[[[UILabel alloc] initWithFrame:CGRectMake(180, 10, 30, 20)] autorelease];
+        scoreLabel.font=[UIFont systemFontOfSize:14];
+        scoreLabel.textColor=[UIColor blackColor];
+        scoreLabel.lineBreakMode=UILineBreakModeHeadTruncation;
+        scoreLabel.backgroundColor=[UIColor clearColor];
+        [scoreLabel setTag:MLABEL_SCORE_TAG];
+        [cell.contentView addSubview:scoreLabel];
+        
+        UILabel *detailTextLabel = [[[UILabel alloc]initWithFrame:CGRectMake(12, 34, 230, 13)]autorelease];
+        detailTextLabel.textColor = UIColorFromRGBValue(0x969696);
+        [detailTextLabel setShadowColor:UIColorFromRGBValue(0xffffff)];
+        [detailTextLabel setShadowOffset:CGSizeMake(0, 1)];
+        detailTextLabel.font = [UIFont systemFontOfSize:13];
+        detailTextLabel.lineBreakMode = UILineBreakModeTailTruncation;
+        detailTextLabel.backgroundColor = [UIColor clearColor];
+        [detailTextLabel setTag:MLABEL_DETAIL_TAG];
+        [cell.contentView addSubview:detailTextLabel];
+
+        
+        UIButton * button=[UIButton buttonWithType:UIButtonTypeCustom];
+        [button setTag:MBUTTON_TAG];
+        [button setFrame:CGRectMake(244, 14.5, 64, 29)];
+        [button setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+        [button titleLabel].font=[UIFont systemFontOfSize:12];
+        //[button titleLabel].textColor=[UIColor whiteColor];
+        [button addTarget:self action:@selector(onCellButtonClick:) forControlEvents:UIControlEventTouchUpInside];
+        [cell.contentView addSubview:button];
+    }
+    NSInteger row=[indexPath row];
+    std::vector<CRecoSongInfo*> vec;
+    CMyOpusData::GetInstance()->GetAllSongs(vec);
+    if (row>=vec.size()) {
+        return cell;
+    }
+    CRecoSongInfo *songinfo=vec[row];
+    NSString *songName=[NSString stringWithUTF8String:songinfo->strSongName.c_str()];
+
+    UILabel *nameLabel=(UILabel*)[cell.contentView viewWithTag:MLABEL_NAME_TAG];
+    [nameLabel setText:songName];
+
+    UILabel *detailLabel = (UILabel *)[cell.contentView viewWithTag:MLABEL_DETAIL_TAG];
+    [detailLabel setText:[NSString stringWithUTF8String:songinfo->strSaveTime.c_str()]];
+    
+    
+    std::string strRid=songinfo->strRid;
+    if (strRid.length() > 0 && 0 != songinfo->uiPoints) {
+        //NSLog(@"strRid:%@",[NSString stringWithUTF8String:strRid.c_str()]);
+        NSString* songScore=[NSString stringWithFormat:@"%d分",songinfo->uiPoints];
+        UILabel *scoreLabel=(UILabel *)[cell.contentView viewWithTag:MLABEL_SCORE_TAG];
+        [scoreLabel setText:songScore];
+        [scoreLabel setHidden:false];
+    }
+    else{
+        UILabel *scoreLabel=(UILabel *)[cell.contentView viewWithTag:MLABEL_SCORE_TAG];
+        [scoreLabel setHidden:true];
+    }
+    
+    UIButton *btn=(UIButton*)[cell.contentView viewWithTag:MBUTTON_TAG];
+    
+    if (!User::GetUserInstance()->isOnline()) {
+        //未登录 全部显示未上传
+        [btn setBackgroundImage:CImageMgr::GetImageEx("KsongDownloadBtn.png") forState:UIControlStateNormal];
+        [btn setBackgroundImage:CImageMgr::GetImageEx("KsongDownloadBtnDown.png") forState:UIControlStateHighlighted];
+        [btn setTitle:@"上 传" forState:UIControlStateNormal];
+        [btn setTitleColor:UIColorFromRGB(51,120,185) forState:UIControlStateNormal];
+
+    }
+    else if (songinfo->eumLocalState == CRecoSongInfo::STATE_NOUPLOAD) {
+        [btn setBackgroundImage:CImageMgr::GetImageEx("KsongDownloadBtn.png") forState:UIControlStateNormal];
+        [btn setBackgroundImage:CImageMgr::GetImageEx("KsongDownloadBtnDown.png") forState:UIControlStateHighlighted];
+        [btn setTitle:@"上 传" forState:UIControlStateNormal];
+        [btn setTitleColor:UIColorFromRGB(51,120,185) forState:UIControlStateNormal];
+
+    }
+    else if(songinfo->eumLocalState == CRecoSongInfo::STATE_UPLOADED)
+    {
+        [btn setBackgroundImage:CImageMgr::GetImageEx("shareButton.png") forState:UIControlStateNormal];
+        [btn setBackgroundImage:CImageMgr::GetImageEx("shareButtonDown.png") forState:UIControlStateHighlighted];
+        [btn setTitle:@"分 享" forState:UIControlStateNormal];
+        [btn setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+
+       
+//        UIImageView *listen=[[[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("listen.png")] autorelease];
+//        [listen setFrame:CGRectMake(90, 35, 10, 10)];
+//        [[cell contentView] addSubview:listen];
+//        UILabel *listenNum=[[[UILabel alloc] initWithFrame:CGRectMake(105, 35, 20, 10)] autorelease];
+//        [listenNum setBackgroundColor:[UIColor clearColor]];
+//        [listenNum setTextColor:[UIColor whiteColor]];
+//        [listenNum setFont:[UIFont systemFontOfSize:10]];
+//        [listenNum setText:[NSString stringWithFormat:@"%d",songinfo->uiCare]];
+//        [[cell contentView] addSubview:listenNum];
+//        
+//        UIImageView *message=[[[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("message.png")] autorelease];
+//        [message setFrame:CGRectMake(140, 35, 10, 10)];
+//        [[cell contentView] addSubview:message];
+//        UILabel *messageNum=[[[UILabel alloc] initWithFrame:CGRectMake(155, 35, 20, 10)] autorelease];
+//        [messageNum setTextColor:[UIColor whiteColor]];
+//        [messageNum setBackgroundColor:[UIColor clearColor]];
+//        [messageNum setFont:[UIFont systemFontOfSize:10]];
+//        [messageNum setText:[NSString stringWithFormat:@"%d",songinfo->uiComment]];
+//        [[cell contentView] addSubview:messageNum];
+//        
+//        UIImageView *rose=[[[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("rose.png")] autorelease];
+//        [rose setFrame:CGRectMake(180, 35, 10, 10)];
+//        [[cell contentView] addSubview:rose];
+//        UILabel *roseNum=[[[UILabel alloc] initWithFrame:CGRectMake(195, 35, 20, 10)] autorelease];
+//        [roseNum setFont:[UIFont systemFontOfSize:10]];
+//        [roseNum setText:[NSString stringWithFormat:@"%d",songinfo->uiFlower]];
+//        [roseNum setBackgroundColor:[UIColor clearColor]];
+//        [roseNum setTextColor:[UIColor whiteColor]];
+//        [[cell contentView] addSubview:roseNum];
+    }
+    
+    if ([tableView isEditing]) {
+        [btn setHidden:true];
+    }
+    else {
+        [btn setHidden:NO];
+    }
+    cell.selectionStyle=UITableViewCellSelectionStyleGray;
+    return  cell;
+}
+-(UITableViewCellEditingStyle)tableView:(UITableView *)tableView editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewCell * cell=[tableView cellForRowAtIndexPath:indexPath];
+    UIButton *btn=(UIButton*)[cell.contentView viewWithTag:MBUTTON_TAG];
+    [btn setHidden:true];
+    return UITableViewCellEditingStyleDelete;
+}
+-(void)tableView:(UITableView *)tableView didEndEditingRowAtIndexPath:(NSIndexPath *)indexPath
+{
+//    UITableViewCell * cell = [tableView cellForRowAtIndexPath:indexPath];
+//    UIButton*btn = (UIButton*)[cell.contentView viewWithTag:MBUTTON_TAG];
+//    [btn setHidden:false];
+    [mySongsList reloadData];
+}
+-(void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    if (editingStyle==UITableViewCellEditingStyleDelete) {
+        
+        std::vector<CRecoSongInfo*> vec;
+        CMyOpusData::GetInstance()->GetAllSongs(vec);
+        NSInteger songNum=[indexPath row];
+        if (songNum > vec.size()) {
+            return;
+        }
+        CRecoSongInfo *songinfo=vec[songNum];
+        isDelete=TRUE;
+        if (songinfo->eumLocalState == CRecoSongInfo::STATE_UPLOADING || songinfo->eumLocalState == CRecoSongInfo::STATE_DELETING ||songinfo->eumLocalState == CRecoSongInfo::STATE_NOSAVE) {
+            return;
+        }
+        if(CMyOpusData::GetInstance()->RemoveSong(songNum,CMyOpusData::REMOVE_LOCAL))
+            [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+        else{
+            [[[[iToast makeText:NSLocalizedString(@"删除失败", @"")]setGravity:iToastGravityCenter] setDuration:1000] show];
+        }
+        /*
+        if (!User::GetUserInstance()->isOnline()) {
+            MyModalAlertView *modal=[[[MyModalAlertView alloc] initWithTitle:@"确认删除？"
+                                                                     message:nil
+                                                                    delegate:self
+                                                           cancelButtonTitle:@"取消"
+                                                           otherButtonTitles:@"删除",
+                                      nil] autorelease];
+            int res=[modal showModal];
+            switch (res) {
+                case 1:
+                    //删除手机里的作品
+                    if(CMyOpusData::GetInstance()->RemoveSong(songNum,CMyOpusData::REMOVE_LOCAL))
+                        [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                    break;
+                default:
+                    //[tableView reloadData];
+                    break;
+            }
+            return;
+        }
+        
+        if (songinfo->eumLocalState == CRecoSongInfo::STATE_UPLOADING || songinfo->eumLocalState == CRecoSongInfo::STATE_DELETING ||songinfo->eumLocalState == CRecoSongInfo::STATE_NOSAVE) {
+            return;
+        }
+        
+        if (songinfo->eumLocalState == CRecoSongInfo::STATE_UPLOADED) {
+            MyModalAlertView *modal=[[[MyModalAlertView alloc] initWithTitle:@"选择删除方式" 
+                                                                     message:nil 
+                                                                    delegate:self 
+                                                           cancelButtonTitle:@"取消" 
+                                                           otherButtonTitles:@"删除保存在手机内的作品",@"删除上传到主页的作品",@"同时删除",
+                                      nil] autorelease];
+            int res=[modal showModal];
+            switch (res) {
+                case 1:
+                    //删除手机里的作品
+                    if(CMyOpusData::GetInstance()->RemoveSong(songNum,CMyOpusData::REMOVE_LOCAL))
+                        [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                        break;
+                case 2:
+                    //删除上传到主页的作品
+                    if(CMyOpusData::GetInstance()->RemoveSong(songNum, CMyOpusData::REMOVE_REMOTE))
+                        //[tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                        break;
+                case 3:
+                    //同时删除
+                    if(CMyOpusData::GetInstance()->RemoveSong(songNum, CMyOpusData::REMOVE_ALL))
+                        [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                        break;
+                default:
+                    [tableView reloadData];
+                    break;
+            }
+        }
+        else if (songinfo->eumLocalState == CRecoSongInfo::STATE_NOUPLOAD) {
+            MyModalAlertView *modal=[[[MyModalAlertView alloc] initWithTitle:@"确认删除？"
+                                                                     message:nil 
+                                                                    delegate:self 
+                                                           cancelButtonTitle:@"取消" 
+                                                           otherButtonTitles:@"删除",
+                                      nil] autorelease];
+            int res=[modal showModal];
+            switch (res) {
+                case 1:
+                    //删除手机里的作品
+                    if(CMyOpusData::GetInstance()->RemoveSong(songNum,CMyOpusData::REMOVE_LOCAL))
+                        [tableView deleteRowsAtIndexPaths:[NSArray arrayWithObject:indexPath] withRowAnimation:UITableViewRowAnimationFade];
+                        break;
+                default:
+                    //[tableView reloadData];
+                    break;
+            }
+        }
+         */
+    }
+    isDelete=FALSE;
+}
+
+
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    std::vector<CRecoSongInfo *> vec;
+    CMyOpusData::GetInstance()->GetAllSongs(vec);
+    NSInteger songnum=[indexPath row];
+    if (songnum > vec.size()) {
+        return;
+    }
+    CRecoSongInfo * songinfo=vec[songnum];
+    if(songinfo)
+    {
+        NowPlayViewController * nowplay = [[[NowPlayViewController alloc]init]autorelease];
+        [ROOT_NAVAGATION_CONTROLLER pushViewController:nowplay animated:YES];
+        [nowplay playLocalReco:songinfo];
+    }
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForHeaderInSection:(NSInteger)section
+{
+    return 0;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 55;
+}
+
+-(NSString *)tableView:(UITableView *)tableView titleForDeleteConfirmationButtonForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return @"删除";
+}
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    UIViewController* pNavagateTo(NULL);
+    if (alertView.tag == ALERT_TAG_LOGIN) {
+        if (buttonIndex!=0) {
+            //立即登录
+            pNavagateTo=[[[KSLoginViewController alloc] init] autorelease];
+        }
+    }
+    else if (alertView.tag == ALERT_TAG_SHARE) {
+        if (buttonIndex == 1) {
+            //sina
+            KSOtherLoginViewController *sinaLogin=[[[KSOtherLoginViewController alloc] initWithType:SINA] autorelease];
+            [sinaLogin setIsShare:YES];
+            pNavagateTo=sinaLogin;
+        }
+        else if (buttonIndex == 2) {
+            //qq
+            KSOtherLoginViewController *qqLogin=[[[KSOtherLoginViewController alloc] initWithType:QQ] autorelease];
+            [qqLogin setIsShare:YES];
+            pNavagateTo=qqLogin;
+        }
+    }
+    if (pNavagateTo) {
+        [ROOT_NAVAGATION_CONTROLLER pushViewController:pNavagateTo animated:YES];
+    }
+}
+
+- (void)IMyOpusObserver_Refresh
+{
+    if (!isDelete) {
+        [mySongsList reloadData];
+    }
+    if(CMyOpusData::GetInstance()->GetSongNum() == 0){
+        [noSongTip setHidden:NO];
+    }
+    else{
+        [noSongTip setHidden:YES];
+    }
+}
+- (void)IMyOpusObserver_AddSong:(CRecoSongInfo*)pSong
+{
+    [mySongsList reloadData];
+}
+- (void)IMyOpusObserver_UploadProgress:(unsigned)idx :(CRecoSongInfo*)pSong :(unsigned)percent
+{
+    //[mySongsList reloadData];
+}
+- (void)IMyOpusObserver_BeforeDeleteItem:(unsigned)idx :(CRecoSongInfo*)pSong
+{
+}
+- (void)IMyOpusObserver_AfterDeleteItem:(unsigned)idx
+{
+    //refresh already done
+}
+- (void)IMyOpusObserver_FinishUploadOne:(unsigned)idx :(CRecoSongInfo*)pSong :(CMyOpusData::SEND_RESULT)sendRes
+{
+    [mySongsList reloadData];
+//    if (sendRes == CMyOpusData::SEND_FAIL) {
+//        if(nUploadIndex == idx)
+//        {
+//            UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示"
+//                                                     message:@"上传失败"
+//                                                    delegate:nil
+//                                           cancelButtonTitle:@"确定"
+//                                           otherButtonTitles:nil, nil] autorelease];
+//            [alert show];
+//            nUploadIndex = -1;
+//        }
+//        [mySongsList reloadData];
+//    }
+//    else if(sendRes == CMyOpusData::SEND_SUCCESS){
+//        if(nUploadIndex == idx)
+//        {
+//            [[[[iToast makeText:NSLocalizedString(@"上传成功", @"")]setGravity:iToastGravityCenter] setDuration:1000] show];
+//            nUploadIndex = -1;
+//        }
+//        [mySongsList reloadData];
+//    }
+//    else if (sendRes == CMyOpusData::SEND_BEYOND_LIMIT){
+//        if(nUploadIndex == idx)
+//        {
+//            UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示"
+//                                                           message:@"上传数量到达最大限制"
+//                                                          delegate:nil
+//                                                 cancelButtonTitle:@"确定"
+//                                                 otherButtonTitles:nil, nil] autorelease];
+//            [alert show];
+//            nUploadIndex = -1;
+//        }
+//        [mySongsList reloadData];
+//    }
+}
+-(void)IUserStatusObserver_LoginFinish:(LOGIN_TYPE) type :(LOGIN_TIME)first
+{
+    if (type != REPEAT_LOGIN && type != FAIL_LOGIN){
+        [mySongsList reloadData];
+    }
+}
+-(void)IUserStatusObserver_Logout
+{
+    [mySongsList reloadData];
+}
+@end

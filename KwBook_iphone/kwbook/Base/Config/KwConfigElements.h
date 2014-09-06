@@ -1,0 +1,61 @@
+//
+//  KwConfigElements.h
+//  KwSing
+//
+//  Created by 永杰 单 on 12-9-18.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#ifndef KwSing_KwConfigElements_h
+#define KwSing_KwConfigElements_h
+
+#define AUTHORITY_GROUP             "AuthorityInfo"
+#define AUTHORITY_AUTHORIZED        "IsAuthorized"
+#define AUTHORITY_IP                "IP"
+#define AUTHORITY_DOMAIN            "DOMAIN"
+
+#define MY_MESSAGE_GROUP            "MyMessage"
+#define MY_MESSAGE_QUERY_PERIOD     "QueryPeriod"
+#define NUM_NEW_SYS_NOTIFICATION    "SysNotification"
+#define NUM_NEW_COMMENT             "Comment"
+#define NUM_NEW_ATTENTION           "Attention"
+#define NUM_NEW_FLOWER              "Flower"
+#define NUM_NEW_REPLY               "Reply"
+#define NUM_NEW_TOTAL_MESSAGE       "TotalNewMessage"
+
+#define USER_GROUP                  "User"
+#define USER_USERID                 "UserID"
+#define USER_PWD                    "UserPWD"
+#define USER_SID                    "UserSid"
+#define USER_NAME                   "UserName"
+#define USER_AUTOLOGIN              "AutoLogin"
+#define USER_LASTLOGIN              "LastLoginType"
+
+#define SECTION_WEBURL              "WebUrl"
+#define CONF_WEBURL_NEWSONG         "NewSongPage"
+#define CONF_WEBURL_RANKING         "RankPage"
+#define CONF_WEBURL_SINGER          "SingerPage"
+
+#define SECTION_COMMENT             "AppComment"
+#define NUM_PROMPT_TIMES            "PromptTimes"
+#define NUM_PLAY_CHAPTERS           "PlayChapters"
+#define BOOL_NEED_COMMENT           "NeedComment"
+
+#define DEVICE_INFO                 "DeviceInfo"
+#define DEVICE_UUID                 "DeviceUUID"
+
+#define ACTIVITY_GROUP              "HrbActivity"
+#define HRB_ID                      "HrbId"
+#define TELE_ID                     "TeleId"
+
+#define SPLASH_NEW_GROUP            "SplashNew"
+#define SPLASH_FINISH               "SplashFinish"
+
+#define PLAY_LIST_INFO_GROUP        "PlayListInfo"
+#define CURRENT_CHAPTER_INDEX       "CurrentIndex"
+#define CURRENT_POSITION            "CurrentPosition"
+
+#define FLOW_PROTECT_GROUP          "FlowProtectGroup"
+#define FLOW_PROTECT_STATUS         "FlowProtectStatus"
+
+#endif

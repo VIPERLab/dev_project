@@ -1,0 +1,184 @@
+//
+//  MainViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "MainViewController.h"
+#import "FooterTabBar.h"
+#import "ImageMgr.h"
+#import "iToast.h"
+#import "CategoryViewController.h"
+#import "RecommendViewController.h"
+#import "DownloadViewController.h"
+#import "MineViewController.h"
+#import "PlayControlViewController.h"
+#import "IObserverApp.h"
+#import "IObserverDownTaskStatus.h"
+#import "MessageManager.h"
+#import "HttpRequest.h"
+
+
+enum{
+    PAGE_RECOMMEND,
+    PAGE_CATEFORY,
+    PAGE_PLAY,      //play在这仅仅占着位置
+    PAGE_DOWNLOAD,
+    PAGE_MINE,
+    PAGE_NUM
+};
+
+@interface MainViewController ()<FooterTabBarDelegate>
+{
+    UIViewController* _subVC[PAGE_NUM];
+    UIView          *_subContainerView;
+    
+    BOOL             _isFootHidden;
+}
+@property (nonatomic , strong) FooterTabBar *footerTabBar;
+-(void)showSubView:(NSUInteger)index;
+@end
+
+@implementation MainViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_DOWN_STATE, IObserverDownTaskStatus);
+        GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_APP,IObserverApp);
+        _isFootHidden = NO;
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    for (int i=0; i<PAGE_NUM; ++i) {
+        _subVC[i] = nil;
+    }
+    CGRect containerRect = self.view.bounds;
+    //containerRect.size.height -= FOOTER_TABBAR_HEIGHT;
+    _subContainerView = [[UIView alloc] initWithFrame:containerRect];
+    [_subContainerView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    [[self view] addSubview:_subContainerView];
+    
+    self.footerTabBar = ({
+        FooterTabBar *footBar = [[FooterTabBar alloc] initWithSuperView:self.view];
+        [footBar setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        [footBar setDelegate:self];
+        footBar;
+    });
+    
+    [self.footerTabBar setSelectedIndex:PAGE_RECOMMEND];
+    [self showSubView:PAGE_RECOMMEND];
+    
+    [self showWWLanTips];
+}
+-(void)showWWLanTips
+{
+    if (CHttpRequest::GetNetWorkStatus() == NETSTATUS_WWAN) {
+        [iToast defaultShow:@"运营商网络下，注意你的流量哦"];
+    }
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    for (int i = 0; i<PAGE_NUM; ++i) {
+        if (_subVC[i] && _subVC[i].view.hidden) {
+            if (PAGE_DOWNLOAD == i) {
+                [((DownloadViewController*)_subVC[i]) detachObservers];
+            }
+            [_subVC[i] willMoveToParentViewController:nil];
+            [_subVC[i].view removeFromSuperview];
+            [_subVC[i] removeFromParentViewController];
+            _subVC[i] = nil;
+        }
+    }
+}
+-(void)showSubView:(NSUInteger)index
+{
+    if (index == PAGE_PLAY) {
+        return;
+    }
+    [self createViewControllerWithIndex:index];
+    for (int i = 0; i<PAGE_NUM; ++i) {
+        if (index == i) {
+            _subVC[i].view.hidden = NO;
+        }
+        else if (_subVC[i] && !_subVC[i].view.hidden){
+            _subVC[i].view.hidden = YES;
+        }
+    }
+}
+-(void)createViewControllerWithIndex:(NSUInteger)index
+{
+    if (index == PAGE_PLAY) {
+        return;
+    }
+    if (index < PAGE_NUM && !_subVC[index]) {
+        CGRect rect = _subContainerView.bounds;
+        rect.size.height -= FOOTER_TABBAR_HEIGHT;
+        KBViewController *viewController;
+        switch (index) {
+            case PAGE_RECOMMEND:
+                viewController = [[RecommendViewController alloc] initWithFrame:rect];
+                break;
+            case PAGE_CATEFORY:
+                viewController = [[CategoryViewController alloc] initWithFrame:rect];
+                
+                break;
+            case PAGE_DOWNLOAD:
+                viewController = [[DownloadViewController alloc] initWithFrame:rect];
+                break;
+            case PAGE_MINE:
+                viewController = [[MineViewController alloc] initWithFrame:rect];
+                break;
+            default:
+                break;
+        }
+        [viewController setFootDelegate:self.footerTabBar];
+        [self addChildViewController:viewController];
+        [_subContainerView addSubview:viewController.view];
+        [viewController didMoveToParentViewController:self];
+        _subVC[index] = viewController;
+    }
+}
+
+#pragma mark
+#pragma mark FooterTabBar delegate
+- (void)didFooterTabBarSelected:(unsigned)index
+{
+    if (index == PAGE_DOWNLOAD) {
+        [self.footerTabBar removeTipsAtIndex:2];
+    }
+    if (index == PAGE_PLAY) {
+        PlayControlViewController *playControlVC = [[PlayControlViewController alloc] init];
+        [self addChildViewController:playControlVC];
+        [[self view] addSubview:playControlVC.view];
+        [playControlVC didMoveToParentViewController:self];
+        return;
+    }
+    [self showSubView:index];
+}
+#pragma mark
+#pragma mark download status delegate
+
+-(void)IObDownStatus_AddTask:(unsigned)un_rid
+{
+    [self.footerTabBar addTipsAtIndex:2];
+}
+-(void)IObserverApp_NetWorkStatusChanged:(KSNetworkStatus)enumStatus
+{
+    if (enumStatus == NETSTATUS_NONE) {
+        [iToast defaultShow:@"网络中断，请检查网络设置"];
+    }
+    if (enumStatus == NETSTATUS_WWAN) {
+        [iToast defaultShow:@"运营商网络下，请注意你的流量哦"];
+    }
+}
+@end

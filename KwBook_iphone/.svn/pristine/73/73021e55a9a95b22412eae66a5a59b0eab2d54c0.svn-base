@@ -1,0 +1,94 @@
+//
+//  KBSearchViewController.m
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-4.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "KBSearchViewController.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+
+@interface KBSearchViewController ()
+
+@property (nonatomic , strong) UIView           *topBar;
+@property (nonatomic , strong) UISearchBar      *searchBar;
+
+@end
+
+@implementation KBSearchViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    float gap = 0.0;
+    if (isIOS7()) {
+        gap = 20;
+    }
+    float width  = self.view.bounds.size.width;
+//    float height = self.view.bounds.size.height;
+    self.topBar = ({
+        UIView *topBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44+gap)];
+        UIImageView *backView = [[UIImageView alloc] initWithFrame:topBar.bounds];
+        if (isIOS7()) {
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor7.png")];
+        }
+        else{
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor6.png")];
+        }
+        [topBar addSubview:backView];
+        UIButton *backBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [backBtn setImage:CImageMgr::GetImageEx("TopBackBtn.png") forState:UIControlStateNormal];
+        [backBtn setFrame:CGRectMake(0, gap, 44, 44)];
+        [backBtn addTarget:self action:@selector(onBackBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:backBtn];
+        
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(70, gap, 180, 44)];
+        [titleLabel setText:@"搜索"];
+        [titleLabel setBackgroundColor:[UIColor clearColor]];
+        [titleLabel setTextAlignment:NSTextAlignmentCenter];
+        [titleLabel setTextColor:[UIColor whiteColor]];
+        [titleLabel setFont:[UIFont systemFontOfSize:20.0]];
+        [topBar addSubview:titleLabel];
+        
+        topBar;
+    });
+    [[self view] addSubview:self.topBar];
+    
+    UIView* back_view = [[UIView alloc] init];
+    back_view.frame = CGRectMake(0, 44+gap, width, 64);
+    [back_view setBackgroundColor:UIColorFromRGB(204, 200, 194)];
+    [[self view] addSubview:back_view];
+    
+    _searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(12, 17.5, 296, 29)];
+    [_searchBar setBackgroundColor:[UIColor clearColor]];
+    if (isIOS7()) {
+        [_searchBar setBarTintColor:[UIColor clearColor]];
+    }else {
+        [[[_searchBar subviews] objectAtIndex:0] removeFromSuperview];
+    }
+    [back_view addSubview:_searchBar];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)onBackBtnClick{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+@end

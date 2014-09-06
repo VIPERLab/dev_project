@@ -1,0 +1,578 @@
+//
+//  LocalBookRequest.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "LocalBookRequest.h"
+#include "MessageManager.h"
+#include "KwTools.h"
+
+#define FILENAME_LOCALMUSIC         @"localmusic.plist"
+#define DOWN_MUSIC_RETRY_COUNT             1
+
+inline void __ReadFromDict(NSDictionary* dict,NSString* strKey,unsigned& n)
+{
+    id v=[dict objectForKey:strKey];
+    if (v && [[v class] isSubclassOfClass:[NSNumber class]]) {
+        NSNumber* num=(NSNumber*)v;
+        n=[num unsignedIntValue];
+    }
+}
+
+inline void __SaveToDict(unsigned n,NSString* strKey,NSMutableDictionary* dict)
+{
+    if(n) [dict setObject:[NSNumber numberWithUnsignedInt:n] forKey:strKey];
+}
+
+void CLocalTask::LoadFromDict(NSDictionary* dict)
+{
+    CChapterInfo::LoadFromDict(dict);
+    
+    __ReadFromDict(dict, @"taskstatus", (unsigned&)taskStatus);
+}
+
+void CLocalTask::SaveToDict(NSMutableDictionary* dict)
+{
+    CChapterInfo::SaveToDict(dict);
+    
+    __SaveToDict(taskStatus, @"taskstatus", dict);
+}
+
+CLocalBookRequest * CLocalBookRequest::GetInstance()
+{
+    static CLocalBookRequest sInstance;
+    return &sInstance;
+}
+
+CLocalBookRequest::CLocalBookRequest()
+{
+    m_pCurrentTask = NULL;
+    m_bChangeData = FALSE;
+    GLOBAL_ATTACH_MESSAGE(OBSERVER_ID_APP,IObserverApp);
+    
+}
+
+CLocalBookRequest::~CLocalBookRequest()
+{
+    GLOBAL_DETACH_MESSAGE(OBSERVER_ID_APP,IObserverApp);
+}
+
+BOOL CLocalBookRequest::StartDownTask(CChapterInfo * chapterInfo)
+{
+    CLocalTask * localinfo = (CLocalTask*)GetLocalBook(chapterInfo->m_unRid);
+    if(localinfo)
+    {
+        if(localinfo->taskStatus == TaskStatus_Downing)
+        {
+            return FALSE;
+        }
+        else if(localinfo->taskStatus == TaskStatus_Finish)
+        {
+//            SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::RecordMusic,localinfo->strRid);
+            return FALSE;
+        }
+        else if(localinfo->taskStatus == TaskStatus_Pause || localinfo->taskStatus == TaskStatus_Fail)
+        {
+            localinfo->taskStatus = TaskStatus_Downing;
+//            SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::StartTask,localinfo->strRid);
+            m_vecDowningTask.push_back(localinfo);
+        }
+    }
+    else {
+//        c_KuwoDebugLog("LOCALMUSIC",DEBUG_LOG,"StartDownTask:New Task is created:rid=%s",songInfo->strRid.c_str());
+        localinfo = new CLocalTask;
+        localinfo->taskStatus = TaskStatus_Downing;
+        localinfo->m_unDownload = 1;
+        *((CChapterInfo*)localinfo) = *chapterInfo;
+        m_vecLocalTask.push_back(localinfo);
+        m_vecDowningTask.push_back(localinfo);
+//        SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::AddTask,songInfo->strRid);
+        m_bChangeData = true;
+        //新点一首歌要保存列表
+        SaveAllTask();
+    }
+    
+    UpdateDownTask();
+    return TRUE;
+}
+
+CChapterInfo * CLocalBookRequest::GetLocalBook(const unsigned & strRid)
+{
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecLocalTask.begin(); iter!= m_vecLocalTask.end(); iter++) {
+        if(strRid == (*iter)->m_unRid)
+            return (*iter);
+    }
+    return NULL;
+}
+
+BOOL CLocalBookRequest::DownTaskImmediately(CChapterInfo * chapterInfo)
+{
+    if (m_pCurrentTask && m_pCurrentTask->m_unRid == chapterInfo->m_unRid) {
+        return TRUE;
+    }
+    
+    CLocalTask * localtask = (CLocalTask*)GetLocalBook(chapterInfo->m_unRid);
+    if(localtask) //该任务已在已点歌曲中,提到下载队列对最前
+    {
+        if(localtask->taskStatus == TaskStatus_Finish)
+        {
+//            SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::RecordMusic,localtask->strRid);
+            return TRUE;
+        }
+        else if(localtask->taskStatus == TaskStatus_Pause || localtask->taskStatus == TaskStatus_Fail)
+        {
+            localtask->taskStatus = TaskStatus_Downing;
+            m_vecDowningTask.insert(m_vecDowningTask.begin(), localtask);
+        }
+        else if(localtask->taskStatus == TaskStatus_Downing)
+        {
+            for (std::vector<CChapterInfo *>::iterator iter = m_vecDowningTask.begin(); iter!= m_vecDowningTask.end(); iter++) {
+                if(localtask->m_unRid == (*iter)->m_unRid)
+                {
+                    m_vecDowningTask.erase(iter);
+                    break;
+                }
+            }
+            m_vecDowningTask.insert(m_vecDowningTask.begin(), localtask);
+        }
+        
+    }
+    else {
+        localtask = new CLocalTask;
+        localtask->taskStatus = TaskStatus_Downing;
+        localtask->m_unDownload = 1;
+        *((CChapterInfo*)localtask) = *chapterInfo;
+        m_vecLocalTask.push_back(localtask);
+        m_vecDowningTask.insert(m_vecDowningTask.begin(), localtask);
+//        SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::AddTask,localtask->strRid);
+        //新点一首歌要保存列表
+        m_bChangeData = TRUE;
+        SaveAllTask();
+        
+    }
+    
+    if(m_pCurrentTask)  //当前有下载任务，停止当前任务
+    {
+        if(m_pCurrentTask->pRequest)
+        {
+            m_pCurrentTask->pRequest->StopRequest();
+            delete m_pCurrentTask->pRequest;
+            m_pCurrentTask->pRequest = NULL;
+        }
+        m_pCurrentTask = NULL;
+    }
+    
+    
+    UpdateDownTask();
+    
+    
+    return TRUE;
+}
+
+void CLocalBookRequest::DownTaskThread(CChapterInfo * pChapterInfo)
+{
+    std::string strFormat;
+    std::string strBitrate;
+    std::string strUrl;
+    std::string strSig;
+    
+    CHttpRequest::CONVERT_URL_PARA para;
+    para.strRid = [[NSString stringWithFormat:@"%d", pChapterInfo->m_unRid] UTF8String];
+    para.strBitrate = "";
+    bool bret = false;
+    
+    if(!(pChapterInfo->m_unFileSize && pChapterInfo->m_unFileSize == pChapterInfo->m_unLocalSize))
+    {
+        para.strContinueSig = pChapterInfo->m_strSig;
+        bret = CHttpRequest::ConvertUrl(para,strFormat,strBitrate,strUrl,strSig);
+        int n_retry_times(0);
+        while ((!bret) && (3 > n_retry_times)) {
+            bret = CHttpRequest::ConvertUrl(para,strFormat,strBitrate,strUrl,strSig);
+            ++n_retry_times;
+        }
+        pChapterInfo->m_strUrl = strUrl;
+        pChapterInfo->m_strSig = strSig;
+    }
+    
+    {
+        // 以下在主线程中执行
+        KS_BLOCK_DECLARE
+        {
+            if(m_pCurrentTask && m_pCurrentTask->m_unRid == pChapterInfo->m_unRid)
+            {
+                if(bret)
+                {
+                    m_pCurrentTask->pRequest = new CHttpRequest(pChapterInfo->m_strUrl);
+                    m_pCurrentTask->m_strSig = pChapterInfo->m_strSig;
+                    std::string strlocal;
+                    KwTools::Dir::GetPath(KwTools::Dir::PATH_LOCALMUSIC,strlocal);
+                    strlocal += "/";
+                    strlocal += [[NSString stringWithFormat:@"%d", m_pCurrentTask->m_unRid] UTF8String];
+                    std::string strex = strUrl.substr(strUrl.rfind("."),-1);
+                    m_pCurrentTask->m_strLocalPath = strlocal + strex;
+                    m_pCurrentTask->pRequest->AsyncSendRequest(this,m_pCurrentTask->m_strLocalPath,TRUE);
+                    m_pCurrentTask->downStatus = Status_DowningBook;
+                }
+                else {
+                    // 失败的任务从下载队列中删除
+                    //DeleteTask(m_pCurrentTask->strRid);
+                    m_pCurrentTask->taskStatus = TaskStatus_Fail;
+//                    SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::TaskFail,m_pCurrentTask->strRid);
+                    m_pCurrentTask = NULL;
+                    UpdateDownTask();
+                }
+            }
+        }
+        KS_BLOCK_SYNRUN();
+    }
+}
+
+BOOL CLocalBookRequest::HasDowningTask()
+{
+    return (NULL != m_pCurrentTask) ? TRUE : FALSE;
+}
+
+BOOL CLocalBookRequest::LoadAllTask()
+{
+    m_vecLocalTask.clear();
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    filepath = [filepath stringByAppendingPathComponent:FILENAME_LOCALMUSIC];
+    NSMutableArray *arrLocalTask;
+    if(KwTools::Dir::IsExistFile(filepath))
+    {
+        @autoreleasepool {
+            arrLocalTask = [NSMutableArray arrayWithContentsOfFile:filepath];
+            for (NSDictionary *dict in arrLocalTask)
+            {
+                CChapterInfo * songInfo = new CLocalTask;
+                ((CLocalTask*)songInfo)->LoadFromDict(dict);
+                
+                if(!KwTools::Dir::IsExistFile(songInfo->m_strLocalPath) && songInfo->m_unLocalSize)
+                {
+                    songInfo->m_unLocalSize = 0;
+                    songInfo->m_strSig = "";
+                    ((CLocalTask*)songInfo)->taskStatus = TaskStatus_Fail;
+                }
+                if(((CLocalTask*)songInfo)->taskStatus != TaskStatus_Fail)
+                {
+                    if(songInfo->m_unFileSize == 0 || songInfo->m_unFileSize != songInfo->m_unLocalSize)
+                    {
+                        ((CLocalTask*)songInfo)->taskStatus = TaskStatus_Pause;
+                    }
+                    else {
+                        ((CLocalTask*)songInfo)->taskStatus = TaskStatus_Finish;
+                    }
+                    
+                }
+                m_vecLocalTask.push_back(songInfo);
+            }
+        }
+    }
+
+    return TRUE;
+    
+}
+
+void CLocalBookRequest::IHttpNotify_DownStart(CHttpRequest* pRequest,long lTotalSize)
+{
+    if(m_pCurrentTask && m_pCurrentTask->pRequest && m_pCurrentTask->pRequest == pRequest)
+    {
+        if(m_pCurrentTask->downStatus == Status_DowningBook)
+            m_pCurrentTask->m_unFileSize = lTotalSize;
+        m_bChangeData = true;
+    }
+    
+}
+
+void CLocalBookRequest::IHttpNotify_Process(CHttpRequest* pRequest,long lTotalSize,long lCurrentSize,long lSpeed)
+{
+    if(CHttpRequest::GetNetWorkStatus() == NETSTATUS_NONE)
+        return;
+    if(m_pCurrentTask && m_pCurrentTask->pRequest && m_pCurrentTask->pRequest == pRequest)
+    {
+        if(lCurrentSize == 0)
+            return;
+        if(lTotalSize<lCurrentSize)
+            return;
+        float fpercent = 0;
+        if(m_pCurrentTask->downStatus == Status_DowningBook)
+        {
+            m_pCurrentTask->m_unFileSize = lTotalSize;
+            m_pCurrentTask->m_unLocalSize = lCurrentSize;
+            fpercent = lCurrentSize*1.0/lTotalSize;
+        }
+        
+        m_bChangeData = true;
+        
+//        SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::TaskProgress,m_pCurrentTask->strRid,fpercent);
+    }
+}
+
+void CLocalBookRequest::IHttpNotify_Stop(CHttpRequest* pRequest,BOOL bSuccess)
+{
+    if(m_pCurrentTask && m_pCurrentTask->pRequest && m_pCurrentTask->pRequest == pRequest)
+    {
+        if(bSuccess)
+        {
+            if(m_pCurrentTask->downStatus == Status_DowningBook)
+            {
+                m_pCurrentTask->nRetryCount = 0;
+                m_pCurrentTask->taskStatus = TaskStatus_Finish;
+                m_pCurrentTask->m_unLocalSize = m_pCurrentTask->m_unFileSize;
+                
+                std::string str_filename_src = m_pCurrentTask->m_strLocalPath;
+                std::string str_filename_dest = KwTools::Dir::GetFileNameWithoutExt(str_filename_src);
+                str_filename_dest += ".m4a";
+                m_pCurrentTask->m_strLocalPath = str_filename_dest;
+                
+                KwTools::Dir::MoveFile(str_filename_src, str_filename_dest);
+                
+//                SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::DownTaskStop,m_pCurrentTask->strRid);
+            }
+        }
+        else
+        {
+            if(m_pCurrentTask->nRetryCount >= DOWN_MUSIC_RETRY_COUNT)
+            {
+                // 失败的任务从下载队列中删除
+                m_pCurrentTask->taskStatus = TaskStatus_Fail;
+                m_pCurrentTask->nRetryCount = 0;
+//                SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::TaskFail,m_pCurrentTask->strRid);
+            }
+            else {
+                // 重试
+                m_pCurrentTask->nRetryCount++;
+            }
+        }
+        
+        m_bChangeData = true;
+        // 保存一次数据
+        SaveAllTask();
+        delete m_pCurrentTask->pRequest;
+        m_pCurrentTask->pRequest = NULL;
+        m_pCurrentTask = NULL;
+        UpdateDownTask();
+    }
+}
+
+BOOL CLocalBookRequest::DeleteTask(const unsigned & unRid)
+{
+    CLocalTask * localtask = (CLocalTask*)GetLocalBook(unRid);
+    if(localtask)
+    {
+        if(m_pCurrentTask && m_pCurrentTask->m_unRid == unRid)
+        {
+            if(m_pCurrentTask->pRequest)
+                m_pCurrentTask->pRequest->StopRequest();
+            m_pCurrentTask = NULL;
+        }
+        for (std::vector<CChapterInfo *>::iterator iter = m_vecLocalTask.begin(); iter!= m_vecLocalTask.end(); iter++) {
+            if(unRid == (*iter)->m_unRid)
+            {
+                m_vecLocalTask.erase(iter);
+                break;
+            }
+        }
+        for (std::vector<CChapterInfo *>::iterator iter = m_vecDowningTask.begin(); iter!= m_vecDowningTask.end(); iter++) {
+            if(unRid == (*iter)->m_unRid)
+            {
+                m_vecDowningTask.erase(iter);
+                break;
+            }
+        }
+        m_bChangeData = true;
+        KwTools::Dir::DeleteFile(localtask->m_strLocalPath);
+        SaveAllTask();
+//        SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::DeleteTask,localtask->strRid);
+        delete localtask;
+        localtask = NULL;
+        UpdateDownTask();
+        return TRUE;
+    }
+    return  FALSE;
+}
+
+BOOL CLocalBookRequest::PauseDownTask(const unsigned & unRid)
+{
+    CLocalTask * localtask = (CLocalTask*)GetLocalBook(unRid);
+    if(localtask)
+    {
+        if(m_pCurrentTask && m_pCurrentTask->m_unRid == unRid)
+        {
+            if(m_pCurrentTask->pRequest)
+            {
+                m_pCurrentTask->pRequest->StopRequest();
+                delete m_pCurrentTask->pRequest;
+                m_pCurrentTask->pRequest = NULL;
+            }
+            m_pCurrentTask = NULL;
+        }
+        localtask->taskStatus = TaskStatus_Pause;
+        for (std::vector<CChapterInfo *>::iterator iter = m_vecDowningTask.begin(); iter!= m_vecDowningTask.end(); iter++) {
+            if(unRid == (*iter)->m_unRid)
+            {
+                m_vecDowningTask.erase(iter);
+                break;
+            }
+        }
+        UpdateDownTask();
+//        SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::PauseTask,localtask->strRid);
+    }
+    
+    return FALSE;
+}
+
+
+//更新当前真正下载对象
+void CLocalBookRequest::UpdateDownTask()
+{
+    if(m_pCurrentTask != NULL)
+        return;
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecDowningTask.begin(); iter!= m_vecDowningTask.end(); iter++) {
+        if(((CLocalTask*)(*iter))->taskStatus != TaskStatus_Downing)
+        {
+            iter = m_vecDowningTask.erase(iter);
+            --iter;
+        }
+        else {
+            // 从下载队列中挑选最前面对一个任务开始下载
+            CChapterInfo *ptemp = new CChapterInfo;
+            m_pCurrentTask = (CLocalTask*)(*iter);
+            *ptemp = *(*iter);
+            KS_BLOCK_DECLARE
+            {
+                DownTaskThread(ptemp);
+                delete ptemp;
+            }
+            KS_BLOCK_RUN_THREAD();
+            return;
+        }
+    }
+    
+}
+
+float CLocalBookRequest::GetTaskRadio(CChapterInfo * pTask)
+{
+    if(!pTask)
+        return 0.0;
+    float fpercent = 0.0;
+    if(pTask->m_unFileSize)
+    {
+        fpercent = pTask->m_unLocalSize*1.0/pTask->m_unFileSize;
+    }
+    
+    return fpercent;
+}
+
+NSString * CLocalBookRequest::GetDowningTaskListString()
+{
+    NSString * value = @"";
+    if(m_pCurrentTask)
+    {
+        int nradio = 0;
+        if(m_pCurrentTask->m_unFileSize!=0)
+            nradio = m_pCurrentTask->m_unLocalSize*100/m_pCurrentTask->m_unFileSize;
+        value = [NSString stringWithFormat: @"%d&&downing&&%d",m_pCurrentTask->m_unRid,nradio];
+    }
+    
+    return value;
+    
+}
+
+NSString * CLocalBookRequest::GetLocalBookListString()
+{
+    NSString * value = [[NSString alloc] initWithString:@""]; //@"";//@"<array>";
+    std::string arrstr[3] = {"downing","finish","pause"};
+    
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecLocalTask.begin(); iter!= m_vecLocalTask.end(); iter++)  {
+        CLocalTask * temp = ((CLocalTask*)(*iter));
+        if(temp->taskStatus == TaskStatus_Fail)
+            continue;
+        int nradio = 0;
+        if(temp->m_unFileSize != 0)
+            nradio = temp->m_unLocalSize*100/temp->m_unFileSize;
+        NSString* p = [value stringByAppendingFormat:@"%d&&%s&&%d||",temp->m_unRid,arrstr[temp->taskStatus-1].c_str(),nradio];
+        value=p;
+    }
+
+    return value;
+}
+
+BOOL CLocalBookRequest::StartAllTask()
+{
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecLocalTask.begin(); iter!= m_vecLocalTask.end(); iter++) {
+        if (((CLocalTask*)(*iter))->m_unDownload) {
+            TaskStatus status = ((CLocalTask*)(*iter))->taskStatus;
+            if(status == TaskStatus_Pause )
+                ((CLocalTask*)(*iter))->taskStatus = TaskStatus_Downing;
+            m_vecDowningTask.push_back((*iter));
+        }
+    }
+    UpdateDownTask();
+    return TRUE;
+}
+
+BOOL CLocalBookRequest::SaveAllTask()
+{
+    if(!m_bChangeData)
+        return FALSE;
+    NSMutableArray *arrTask = [NSMutableArray arrayWithCapacity:m_vecLocalTask.size()];
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecLocalTask.begin(); iter!= m_vecLocalTask.end(); iter++) {
+        CLocalTask* temp = ((CLocalTask*)(*iter));
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+        temp->SaveToDict(dict);
+        [arrTask addObject:dict];
+    }
+    
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    NSString *str = [filepath stringByAppendingPathComponent:FILENAME_LOCALMUSIC];
+    if(KwTools::Dir::IsExistFile([str UTF8String]) && !KwTools::Dir::DeleteFile(str))
+    {
+        return false;
+    }
+    BOOL bret = [arrTask writeToFile:str atomically:YES];
+
+    return bret;
+}
+
+BOOL CLocalBookRequest::PauseAllTasks()
+{
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecDowningTask.begin(); iter!= m_vecDowningTask.end(); iter++) {
+        ((CLocalTask*)(*iter))->taskStatus = TaskStatus_Pause;
+//        SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::PauseTask,(*iter)->strRid);
+    }
+    m_vecDowningTask.clear();
+    if(m_pCurrentTask && m_pCurrentTask->pRequest)
+    {
+        m_pCurrentTask->pRequest->StopRequest();
+        delete m_pCurrentTask->pRequest;
+        m_pCurrentTask->pRequest = NULL;
+    }
+    m_pCurrentTask = NULL;
+    
+    //SYN_NOTIFY(OBSERVER_ID_MUSICLIB, IMusicLibObserver::PauseAllTasks);
+    return TRUE;
+}
+
+void CLocalBookRequest::IObserverApp_EnterBackground()
+{
+    SaveAllTask();
+}
+
+void CLocalBookRequest::IObserverApp_EnterForeground()
+{
+    UpdateDownTask();
+}
+
+void CLocalBookRequest::IObserverApp_NetWorkStatusChanged(KSNetworkStatus enumStatus)
+{
+    if(enumStatus == NETSTATUS_NONE)
+    {
+        PauseAllTasks();
+    }
+}
+
+

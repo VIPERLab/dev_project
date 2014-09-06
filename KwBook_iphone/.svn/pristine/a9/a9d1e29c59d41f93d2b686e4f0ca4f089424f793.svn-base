@@ -1,0 +1,532 @@
+//
+//  RankRecoViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "RankRecoViewController.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+#import "BookListViewController.h"
+#import "KBAppDelegate.h"
+#import "RankDataItem.h"
+#import "CacheMgr.h"
+#import "KBUrls.h"
+#import "HttpRequest.h"
+#import "SBJson4.h"
+#import "iToast.h"
+#import "UMengLog.h"
+#import "KwUMengElement.h"
+#import "KBRefreshHeadView.h"
+#import "KBRefreshFootView.h"
+
+
+#define RECO_RANK_JSONDATA_CACHE_KEY    "RecoRankJsonDataCacheKey"
+#define RECO_RANK_CELL_IDENTIFIER       @"RecoRankCellIdentifier"
+
+#define TAG_CELL_LOAD_DONE           36
+#define TAG_CELL_NEED_LOAD           37
+
+#define TAG_IMAGE       31
+#define TAG_RANK_NAME   32
+#define TAG_FIRST_NAME  33
+#define TAG_SECOND_NAME 34
+#define TAG_THIRD_NAME  35
+
+const int kNumOfBooksInOnePage  = 10;
+
+typedef enum
+{
+    TABLE_FIRST_LOAD,
+    TABLE_REFRESH,
+    TABLE_LOAD_MORE,
+    TABLE_LOAD_FINISH,
+    
+}TABLE_STATE;
+
+@interface RankRecoViewController ()<UITableViewDataSource,UITableViewDelegate,KBRefreshBaseViewDelegate>
+{
+    TABLE_STATE         _state;
+    
+    int                 _currentPage;
+    int                 _totalPages;
+    
+    CGFloat             _lastOffset;
+    BOOL                _isScrolling;
+    
+    KBRefreshHeadView   *_headView;
+    KBRefreshFootView   *_footView;
+}
+@property (nonatomic , strong) UITableView      *tableView;
+@property (nonatomic , strong) NSMutableArray   *tmpArray;
+@property (nonatomic , strong) NSMutableArray   *dataArray;
+
+@end
+
+@implementation RankRecoViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        _tmpArray = [NSMutableArray array];
+        _dataArray = [NSMutableArray array];
+        _isScrolling = NO;
+        _lastOffset = 0.0f;
+        _currentPage = 0;
+        _totalPages = 0;
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    [[self view] setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    
+    self.tableView = ({
+        UITableView *tableView = [[UITableView alloc] initWithFrame:self.view.bounds];
+        [tableView setBackgroundColor:[UIColor clearColor]];
+        [tableView setDelegate:self];
+        [tableView setDataSource:self];
+        tableView;
+    });
+    [[self view] addSubview:self.tableView];
+    [self setTipsRect:self.tableView.frame];
+    _headView = [KBRefreshHeadView header];
+    [_headView setScrollView:self.tableView];
+    [_headView setDelegate:self];
+    
+    _footView = [KBRefreshFootView footer];
+    [_footView setScrollView:self.tableView];
+    [_footView setDelegate:self];
+    
+     _state = TABLE_FIRST_LOAD;
+    [self tableViewNeedChange];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)tableViewNeedChange
+{
+    [self showLoadingPage:YES descript:nil];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        NSData *jsonData = [self fetchJsonData];
+        [self parserJsonData:jsonData];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self reloadView];
+            [self showLoadingPage:NO descript:nil];
+        });
+    });
+}
+
+-(void)onTap
+{
+    if(NETSTATUS_NONE == CHttpRequest::GetNetWorkStatus()){
+        [iToast defaultShow:@"网络似乎断开了，请检查连接"];
+        return;
+    }
+    [self tableViewNeedChange];
+}
+#pragma mark
+#pragma mark on refresh
+
+-(void)onRefresh:(id)sender
+{
+    [self refreshAllCellToReload];
+    _state = TABLE_REFRESH;
+    [self tableViewNeedChange];
+}
+-(void)refreshAllCellToReload
+{
+    int row = [self.tableView numberOfRowsInSection:0];
+    for (int i = 0; i<row; i++) {
+        NSString *cellIdentifier = [NSString stringWithFormat:@"%@%d",RECO_RANK_CELL_IDENTIFIER,i];
+        UITableViewCell *cell = [self.tableView dequeueReusableCellWithIdentifier:cellIdentifier];
+        [cell setTag:TAG_CELL_NEED_LOAD];
+    }
+    NSArray *cellVisble = [self.tableView visibleCells];
+    for (UITableViewCell *cell in cellVisble) {
+        [cell setTag:TAG_CELL_NEED_LOAD];
+    }
+}
+#pragma mark
+#pragma mark on load more
+-(void)onLoadMore
+{
+    _state = TABLE_LOAD_MORE;
+    [self tableViewNeedChange];
+}
+
+
+#pragma mark
+#pragma mark head and foot delegate
+
+- (void)refreshViewBeginRefreshing:(KBRefreshBaseView *)refreshView
+{
+    if (refreshView == _headView) {
+        [self onRefresh:refreshView];
+    }
+    else if (refreshView == _footView){
+        [self onLoadMore];
+    }
+}
+-(void)endRefresh
+{
+    [_headView endRefreshing];
+    [_footView endRefreshing];
+}
+
+#pragma mark
+#pragma mark fetch json data and parser
+-(NSData *)fetchJsonData
+{
+    BOOL useCache = NO;
+    
+    if (TABLE_FIRST_LOAD == _state) {
+        useCache = YES; //只有第一次load用cache
+    }
+    if (TABLE_FIRST_LOAD == _state || TABLE_REFRESH == _state) {
+        _currentPage = 1;
+    }
+    else if(TABLE_LOAD_MORE == _state){
+        _currentPage++;
+    }
+    
+    __block void* jsonData = NULL;
+    __block unsigned length = 0;
+    BOOL outOfTime;
+    if (useCache && CCacheMgr::GetInstance()->Read(RECO_RANK_JSONDATA_CACHE_KEY, jsonData, length, outOfTime)) {
+        NSData *data=[NSData dataWithBytesNoCopy:jsonData length:length freeWhenDone:YES];
+        return data;
+    }
+    else{
+        NSString *strUrl = [NSString stringWithFormat:@"%@stype=json&srcver=storynew&type=story_list&id=3&pn=%d&ps=%d",
+                            BASE_URL,_currentPage,kNumOfBooksInOnePage];
+        CHttpRequest::QuickSyncGet([strUrl UTF8String],jsonData,length);
+        NSData* data=[NSData dataWithBytesNoCopy:jsonData length:length freeWhenDone:YES];
+        CCacheMgr::GetInstance()->Cache(T_DAY, 1, RECO_RANK_JSONDATA_CACHE_KEY, jsonData, length);
+        return data;
+    }
+    return nil;
+}
+
+-(BOOL)parserJsonData:(NSData *)jsonData;
+{
+    if (jsonData == nil || jsonData.length == 0) {
+        if (_state == TABLE_LOAD_MORE) {
+            _currentPage--;//数据获取失败page--
+        }
+        return NO;
+    }
+    if (TABLE_FIRST_LOAD == _state || TABLE_REFRESH == _state) {
+        [self.tmpArray removeAllObjects];
+    }
+//    if(self.tmpArray && self.tmpArray.count > 0){
+//        [self.tmpArray removeAllObjects];
+//    }
+
+    SBJson4ValueBlock block = ^(id item, BOOL *stop){
+        NSDictionary *dic = item;
+        
+        NSString *totalCount = [dic objectForKey:@"totalcount"];
+        _totalPages = [totalCount integerValue];
+        
+        NSArray *array = [dic objectForKey:@"list"];
+        if (array.count == 0) {
+            if (_state == TABLE_LOAD_MORE) {
+                _currentPage--; //没有获取到新的数据page--
+            }
+        }
+        for (NSDictionary *itemDic in array) {
+            RankDataItem *dataItem = [[RankDataItem alloc] init];
+
+            NSString *name = [itemDic objectForKey:@"name"];
+            NSString *rankId = [itemDic objectForKey:@"id"];
+            NSString *imageURL = [itemDic objectForKey:@"pic"];
+            NSArray *array = [itemDic objectForKey:@"story_list"];
+            
+            [dataItem setName:name];
+            [dataItem setRankId:rankId];
+            [dataItem setImageURL:imageURL];
+            
+            NSMutableArray *tmp = [NSMutableArray array];
+            for (NSDictionary *rankDic in array) {
+                NSString *rankName = [rankDic objectForKey:@"name"];
+                [tmp addObject:rankName];
+            }
+            
+            [dataItem setRankArray:tmp];
+            
+            [self.tmpArray addObject:dataItem];
+        }
+    };
+    SBJson4ErrorBlock eh = ^(NSError *error){
+    };
+    SBJson4Parser *parser = [SBJson4Parser parserWithBlock:block allowMultiRoot:NO unwrapRootArray:NO errorHandler:eh];
+    [parser parse:jsonData];
+    return YES;
+}
+-(void)reloadView
+{
+    if (TABLE_REFRESH == _state || TABLE_LOAD_MORE == _state) {
+        [self performSelector:@selector(endRefresh) withObject:nil afterDelay:1.0];
+    }
+    
+    if (self.tmpArray.count == 0) {
+        [iToast defaultShow:@"获取数据失败，请稍后再试!"];
+        
+        if (NETSTATUS_NONE == CHttpRequest::GetNetWorkStatus())
+            [self showNoNetWorkPage];
+        else{
+            [self removeNoNetPage];
+            if (self.tmpArray.count == 0)
+                [self showLoadFailPage];
+            else
+                [self removeLoadFailPage];
+        }
+        return;
+    }
+    [self removeLoadFailPage];
+    [self removeNoNetPage];
+    
+    self.dataArray = self.tmpArray;
+    if (self.dataArray.count >= _totalPages) {
+        [_footView setHidden:YES];
+    }
+    else{
+        [_footView setHidden:NO];
+    }
+    
+    [self.tableView reloadData];
+    _state = TABLE_LOAD_FINISH;
+}
+
+#pragma mark
+#pragma mark load image
+
+-(void)startLoadImageAt:(NSIndexPath *)indexPath
+{
+    UITableViewCell *cell = [self.tableView cellForRowAtIndexPath:indexPath];
+    RankDataItem *item = [self.dataArray objectAtIndex:indexPath.row];
+    NSURL *imageURL = [NSURL URLWithString:item.imageURL];
+    
+    if (cell) {
+        void * imageData = NULL;
+        unsigned int length = 0;
+        BOOL outOfTime(YES);
+        if (item.imageURL && CCacheMgr::GetInstance()->Read([item.imageURL UTF8String], imageData, length, outOfTime)) {
+            NSData *cacheImageData = [[NSData alloc] initWithBytesNoCopy:imageData length:length freeWhenDone:YES];
+            UIImage *image = [[UIImage alloc] initWithData:cacheImageData];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                UIImageView *imageView = (UIImageView *)[cell.contentView viewWithTag:TAG_IMAGE];
+                if (image) {
+                    [imageView setImage:image];
+                }
+            });
+            
+        }
+        else{
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                NSData *imageData  = [NSData dataWithContentsOfURL:imageURL];
+                UIImage *image = [UIImage imageWithData:imageData];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    UIImageView *imageView = (UIImageView *)[cell.contentView viewWithTag:TAG_IMAGE];
+                    if (image) {
+                        [imageView setImage:image];
+                        CCacheMgr::GetInstance()->Cache(T_DAY, 1, [item.imageURL UTF8String], [imageData bytes], [imageData length]);
+                    }
+                });
+            });
+        }
+    }
+}
+#pragma mark
+#pragma mark table view data source
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    unsigned numOfRows = self.dataArray.count;
+    if (numOfRows > 0) {
+        [tableView setSeparatorStyle:UITableViewCellSeparatorStyleSingleLine];
+    }
+    else{
+        [tableView setSeparatorStyle:UITableViewCellSeparatorStyleNone];
+    }
+    return numOfRows;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    NSString *rankCellIdentifier = [NSString stringWithFormat:@"%@%d",RECO_RANK_CELL_IDENTIFIER,indexPath.row];
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:rankCellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:rankCellIdentifier];
+        [cell setSelectionStyle:UITableViewCellSelectionStyleGray];
+        if (isIOS7()) {
+            [cell setSeparatorInset:UIEdgeInsetsZero];
+        }
+        [[cell contentView] setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        
+        UIImageView *headBack = [[UIImageView alloc] initWithFrame:CGRectMake(2.5, 10.5, 79, 79)];
+        [headBack setImage:CImageMgr::GetImageEx("RankHeadBack.png")];
+        UIImageView *headView = [[UIImageView alloc] initWithFrame:CGRectMake(4.5, 4.5, 70, 70)];
+        [headView setTag:TAG_IMAGE];
+        [headView setImage:CImageMgr::GetImageEx("DefaultBookImageLarge.png")];
+        [headBack addSubview:headView];
+        [cell.contentView addSubview:headBack];
+        
+        UIView *contentView  = [[UIView alloc] initWithFrame:CGRectMake(90.5, 6, 229.5, 94)];
+        [contentView setBackgroundColor:[UIColor clearColor]];
+        UILabel *rankNameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 200, 17)];
+        [rankNameLabel setBackgroundColor:[UIColor clearColor]];
+        [rankNameLabel setTag:TAG_RANK_NAME];
+        [contentView addSubview:rankNameLabel];
+        
+        UILabel *one = [[UILabel alloc] initWithFrame:CGRectMake(0, 26, 13, 13)];
+        UILabel *two = [[UILabel alloc] initWithFrame:CGRectMake(0, 46.5, 13, 13)];
+        UILabel *three = [[UILabel alloc] initWithFrame:CGRectMake(0, 67, 13, 13)];
+        
+        [one setTextAlignment:NSTextAlignmentCenter];
+        [two setTextAlignment:NSTextAlignmentCenter];
+        [three setTextAlignment:NSTextAlignmentCenter];
+        
+        [one setFont:[UIFont systemFontOfSize:12.0]];
+        [two setFont:[UIFont systemFontOfSize:12.0]];
+        [three setFont:[UIFont systemFontOfSize:12.0]];
+        
+        [one setBackgroundColor:UIColorFromRGBValue(0xee7270)];
+        [two setBackgroundColor:UIColorFromRGBValue(0xee7270)];
+        [three setBackgroundColor:UIColorFromRGBValue(0xee7270)];
+        
+        [one setTextColor:[UIColor whiteColor]];
+        [two setTextColor:[UIColor whiteColor]];
+        [three setTextColor:[UIColor whiteColor]];
+        
+        [one setText:@"1"];
+        [two setText:@"2"];
+        [three setText:@"3"];
+        
+        [contentView addSubview:one];
+        [contentView addSubview:two];
+        [contentView addSubview:three];
+        
+        UILabel *first = [[UILabel alloc] initWithFrame:CGRectMake(14, 26, 186, 13)];
+        UILabel *second = [[UILabel alloc] initWithFrame:CGRectMake(14, 46.5, 186, 13)];
+        UILabel *third = [[UILabel alloc] initWithFrame:CGRectMake(14, 67, 186, 13)];
+        
+        [first setFont:[UIFont systemFontOfSize:13.0]];
+        [second setFont:[UIFont systemFontOfSize:13.0]];
+        [third setFont:[UIFont systemFontOfSize:13.0]];
+        
+        [first setTag:TAG_FIRST_NAME];
+        [second setTag:TAG_SECOND_NAME];
+        [third setTag:TAG_THIRD_NAME];
+        
+        [first setBackgroundColor:[UIColor clearColor]];
+        [second setBackgroundColor:[UIColor clearColor]];
+        [third setBackgroundColor:[UIColor clearColor]];
+        
+        [first setTextColor:defaultGrayColor()];
+        [second setTextColor:defaultGrayColor()];
+        [third setTextColor:defaultGrayColor()];
+        
+        [contentView addSubview:first];
+        [contentView addSubview:second];
+        [contentView addSubview:third];
+        
+        UIImageView *moreView  = [[UIImageView alloc] initWithFrame:CGRectMake(50, 85, 19, 1.5)];
+        [moreView setImage:CImageMgr::GetImageEx("RankCellMore.png")];
+        [contentView addSubview:moreView];
+        
+        UIImageView *accessoryView  = [[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("cellIndicator.png")];
+        [accessoryView setCenter:CGPointMake(300, 50)];
+        [accessoryView setBackgroundColor:[UIColor clearColor]];
+        [cell.contentView addSubview:accessoryView];
+        
+         [cell.contentView addSubview:contentView];
+        [self performSelector:@selector(startLoadImageAt:) withObject:indexPath afterDelay:0.5];
+    }
+    unsigned row = indexPath.row;
+    if (row < self.dataArray.count) {
+        
+        RankDataItem *item = [self.dataArray objectAtIndex:row];
+        
+        UILabel *ranklabel = (UILabel *)[cell.contentView viewWithTag:TAG_RANK_NAME];
+        UILabel *firstLabel = (UILabel *)[cell.contentView viewWithTag:TAG_FIRST_NAME];
+        UILabel *secondLabel = (UILabel *)[cell.contentView viewWithTag:TAG_SECOND_NAME];
+        UILabel *thirdLabel = (UILabel *)[cell.contentView viewWithTag:TAG_THIRD_NAME];
+        
+        [ranklabel setText:item.name];
+        NSArray *rankList = [item rankArray];
+        if (rankList.count > 0) {
+            [firstLabel setText:rankList[0]];
+        }
+        if (rankList.count > 1) {
+            [secondLabel setText:rankList[1]];
+        }
+        if (rankList.count >2) {
+            [thirdLabel setText:rankList[2]];
+        }
+    }
+    
+    return cell;
+}
+#pragma mark
+#pragma mark table view delegate
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 100.0f;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    if (CHttpRequest::GetNetWorkStatus() == NETSTATUS_NONE) {
+        [iToast defaultShow:@"网络连接不可用，请检查网络稍后再试"];
+        return;
+    }
+    UMengLog(KB_RECOMMEND, "Rank");
+    
+    RankDataItem *item = [self.dataArray objectAtIndex:indexPath.row];
+    BookListViewController *bookList = [[BookListViewController alloc] initWithBookListId:item.rankId andName:item.name];
+    [bookList setType:BOOKLIST_RANK];
+    [ROOT_NAVI_CONTROLLER pushAddButtonViewController:bookList animated:YES];
+}
+#pragma mark
+#pragma mark scroll view delegate
+/*
+-(void)scrollViewDidScroll:(UIScrollView *)sender
+{
+    [NSObject cancelPreviousPerformRequestsWithTarget:self selector:@selector(scrollViewDidEndScrollingAnimation:) object:sender];
+    [self performSelector:@selector(scrollViewDidEndScrollingAnimation:) withObject:sender afterDelay:0.3];
+    if (!_isScrolling) {
+        _isScrolling = YES;
+        //[self performSelector:@selector(scrollViewBeginScrolling:) withObject:sender];
+    }
+}
+//-(void)scrollViewBeginScrolling:(UIScrollView *)scrollView
+//{
+//    [self.rootViewController.contentViewController setKSongButtonHidden:YES];
+//}
+-(void)scrollViewDidEndScrollingAnimation:(UIScrollView *)scrollView
+{
+    CGFloat thisOffset = scrollView.contentOffset.y;
+    
+    if (thisOffset > _lastOffset) {
+        [self.footDelegate hideFoot];
+    }
+    else{
+        [self.footDelegate showFoot];
+    }
+    
+    _lastOffset = thisOffset;
+    _isScrolling = NO;
+}
+ */
+
+@end

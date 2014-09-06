@@ -1,0 +1,163 @@
+//
+//  SquareView.mm
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-7-31.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "SquareViewController.h"
+#import "SegmentControl.h"
+#include "ImageMgr.h"
+#import "globalm.h"
+#import "KSWebView.h"
+#include "MobClick.h"
+#include "MessageManager.h"
+#include "IObserverApp.h"
+#import "HotSongsView.h"
+#import "KSongsView.h"
+#import "NewSongsView.h"
+
+
+@interface KSSquareViewController()<SegmentControlDelegate,IObserverApp>
+{
+    HotSongsView *hotSongsView;
+    KSongsView *kSongsView;
+    NewSongsView *newSongsView;
+    
+    UIView* subViewContainer;
+}
+
+- (void)segmentControl:(SegmentControl *)segmentControl selectedItemChanged:(NSUInteger)index;
+
+-(void)IObserverApp_MemoryWarning;
+@end
+
+@implementation KSSquareViewController
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+	UIImage* pTopBkImg=CImageMgr::GetImageEx("topBk.png");
+    UIImageView * imageView = [[[UIImageView alloc]initWithImage:pTopBkImg]autorelease];
+    CGRect rcBkg(self.view.bounds);
+    rcBkg.size.height=pTopBkImg.size.height;
+    [imageView setFrame:rcBkg];
+    [self.view addSubview:imageView];
+    
+    UIImage* pShadow=CImageMgr::GetImageEx("topShadow.png");
+    UIImageView * topshadowView = [[[UIImageView alloc]initWithImage:pShadow]autorelease];
+    CGRect rcshadow = rcBkg;
+    rcshadow.origin.y += rcshadow.size.height;
+    rcshadow.size.height = pShadow.size.height;
+    [topshadowView setFrame:rcshadow];
+    [self.view addSubview:topshadowView];
+    
+    UIImageView * SegBkView = [[[UIImageView alloc]init]autorelease];
+    CGRect rcSegBk = CGRectMake(27, 6, 267, 32);
+    [SegBkView setFrame:rcSegBk];
+    [SegBkView setImage:CImageMgr::GetImageEx("topNavSegBk_12.png")];
+    [self.view addSubview:SegBkView];
+    
+    SegmentControl *segctrl = [[[SegmentControl alloc]initWithFrame:CGRectMake(30, 9, 261, 27)] autorelease];
+    segctrl.delegate = self;
+    segctrl.segmentSize = CGSizeMake(87, 27);
+    segctrl.segmentSpace = CGSizeMake(0, 0);
+    [segctrl insertSegmentWithTitle:@"热门作品" atIndex:0 animated:NO];
+    [segctrl insertSegmentWithTitle:@"K歌达人" atIndex:1 animated:NO];
+    [segctrl insertSegmentWithTitle:@"最新作品" atIndex:2 animated:NO];
+    
+    [segctrl setTextShadowColor:[UIColor blackColor]];
+    [segctrl setTextShadowColorSelected:[UIColor blackColor]];
+    
+    [segctrl setSegmentBackgroundImageFirst: CImageMgr::GetImageEx("topNavSegLeftNormal_5.png") selectedImage:CImageMgr::GetImageEx("topNavSegLeftDown_5.png")];
+     [segctrl setSegmentBackgroundImage: CImageMgr::GetImageEx("topNavSegMidNormal_5.png") selectedImage:CImageMgr::GetImageEx("topNavSegMidDown_5.png")];
+     [segctrl setSegmentBackgroundImageLast: CImageMgr::GetImageEx("topNavSegRightNormal_5.png") selectedImage:CImageMgr::GetImageEx("topNavSegRightDown_5.png")];
+     
+     [[self view] addSubview:segctrl];
+    
+    CGRect rc = TopRect(self.view.bounds, self.view.bounds.size.height-rcBkg.size.height, rcBkg.size.height);
+    subViewContainer=[[UIView alloc] initWithFrame:rc];
+    [self.view addSubview:subViewContainer];
+    
+    [segctrl setSelectedSegmentIndex:0];
+    
+    [self.view bringSubviewToFront:topshadowView];
+    
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_APP,IObserverApp);
+}
+
+- (void)dealloc
+{
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_APP,IObserverApp);
+    [super dealloc];
+}
+
+
+- (void)tryHideSubView:(UIView*)pView
+{
+    if (!pView.hidden) {
+        pView.hidden=YES;
+        [MobClick endLogPageView:[NSString stringWithUTF8String:object_getClassName(pView)]];
+    }
+}
+
+- (void)tryShowSubView:(UIView*)pView
+{
+    pView.hidden=NO;
+    [MobClick beginLogPageView:[NSString stringWithUTF8String:object_getClassName(pView)]];
+}
+
+-(void)segmentControl:(SegmentControl *)segmentControl selectedItemChanged:(NSUInteger)index
+{
+    [self tryHideSubView:hotSongsView];
+    [self tryHideSubView:newSongsView];
+    [self tryHideSubView:kSongsView];
+    switch (index) {
+        case 0: {
+            if (!hotSongsView) {
+                hotSongsView=[[[HotSongsView alloc] initWithFrame:subViewContainer.bounds] autorelease];
+                [subViewContainer addSubview:hotSongsView];
+            }
+            [self tryShowSubView:hotSongsView];
+        }
+            break;
+        case 1: {
+            if (!kSongsView) {
+                kSongsView=[[[KSongsView alloc] initWithFrame:subViewContainer.bounds] autorelease];
+                [subViewContainer addSubview:kSongsView];
+            }
+            [self tryShowSubView:kSongsView];
+        }
+            break;
+        case 2: {
+            if (!newSongsView) {
+                newSongsView=[[[NewSongsView alloc] initWithFrame:subViewContainer.bounds] autorelease];
+                [subViewContainer addSubview:newSongsView];
+            }
+            [self tryShowSubView:newSongsView];
+        }
+            break;
+        default: break;
+    }
+}
+
+
+- (void)tryDestorySubView:(UIView**)ppView
+{
+    UIView*& pView=*ppView;
+    if ( pView && pView.hidden) {
+        [pView removeFromSuperview];
+        pView=NULL;
+    }
+}
+
+-(void)IObserverApp_MemoryWarning
+{
+    [self tryDestorySubView:&hotSongsView];
+    [self tryDestorySubView:&newSongsView];
+    [self tryDestorySubView:&kSongsView];
+}
+
+@end

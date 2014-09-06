@@ -1,0 +1,306 @@
+//
+//  SettingView.mm
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-7-31.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "SettingViewController.h"
+#include "KSWebView.h"
+#include "LoginViewController.h"
+#include "KSAppDelegate.h"
+#include "ImageMgr.h"
+#include "globalm.h"
+#include "FooterTabBar.h"
+#include "MessageManager.h"
+#include "User.h"
+#include "IUserStatusObserver.h"
+#include "UMFeedback.h"
+#include "HttpRequest.h"
+#include "AboutViewController.h"
+#include "KwConfig.h"
+#include "KwConfigElements.h"
+#include "KuwoConstants.h"
+#include "ShareSettingViewController.h"
+#include "KSModalAlertView.h"
+
+
+static long Encoding18030 = CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingGB_18030_2000);
+@implementation KSSettingViewController
+
+@synthesize settingTableView=_settingTableView;
+@synthesize cellTitle=_cellTitle;
+
+-(id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self=[super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS,IUserStatusObserver);
+    }
+    return self;
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    [self setTitle:@"设置"];
+    
+    [self setCellTitle:[NSArray arrayWithObjects:@"关于酷我K歌",@"意见反馈", nil]];
+    //[[self view] setBackgroundColor:[UIColor whiteColor]];
+
+    UIImageView * imageView = [[UIImageView alloc]init];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER_BOUNDS];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    [imageView release];
+    
+    UIImageView * topshadowView = [[UIImageView alloc]init];
+    CGRect rcshadow = ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y += rcshadow.size.height;
+    rcshadow.size.height = 5;
+    [topshadowView setFrame:rcshadow];
+    [topshadowView setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadowView];
+    [topshadowView release];
+
+    UILabel* lable = [[UILabel alloc]initWithFrame:CGRectMake(60, 15, ROOT_NAVAGATION_CONTROLLER_BOUNDS.size.width-120,18)];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = [self title];
+    lable.Font = [UIFont systemFontOfSize:18];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    [lable release];
+ 
+    CGRect rc=[self view].bounds;
+    CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rc=BottomRect(rc, rc.size.height-rcna.size.height-FOOTER_TABBAR_BTN_HEIGHT, FOOTER_TABBAR_BTN_HEIGHT);
+
+    _settingTableView=[[UITableView alloc] initWithFrame:rc style:UITableViewStyleGrouped];
+    _settingTableView.delegate=self;
+    _settingTableView.dataSource=self;
+    [_settingTableView setBackgroundColor:[UIColor clearColor]];
+    _settingTableView.backgroundView.alpha=0;
+    _settingTableView.scrollEnabled=NO;
+    _settingTableView.sectionFooterHeight=30;
+    
+    [[self view] addSubview:_settingTableView];
+    
+    CGRect rcFoot=[[self view] bounds];
+    rcFoot.size.height=75;
+    UIView * footView=[[UIView alloc] initWithFrame:rcFoot];
+    
+    _settingTableView.tableFooterView=footView;
+    [footView release];
+    
+    _waitingDialog=[[UIAlertView alloc] initWithTitle:@"正在注销,请稍后..." message:nil delegate:nil cancelButtonTitle:nil otherButtonTitles:nil, nil];
+    
+    UIActivityIndicatorView *activity=[[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite] autorelease];
+    [activity setCenter:CGPointMake(150, 50)];
+    [activity startAnimating];
+    [_waitingDialog addSubview:activity];
+    
+    [[self view] setBackgroundColor:UIColorFromRGBValue(0xededed)];
+}
+
+-(void)viewDidUnload
+{
+    _settingTableView=nil;
+    _cellTitle=nil;
+    _waitingDialog=nil;
+}
+
+-(void)dealloc
+{
+     GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS,IUserStatusObserver);
+    [_settingTableView release];
+    [_cellTitle release];
+    [_waitingDialog release];
+    [super dealloc];
+}
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 1;
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 4;
+
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewCell *cell=[tableView dequeueReusableCellWithIdentifier:@"settingCell"];
+    if (!cell) {
+        cell=[[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleValue1 reuseIdentifier:@"settingCell"] autorelease];
+    }
+    switch ([indexPath row]) {
+        case 0:
+            if (User::GetUserInstance()->isOnline()) {
+                if (User::GetUserInstance()->getNickName() && [User::GetUserInstance()->getNickName() length] > 0) {
+                    [cell.textLabel setText:User::GetUserInstance()->getNickName()];
+                }
+                else{
+                    //[cell.textLabel setText:User::GetUserInstance()->getUserName()];
+                    [cell.textLabel setText:@"酷我新人"];
+                }
+                [[cell textLabel] setFont:[UIFont systemFontOfSize:18.0]];
+                [[cell textLabel] setTextColor:[UIColor blackColor]];
+                [cell.detailTextLabel setText:@"注销"];
+                [[cell detailTextLabel] setFont:[UIFont systemFontOfSize:14.0]];
+                [[cell detailTextLabel] setTextColor:UIColorFromRGBValue(0x0f72d8)];
+            }
+            else {
+                [cell.textLabel setText:@"注册登录"];
+                [[cell textLabel] setFont:[UIFont systemFontOfSize:18.0]];
+                [[cell textLabel] setTextColor:[UIColor blackColor]];
+                [cell.detailTextLabel setText:@"未登录"];
+                [[cell detailTextLabel] setFont:[UIFont systemFontOfSize:14.0]];
+                [[cell detailTextLabel] setTextColor:[UIColor blueColor]];
+            }
+            break;
+        case 1:
+        {
+            [cell.textLabel setText:@"分享设置"];
+            [cell.textLabel setFont:[UIFont systemFontOfSize:18.0]];
+            [cell.textLabel setTextColor:[UIColor blackColor]];
+            UIImageView *sinaImage=[[[UIImageView alloc] initWithFrame:CGRectMake(100, 5, 35, 35)] autorelease];
+            [sinaImage setImage:CImageMgr::GetImageEx("sinaShare.png")];
+            [cell.contentView addSubview:sinaImage];
+            UIImageView *qqImage=[[[UIImageView alloc] initWithFrame:CGRectMake(140, 5, 35, 35)] autorelease];
+            [qqImage setImage:CImageMgr::GetImageEx("qqShare.png")];
+            [cell.contentView addSubview:qqImage];
+            UIImageView *renrenImage=[[[UIImageView alloc] initWithFrame:CGRectMake(180, 5, 35, 35)] autorelease];
+            [renrenImage setImage:CImageMgr::GetImageEx("renrenShare.png")];
+            [cell.contentView addSubview:renrenImage];
+        }
+            break;
+        case 2:
+        {
+            [[cell textLabel] setText:[_cellTitle objectAtIndex:0]];
+            [[cell textLabel] setFont:[UIFont systemFontOfSize:18.0]];
+            [[cell textLabel] setTextColor:[UIColor blackColor]];
+            cell.accessoryType=UITableViewCellAccessoryDisclosureIndicator;
+            cell.selectionStyle=UITableViewCellSelectionStyleGray;
+        }
+            break;
+        case 3:
+        {
+            [[cell textLabel] setText:[_cellTitle objectAtIndex:1]];
+            [[cell textLabel] setFont:[UIFont systemFontOfSize:18.0]];
+            [[cell textLabel] setTextColor:[UIColor blackColor]];
+            cell.accessoryType=UITableViewCellAccessoryDisclosureIndicator;
+            cell.selectionStyle=UITableViewCellSelectionStyleGray;
+        }
+            break;
+        default:
+            break;
+    }
+    cell.accessoryType=UITableViewCellAccessoryDisclosureIndicator;  //右侧V标记
+    cell.selectionStyle=UITableViewCellSelectionStyleGray;           //选中变色
+    return cell;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [_settingTableView deselectRowAtIndexPath:indexPath animated:YES];
+    
+    switch ([indexPath row]) {
+        case 0:
+        {
+            if (CHttpRequest::GetNetWorkStatus() == NETSTATUS_NONE) {
+                UIAlertView * alertView=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"没有网络连接" delegate:self cancelButtonTitle:@"确定" otherButtonTitles:nil, nil] autorelease];
+                [alertView show];
+                return;
+            }
+            if (!User::GetUserInstance()->isOnline()) {
+                KSLoginViewController* loginController=[[KSLoginViewController alloc] init];
+                [ROOT_NAVAGATION_CONTROLLER pushViewController:loginController animated:YES];
+                [loginController release];
+            }
+            else {
+                UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"确认注销" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确认", nil] autorelease];
+                [alert show];
+            }
+
+        }
+            break;
+        case 1:
+        {
+            if (!User::GetUserInstance()->isOnline()) {
+                KSModalAlertView *alert=[[[KSModalAlertView alloc] initWithTitle:@"需要登录才能继续的操作" message:@"是否现在登录" delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"确定", nil] autorelease] ;
+                int res=[alert showModal];
+                switch (res) {
+                    case 0:
+                        //取消
+                        [alert dismissWithClickedButtonIndex:0 animated:YES];
+                        break;
+                    case 1:
+                    {
+                        [alert dismissWithClickedButtonIndex:0 animated:YES];
+                        KSLoginViewController* loginController=[[KSLoginViewController alloc] init];
+                        [ROOT_NAVAGATION_CONTROLLER pushViewController:loginController animated:YES];
+                        [loginController release];
+                    }
+                        break;
+                    default:
+                        break;
+                }
+                return;
+            }
+            ShareSettingViewController *share=[[[ShareSettingViewController alloc] init] autorelease];
+            [ROOT_NAVAGATION_CONTROLLER pushViewController:share animated:YES];
+        }
+            break;
+        case 2:
+        {
+            AboutViewController *aboutView=[[[AboutViewController alloc] init] autorelease];
+            [ROOT_NAVAGATION_CONTROLLER pushViewController:aboutView animated:YES];
+        }
+            break;
+        case 3:
+        {
+            [UMFeedback showFeedback:ROOT_NAVAGATION_CONTROLLER withAppkey:UM_APPKEY];
+        }
+            break;
+        default:
+            break;
+    }
+}
+
+
+-(void)IUserStatusObserver_LoginFinish:(LOGIN_TYPE)type :(LOGIN_TIME)first
+{
+    [self.settingTableView reloadData];
+}
+-(void)IUserStatusObserver_Logout
+{
+    [self.settingTableView reloadData];
+}
+-(void)IUserStatusObserver_StateChange
+{
+    [self.settingTableView reloadData];
+}
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex) {
+        case 0:
+            //取消
+            break;
+        case 1:
+            //确认注销
+            [_waitingDialog show];
+            KS_BLOCK_DECLARE
+            {
+                User::GetUserInstance()->Logout();
+                KS_BLOCK_DECLARE{
+                    [_waitingDialog dismissWithClickedButtonIndex:0 animated:NO];
+                }KS_BLOCK_SYNRUN();
+            }
+            KS_BLOCK_RUN_THREAD();
+        default:
+            break;
+    }
+}
+@end

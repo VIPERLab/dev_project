@@ -1,0 +1,15 @@
+//
+//  KBDatabaseManagement.h
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-5.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+@interface KBDatabaseManagement : NSObject
+
++(KBDatabaseManagement*)sharedInstance;
+
+@end

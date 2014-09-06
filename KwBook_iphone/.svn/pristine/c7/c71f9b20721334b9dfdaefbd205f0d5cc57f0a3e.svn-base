@@ -1,0 +1,104 @@
+//
+//  RecentBookList.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "RecentBookList.h"
+#include "KwTools.h"
+
+#define FILENAME_RECENT_BOOKS        @"recentbook.plist"
+
+CRecentBookList * CRecentBookList::GetInstance(){
+    static CRecentBookList sInstance;
+    sInstance.LoadAllBooks();
+    
+    return &sInstance;
+}
+
+void CRecentBookList::AddBookInfo(CRecentBookInfo* recent_book){
+    CRecentBookInfo* book_info = GetCurBook([[NSString stringWithFormat:@"%s", recent_book->m_strBookId.c_str()] intValue]);
+    if (book_info) {
+        book_info->m_unCount = recent_book->m_unCount;
+        book_info->m_unIndex = recent_book->m_unIndex;
+        book_info->m_unNewChapter = recent_book->m_unNewChapter;
+        book_info->m_unRid = recent_book->m_unRid;
+        book_info->m_unPosMilSec = recent_book->m_unPosMilSec;
+    }else {
+        CRecentBookInfo* cur_book = new CRecentBookInfo;
+        *((CRecentBookInfo*)cur_book) = *recent_book;
+        m_vecRecentList.push_back(cur_book);
+    }
+    
+    SaveAllBooks();
+}
+
+void CRecentBookList::DeleteBookInfo(const unsigned& un_book_id){
+    
+    CRecentBookInfo* book_info = GetCurBook(un_book_id);
+    if (book_info) {
+        for (std::vector<CRecentBookInfo *>::iterator iter = m_vecRecentList.begin(); iter!= m_vecRecentList.end(); iter++) {
+            if(un_book_id == [[NSString stringWithFormat:@"%s", (*iter)->m_strBookId.c_str()] intValue])
+            {
+                m_vecRecentList.erase(iter);
+            }
+        }
+        
+        delete book_info;
+        book_info = NULL;
+    }
+    
+    SaveAllBooks();
+}
+
+CRecentBookInfo* CRecentBookList::GetCurBook(const unsigned& un_book_id){
+    for (std::vector<CRecentBookInfo *>::iterator iter = m_vecRecentList.begin(); iter!= m_vecRecentList.end(); iter++) {
+        if(un_book_id == [[NSString stringWithFormat:@"%s", (*iter)->m_strBookId.c_str()] intValue])
+            return (*iter);
+    }
+    
+    return NULL;
+}
+
+BOOL CRecentBookList::SaveAllBooks(){
+    NSMutableArray *arrTask = [NSMutableArray arrayWithCapacity:m_vecRecentList.size()];
+    for (std::vector<CRecentBookInfo *>::iterator iter = m_vecRecentList.begin(); iter!= m_vecRecentList.end(); iter++) {
+        CRecentBookInfo* temp = ((CRecentBookInfo*)(*iter));
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+        temp->SaveToDict(dict);
+        [arrTask addObject:dict];
+    }
+    
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    NSString *str = [filepath stringByAppendingPathComponent:FILENAME_RECENT_BOOKS];
+    if(KwTools::Dir::IsExistFile([str UTF8String]) && !KwTools::Dir::DeleteFile(str))
+    {
+        return false;
+    }
+    BOOL bret = [arrTask writeToFile:str atomically:YES];
+    
+    return bret;
+}
+
+BOOL CRecentBookList::LoadAllBooks(){
+    m_vecRecentList.clear();
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    filepath = [filepath stringByAppendingPathComponent:FILENAME_RECENT_BOOKS];
+    NSMutableArray *arrLocalTask;
+    if(KwTools::Dir::IsExistFile(filepath))
+    {
+        arrLocalTask = [NSMutableArray arrayWithContentsOfFile:filepath];
+        for (NSDictionary *dict in arrLocalTask)
+        {
+            CRecentBookInfo * bookInfo = new CRecentBookInfo;
+            ((CRecentBookInfo*)bookInfo)->LoadFromDict(dict);
+            
+            m_vecRecentList.push_back(bookInfo);
+        }
+    }
+    
+    return TRUE;
+}
+

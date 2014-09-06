@@ -1,0 +1,14 @@
+//
+//  IObserverAudioPlayState.h
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-3.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#ifndef kwbook_IObserverAudioPlayState_h
+#define kwbook_IObserverAudioPlayState_h
+
+
+
+#endif

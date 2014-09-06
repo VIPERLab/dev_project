@@ -1,0 +1,167 @@
+//
+//  SettingViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-4.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "SettingViewController.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+
+
+@interface SettingViewController ()<UITableViewDataSource,UITableViewDelegate>
+@property (nonatomic , strong) UIView *topBar;
+@property (nonatomic , strong) UITableView *tableView;
+@end
+
+@implementation SettingViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    float gap = 0.0;
+    if (isIOS7()) {
+        gap = 20;
+    }
+    float width  = self.view.bounds.size.width;
+    float height = self.view.bounds.size.height;
+    self.topBar = ({
+        UIView *topBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44+gap)];
+        UIImageView *backView = [[UIImageView alloc] initWithFrame:topBar.bounds];
+        if (isIOS7()) {
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor7.png")];
+        }
+        else{
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor6.png")];
+        }
+        [topBar addSubview:backView];
+        
+        UIButton *backBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [backBtn setImage:CImageMgr::GetImageEx("TopBackBtn.png") forState:UIControlStateNormal];
+        [backBtn setFrame:CGRectMake(0, gap, 44, 44)];
+        [backBtn addTarget:self action:@selector(onBackBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:backBtn];
+        
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(70, gap, 180, 44)];
+        [titleLabel setText:@"设置"];
+        [titleLabel setTextAlignment:NSTextAlignmentCenter];
+        [titleLabel setTextColor:[UIColor whiteColor]];
+        [titleLabel setFont:[UIFont systemFontOfSize:20.0]];
+        [topBar addSubview:titleLabel];
+        topBar;
+    });
+    [[self view] addSubview:self.topBar];
+    
+    self.tableView = ({
+        UITableView *tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, self.topBar.bounds.size.height, width, height-self.topBar.bounds.size.height) style:UITableViewStyleGrouped];
+        [tableView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        [tableView setDelegate:self];
+        [tableView setDataSource:self];
+        tableView;
+    });
+    [[self view] addSubview:self.tableView];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)onBackBtnClick:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+-(NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return 4;
+}
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    switch (section) {
+        case 0:
+            return 2;
+        case 1:
+            return 2;
+        case 2:
+            return 1;
+        case 3:
+            return 3;
+    }
+    return 0;
+}
+-(NSString *)tableView:(UITableView *)tableView titleForHeaderInSection:(NSInteger)section
+{
+    if (section == 0) {
+        return @"睡眠模式";
+    }
+    if (section == 3) {
+        return @"其它";
+    }
+    return nil;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    UITableViewCell *cell = [[UITableViewCell alloc] init];
+    //[cell setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    switch (indexPath.section) {
+        case 0:
+        {
+            if (indexPath.row == 0) {
+                [cell.textLabel setText:@"按时间定时"];
+            }
+            else if (indexPath.row == 1){
+                [cell.textLabel setText:@"按集数定时"];
+            }
+            [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
+            break;
+        }
+        case 1:
+        {
+            if (indexPath.row == 0) {
+                [cell.textLabel setText:@"夜间模式"];
+            }
+            else if (indexPath.row == 1){
+                [cell.textLabel setText:@"拔出耳机自动暂停"];
+            }
+            UISwitch *switchView = [[UISwitch alloc] init];
+            [cell setAccessoryView:switchView];
+            break;
+        }
+        case 2:
+        {
+            [cell.textLabel setText:@"清空缓存"];
+            [cell.textLabel setTextAlignment:NSTextAlignmentCenter];
+            break;
+        }
+        case 3:
+        {
+            if (indexPath.row == 0) {
+                [cell.textLabel setText:@"意见反馈"];
+            }
+            else if (indexPath.row == 1){
+                [cell.textLabel setText:@"酷我听书赞一个"];
+            }
+            else if (indexPath.row == 2){
+                [cell.textLabel setText:@"关于我们"];
+            }
+            [cell setAccessoryType:UITableViewCellAccessoryDisclosureIndicator];
+            break;
+        }
+        default:
+            break;
+    }
+    return cell;
+}
+@end

@@ -1,0 +1,71 @@
+//
+//  MessageManager.h
+//  KwSing
+//
+//  Created by 海平 翟 on 12-7-5.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#ifndef KwSing_MessageManager_h
+#define KwSing_MessageManager_h
+
+#include <vector>
+#include <list>
+#include "Variant.h"
+#include "MessageManagerHelper.h"
+#include "Block.h"
+
+//基础Observer机制，集中式管理Observer
+//通知发起者可以在任何线程
+//最后所有通知均在主线程响应，可以用来解决操作界面或者数据等加锁问题
+
+//Observer类型
+typedef enum eumMessage
+{
+    OBSERVER_ID_RESERVE
+    ,OBSERVER_ID_APP
+    ,OBSERVER_ID_MAX    //这一行要保持一直在最后一个
+}MESSAGE_ID;
+
+//注册Observer
+#define GLOBAL_ATTACH_MESSAGE(msg,type) CMessageManager::GetInstance()->AttachMessage(msg,(type*)this)
+#define GLOBAL_ATTACH_MESSAGE_OC(msg,type) CMessageManager::GetInstance()->AttachMessage(msg,type::__GetInstance(),(id<type>)self)
+
+//反注册Observer
+#define GLOBAL_DETACH_MESSAGE(msg,type) CMessageManager::GetInstance()->DetachMessage(msg,(type*)this)
+#define GLOBAL_DETACH_MESSAGE_OC(msg,type) CMessageManager::GetInstance()->DetachMessage(msg,type::__GetInstance(),(id<type>)self)
+
+//同步通知
+#define SYN_NOTIFY(eumObserverID,eumMethod,...) SYN_NOTIFY_H(eumObserverID,eumMethod,__VA_ARGS__)
+
+//异步通知
+#define ASYN_NOTIFY(eumObserverID,eumMethod,iDelay,...) ASYN_NOTIFY_H(eumObserverID,eumMethod,iDelay,__VA_ARGS__)
+
+
+class IMessageObserver;
+@protocol IMessageObserver;
+class CMessageManager
+{
+public:
+    static CMessageManager* GetInstance();
+    
+public:
+    void StopAllMessage();
+    
+    //以下接口尽量不要直接使用，请通过上方的宏来使用
+    void AttachMessage(MESSAGE_ID msg,IMessageObserver* pOb);
+    void AttachMessage(MESSAGE_ID msg,IMessageObserver* pObHelper,id idOb);
+    
+    void DetachMessage(MESSAGE_ID msg,IMessageObserver* pOb);
+    void DetachMessage(MESSAGE_ID msg,IMessageObserver* pObHelper,id idOb);
+    
+    void SyncNotify(MESSAGE_ID msg,unsigned uiMethod,const std::vector<KwTools::Variant>& vecParams);
+    
+    void AsyncNotify(MESSAGE_ID msg,unsigned uiMethod,int nDelay,const std::vector<KwTools::Variant>& vecParams);
+    
+private:
+    CMessageManager();
+    ~CMessageManager();
+};
+
+#endif

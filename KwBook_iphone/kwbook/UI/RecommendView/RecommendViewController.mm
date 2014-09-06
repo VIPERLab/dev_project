@@ -1,0 +1,145 @@
+//
+//  RecommendViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "RecommendViewController.h"
+#import "KBSegmentControl.h"
+#import "globalm.h"
+#import "NewRecoViewController.h"
+#import "HotRecoViewController.h"
+#import "RankRecoViewController.h"
+#import "ImageMgr.h"
+#import "KBSearchViewController.h"
+#import "KBAppDelegate.h"
+
+#define NUM_OF_PAGES            3
+
+@interface RecommendViewController ()<KBSegmentProtocol,UIScrollViewDelegate>
+@property (nonatomic , strong) UIView           *topBar;
+@property (nonatomic , strong) KBSegmentControl *segmentControl;
+@property (nonatomic , strong) UIScrollView     *containerView;
+@property (nonatomic , strong) NSArray          *subVC;
+@end
+
+@implementation RecommendViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    //[[self view] setBackgroundColor:[UIColor purpleColor]];
+    float gap = 0.0;
+    if (isIOS7()) {
+        gap = 20;
+    }
+    float width  = self.view.bounds.size.width;
+    float height = self.view.bounds.size.height;
+    self.topBar = ({
+        UIView *topBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44+gap)];
+        UIImageView *backView = [[UIImageView alloc] initWithFrame:topBar.bounds];
+        if (isIOS7()) {
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor7.png")];
+        }
+        else{
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor6.png")];
+        }
+        [topBar addSubview:backView];
+        UIButton *searchBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [searchBtn setFrame:CGRectMake(276, gap, 44, 44)];
+        [searchBtn setBackgroundImage:CImageMgr::GetImageEx("searchBtn.png") forState:UIControlStateNormal];
+        [searchBtn addTarget:self action:@selector(onSearchBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:searchBtn];
+        topBar;
+    });
+    [[self view] addSubview:self.topBar];
+    
+    self.segmentControl = ({
+        KBSegmentControl *segmentControl = [[KBSegmentControl alloc] initWithItems:@[@"最新",@"最热",@"精选"]];
+        [segmentControl setFrame:CGRectMake(0, gap, 240, 44)];
+        [segmentControl setBackgroundColor:[UIColor clearColor]];
+        [segmentControl setSegmentTextColor:[UIColor whiteColor]];
+        [segmentControl setSelectedSegmentTextColor:UIColorFromRGBValue(0x028bd0)];
+        UIImageView *selectBack = [[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("RecoSegSelectBack.png")];
+        [selectBack setFrame:CGRectMake(0, 0, 80, 44)];
+        segmentControl.selectedStainView = selectBack;
+        [segmentControl setDelegate:self];
+        segmentControl;
+    });
+    [self.topBar addSubview:self.segmentControl];
+    
+    self.containerView = ({
+        UIScrollView *containerView = [[UIScrollView alloc]
+                                       initWithFrame:
+                                       CGRectMake(0, 44+gap,width,height-44-gap)];
+        [containerView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        [containerView setContentSize:CGSizeMake(width * NUM_OF_PAGES, height-44-gap)];
+        [containerView setPagingEnabled:YES];
+        [containerView setShowsHorizontalScrollIndicator:NO];
+        [containerView setShowsVerticalScrollIndicator:NO];
+        [containerView setDelegate:self];
+        containerView;
+    });
+    [[self view] addSubview:self.containerView];
+    [self addSubViewControllers];
+}
+-(void)addSubViewControllers
+{
+    float width  = self.view.bounds.size.width;
+    
+    CGRect subRect = self.containerView.bounds;
+    NewRecoViewController *newRecoVc = [[NewRecoViewController alloc] initWithFrame:subRect];
+    subRect.origin.x += width;
+    HotRecoViewController *hotRecoVc = [[HotRecoViewController alloc] initWithFrame:subRect];
+    subRect.origin.x += width;
+    RankRecoViewController *rankRecoVc = [[RankRecoViewController alloc] initWithFrame:subRect];
+    self.subVC = @[newRecoVc,hotRecoVc,rankRecoVc];
+    
+    for (KBViewController *viewController in self.subVC) {
+        [viewController setFootDelegate:self.footDelegate];
+        [self addChildViewController:viewController];
+        [self.containerView addSubview:viewController.view];
+        [viewController didMoveToParentViewController:self];
+    }
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark
+#pragma mark segment control delegate
+-(void)onSearchBtnClick:(id)sender
+{
+    KBSearchViewController *searchViewController = [[KBSearchViewController alloc] init];
+    [ROOT_NAVI_CONTROLLER pushAddButtonViewController:searchViewController animated:YES];
+}
+
+#pragma mark
+#pragma mark segment control delegate
+-(void)didSegmentControlSelectIndex:(NSUInteger)index
+{
+    float width  = self.view.bounds.size.width;
+    [self.containerView setContentOffset:CGPointMake(width * index, 0) animated:YES];
+}
+#pragma mark
+#pragma mark scroll view delegate
+- (void)scrollViewDidEndDecelerating:(UIScrollView *)scrollView
+{
+    float width  = self.view.bounds.size.width;
+    int index = scrollView.contentOffset.x / width;
+    [self.segmentControl selectIndex:index];
+}
+@end

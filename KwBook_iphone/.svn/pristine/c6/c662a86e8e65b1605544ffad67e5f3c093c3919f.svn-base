@@ -1,0 +1,54 @@
+//
+//  KuwoConstants.h
+//  KwSing
+//
+//  Created by YeeLion on 12-8-1.
+//  Copyright 2011 Kuwo Beijing Co., Ltd. All rights reserved.
+//  从音乐盒搬过来
+
+#import <Foundation/Foundation.h>
+#ifndef _KWSING_CONSTANTS__
+#define _KWSING_CONSTANTS__
+
+// version string & install information
+#define KWSING_PRODUCT        "kwbook"
+#define KWSING_PLATFORM       "ip"
+#define KWSING_VERSION        0x0100
+#define KWSING_VERSION_STRING "1.0.0"
+#define KWSING_PACKEG_TYPE    "ipa"	
+#define KWSING_CHANNEL        @"App Store"
+
+#define KWSING_SERVER_HOST   "http://mobi.kuwo.cn/"//"http://60.28.201.38/"
+
+#define KWSING_SERVER_URL     KWSING_SERVER_HOST"mobi.s?f=kuwo&q="
+
+#define KWSING_COMPANY_NAME   "kuwo"
+#define KWSING_ENCRYPT_KEY    "ylzsxkwm"
+#define UM_APPKEY             @"508e3224527015140900002a"   
+
+__BEGIN_DECLS
+
+const char* GetDeviceType();
+#define DEVICE_TYPE GetDeviceType()
+
+const char* GetDeviceId();
+#define DEVICE_ID GetDeviceId()
+
+const char* GetDeviceMacAddress();
+#define DEVICE_MAC_ADDR GetDeviceMacAddress()
+
+const char* GetUserUUID();
+#define USER_UUID GetUserUUID()
+
+const char* GetDeviceOSVersion();
+#define DEVICE_OS_VERSION   GetDeviceOSVersion()
+
+const char* GetClientVersionString();
+#define KWSING_CLIENT_VERSION_STRING     GetClientVersionString()
+	
+const char* GetClientInstallSource();
+#define KWSING_INSTALL_SOURCE	GetClientInstallSource()
+	
+__END_DECLS
+
+#endif // _KWSING_CONSTANTS__

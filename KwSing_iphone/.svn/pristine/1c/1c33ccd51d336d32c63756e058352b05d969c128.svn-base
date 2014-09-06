@@ -1,0 +1,103 @@
+//
+//  KSSearchDetailViewController.m
+//  KwSing
+//
+//  Created by 单 永杰 on 13-10-30.
+//  Copyright (c) 2013年 酷我音乐. All rights reserved.
+//
+
+#import "KSSearchDetailViewController.h"
+#import "KSAppDelegate.h"
+#import "ImageMgr.h"
+#include "globalm.h"
+
+@interface KSSearchDetailViewController ()<UISearchBarDelegate>{
+    NSArray* friend_list;
+    UISearchBar* search_view;
+    UITableView* table_friends;
+}
+
+@end
+
+@implementation KSSearchDetailViewController
+
+@synthesize searchType = _searchType;
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    UIImageView * imageView=[[[UIImageView alloc] init] autorelease];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER.navigationBar.bounds];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    
+    UILabel* lable = [[UILabel alloc] initWithFrame:CGRectMake(60, 15, self.navigationController.navigationBar.bounds.size.width-120,18)];
+    lable.textAlignment = UITextAlignmentCenter;
+    switch (_searchType) {
+        case E_SEARCH_KUWO:
+            lable.text = @"酷我好友";
+            break;
+        
+        case E_SEARCH_SINA:
+            lable.text = @"新浪微博好友";
+            break;
+            
+        case E_SEARCH_QQ:
+            lable.text = @"腾讯微博好友";
+            break;
+            
+        default:
+            break;
+    }
+    
+    lable.Font = [UIFont systemFontOfSize:18];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    [lable release];
+    
+    UIButton* returnButton= [UIButton buttonWithType:UIButtonTypeCustom];
+    [returnButton setTitle:@"返回" forState: UIControlStateNormal];
+    [[returnButton titleLabel] setShadowColor:[UIColor blackColor]];
+    [[returnButton titleLabel] setShadowOffset:CGSizeMake(0, 1)];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    returnButton.titleLabel.font=[UIFont systemFontOfSize:14];
+    returnButton.frame = CGRectMake(10, 9, 47,28);
+    [returnButton addTarget:self action:@selector(ReturnBtnClick) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:returnButton];
+    
+    UIImageView * topshadow=[[[UIImageView alloc] init] autorelease];
+    CGRect rcshadow=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y+=rcshadow.size.height;
+    rcshadow.size.height=5;
+    [topshadow setFrame:rcshadow];
+    [topshadow setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadow];
+    
+    
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+-(void) ReturnBtnClick{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+@end

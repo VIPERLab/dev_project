@@ -1,0 +1,276 @@
+//
+//  HttpRequest.mm
+//  KwSing
+//
+//  Created by 海平 翟 on 12-7-19.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "HttpRequest.h"
+#include "IHttpNotify.h"
+#include "Block.h"
+#include "Encrypt.h"
+#include "StringUtility.h"
+#include <CoreTelephony/CTTelephonyNetworkInfo.h>
+#include <CoreTelephony/CTCarrier.h>
+#include <map>
+#include "UMengLog.h"
+#include "KwUMengElement.h"
+#include "IObserverApp.h"
+#include "MessageManager.h"
+
+#import "AFHTTPClient.h"
+#import "Reachability.h"
+
+static AFHTTPClient* s_p_http_client = nil;
+
+KSNetworkStatus CHttpRequest::GetNetWorkStatus()
+{
+    if (NULL == [Reachability reachabilityForInternetConnection] ) {
+        return NETSTATUS_NONE;
+    }else if(NULL != [Reachability reachabilityForLocalWiFi]){
+        return NETSTATUS_WIFI;
+    }else {
+        return NETSTATUS_WWAN;
+    }
+//    
+//    
+//    int n_status = s_p_http_client.networkReachabilityStatus;
+//    if (-1 == n_status) {
+//        return NETSTATUS_NONE;
+//    }else {
+//        return (KSNetworkStatus)n_status;
+//    }
+//    return NETSTATUS_NONE;
+}
+
+void CHttpRequest::startMonitorNetwork(){
+    NSURL *url = [NSURL URLWithString:@"http://www.baidu.com"];
+    if (!s_p_http_client) {
+        s_p_http_client = [[AFHTTPClient alloc] initWithBaseURL:url];
+    }
+    
+    [s_p_http_client setReachabilityStatusChangeBlock : ^(AFNetworkReachabilityStatus status) {
+        
+        // 之所以区分无线和3G主要是为了替用户省钱，省流量
+        // 如果应用程序占流量很大，一定要提示用户，或者提供专门的设置，仅在无线网络时使用！
+        switch (status) {
+            case AFNetworkReachabilityStatusReachableViaWiFi:
+                ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::NetWorkStatusChanged,0,(KSNetworkStatus)status);
+                break;
+            case AFNetworkReachabilityStatusReachableViaWWAN:
+                ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::NetWorkStatusChanged,0,(KSNetworkStatus)status);
+                break;
+            case AFNetworkReachabilityStatusNotReachable:
+                ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::NetWorkStatusChanged,0,NETSTATUS_NONE);
+                break;
+            case AFNetworkReachabilityStatusUnknown:
+                ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::NetWorkStatusChanged,0,NETSTATUS_NONE);
+                break;
+        }
+        
+    }];
+}
+
+std::string CHttpRequest::GetNetWorkProviderName()
+{
+    static CTTelephonyNetworkInfo* pInfo=[[CTTelephonyNetworkInfo alloc] init];
+    if(pInfo.subscriberCellularProvider)
+        return [pInfo.subscriberCellularProvider.carrierName UTF8String];
+    else
+        return "";
+}
+
+BOOL CHttpRequest::ConvertUrl(IN const CONVERT_URL_PARA& para,OUT std::string& strFormat,OUT std::string& strBitrate,OUT std::string& strUrl,OUT std::string& strSig)
+{
+    strUrl.clear();
+    
+    while(TRUE) {
+        if (GetNetWorkStatus()==NETSTATUS_NONE) {
+            break;
+        }
+        std::string strParam="type=convert_url2&network=";
+        strParam += GetNetWorkStatus()==NETSTATUS_WIFI?"WIFI":"3G";
+//        strParam += "&format=mp3&mode=audition&rid="+para.strRid;
+        strParam += "&format=aac&mode=download&rid="+para.strRid;
+        
+        if (!para.strBitrate.empty()) {
+            strParam += "&br="+para.strBitrate;
+        }
+        
+        if (!para.strContinueSig.empty()) {
+            strParam += "&sig="+para.strContinueSig;
+        }
+        
+        std::string strEncryptParam=KwTools::Encrypt::CreateDesUrl(strParam);
+        
+        std::string strData;
+        if ( !QuickSyncGet(strEncryptParam, strData) || strData.empty()) {
+            break;
+        }
+        std::map<std::string,std::string> mapDatas;
+        KwTools::StringUtility::TokenizeKeyValueEx(strData,mapDatas,"\r\n");
+        if (mapDatas.empty()) {
+            break;
+        }
+        strFormat=mapDatas["format"];
+        strBitrate=mapDatas["bitrate"];
+        strUrl=mapDatas["url"];
+        strSig=mapDatas["sig"];
+        break;
+    }
+    
+    if (strUrl.empty()) {
+//        UMengLog(KS_GET_SONGURL, "1");
+    }else {
+//        UMengLog(KS_GET_SONGURL, "0");
+    }
+    
+    return !strUrl.empty();
+}
+
+BOOL CHttpRequest::QuickSyncGet(IN const std::string& strUrl,OUT std::string& strOut)
+{
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    strOut.clear();
+
+    NSURL* url=[NSURL URLWithString:[NSString stringWithUTF8String:strUrl.c_str()]];
+    
+    int nRetryTimes(0);
+    while (nRetryTimes++ <=3) {
+        NSURLRequest* request=[NSURLRequest requestWithURL:url cachePolicy:(NSURLCacheStorageNotAllowed) timeoutInterval:10];
+        
+        NSData* data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+        
+        if (data && (0 < data.length)) {
+            strOut = [[[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding] UTF8String];
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+BOOL CHttpRequest::QuickSyncGet(IN const std::string& strUrl,OUT void*&pData,OUT unsigned& len)
+{
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    NSURL* url=[NSURL URLWithString:[NSString stringWithUTF8String:strUrl.c_str()]];
+    
+    int nRetryTimes(0);
+    while (nRetryTimes++ <=1) {
+        NSURLRequest* request=[NSURLRequest requestWithURL:url cachePolicy:NSURLCacheStorageNotAllowed timeoutInterval:10];
+        NSData* data = [NSURLConnection sendSynchronousRequest:request returningResponse:nil error:nil];
+        
+        if (data) {
+            len=[data length];
+            if (len>0) {
+                pData=new char[len+1];
+                memset(pData,0,len+1);
+                memcpy(pData,[data bytes],len);
+            } else {
+                pData=NULL;
+                len=0;
+            }
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+CHttpRequest::CHttpRequest(const std::string& strUrl, const std::string& str_dest_path)
+{
+    NSURL* url=[NSURL URLWithString:[NSString stringWithUTF8String:strUrl.c_str()]];
+    NSMutableURLRequest *request = [NSMutableURLRequest requestWithURL:url cachePolicy:NSURLRequestUseProtocolCachePolicy timeoutInterval:300];
+    
+    m_pHttp = [[AFDownloadRequestOperation alloc] initWithRequest:request targetPath:[NSString stringWithUTF8String:str_dest_path.c_str()] shouldResume:YES];
+    
+//    m_pHttp = [[AFDownloadRequestOperation alloc] initWithRequest:request targetPath:[[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory,NSUserDomainMask,YES) lastObject] stringByAppendingPathComponent:@"test.mov"] shouldResume:YES];
+    
+    m_bFinished = false;
+    m_bSuccessed = false;
+    ul_file_size = 0;
+    ul_local_size = 0;
+}
+
+CHttpRequest::~CHttpRequest()
+{
+    StopRequest();
+}
+
+BOOL CHttpRequest::AsyncSendRequest(IHttpRequestNotify* pNotify)
+{
+    assert(m_pHttp);
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    
+    [m_pHttp setCompletionBlockWithSuccess:^(AFHTTPRequestOperation *operation, id responseObject) {
+        m_bFinished = true;
+        m_bSuccessed = true;
+        if (pNotify) {
+            if (0 != ul_local_size && ul_local_size == ul_file_size) {
+                pNotify->IHttpNotify_Stop(this, YES);
+            }else {
+                pNotify->IHttpNotify_Stop(this, NO);
+            }
+            
+        }
+        NSLog(@"Download success!");
+    } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
+        m_bFinished = true;
+        m_bSuccessed = false;
+        if (pNotify) {
+            pNotify->IHttpNotify_Stop(this, NO);
+        }
+        NSLog(@"Download fail!");
+    }];
+    
+    [m_pHttp setProgressiveDownloadProgressBlock:^(NSInteger bytesRead, long long totalBytesRead, long long totalBytesExpected, long long totalBytesReadForFile, long long totalBytesExpectedToReadForFile) {
+        ul_local_size = totalBytesReadForFile;
+        ul_file_size = totalBytesExpectedToReadForFile;
+        if (pNotify) {
+            pNotify->IHttpNotify_Process(this, (long)totalBytesExpectedToReadForFile, (long)totalBytesReadForFile, bytesRead);
+        }
+//        NSLog(@"Download bytes %lld", totalBytesRead);
+    }];
+    
+    [m_pHttp start];
+    return TRUE;
+}
+
+void CHttpRequest::StopRequest()
+{
+    [m_pHttp pause];
+    
+    [m_pHttp release];
+    
+    m_pHttp=NULL;
+}
+
+BOOL CHttpRequest::IsFinished() const
+{
+    return m_bFinished;
+}
+
+BOOL CHttpRequest::IsSuccess() const
+{
+    return m_bSuccessed;
+}
+
+void CHttpRequest::PauseRequest(){
+    if (m_pHttp) {
+        [m_pHttp pause];
+    }
+}
+
+void CHttpRequest::ResumeRequest(){
+    if (m_pHttp) {
+        [m_pHttp resume];
+    }
+}
+
+

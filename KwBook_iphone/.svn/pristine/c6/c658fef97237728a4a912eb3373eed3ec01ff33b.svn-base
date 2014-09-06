@@ -1,0 +1,177 @@
+//
+//  RecoCellBtnItem.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "RecoCellBtnItem.h"
+#import "RecoCellDataItem.h"
+#import "ImageMgr.h"
+#import "CacheMgr.h"
+#import "HttpRequest.h"
+#import <CoreText/CoreText.h>
+#import "globalm.h"
+#import "KBBookDetailViewController.h"
+#import "BookInfo.h"
+#import "KBAppDelegate.h"
+
+@interface RecoCellBtnItem ()
+{
+    UIImageView         *_imageView;
+    UIView              *_bottomBackView;
+    RecoCellDataItem    *_dataItem;
+}
+
+-(void)onButtonClick:(id)sender;
+@end
+
+@implementation RecoCellBtnItem
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
+
+-(id)initWithFrame:(CGRect)frame andAlbumInfo:(RecoCellDataItem *)dataItem
+{
+    self = [self initWithFrame:frame];
+    if (self) {
+        //[self setBackgroundImage:CImageMgr::GetImageEx("RecoCellBack.png") forState:UIControlStateNormal];
+        _dataItem = dataItem;
+        _imageView = [[UIImageView alloc] initWithFrame:CGRectMake(4.5, 4.5, 96, 96)];
+        [self addSubview:_imageView];
+        _bottomBackView = [[UIView alloc] initWithFrame:CGRectMake(4.5, 85.5, 96, 15)];
+        [_bottomBackView setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:0.4]];
+        [self addSubview:_bottomBackView];
+        
+        UILabel *musicCountLabel = [[UILabel alloc] initWithFrame:CGRectMake(3.5, 0, 89, 15)];
+        [musicCountLabel setTextColor:[UIColor whiteColor]];
+        [musicCountLabel setBackgroundColor:[UIColor clearColor]];
+        [musicCountLabel setFont:[UIFont systemFontOfSize:11.0]];
+        if (_dataItem.recoType == RECO_NEW) {
+            [musicCountLabel setText:[NSString stringWithFormat:@"更新到%@回",_dataItem.musicCount]];
+        }
+        else if (_dataItem.recoType == RECO_HOT){
+            [musicCountLabel setText:[NSString stringWithFormat:@"%@人在听",_dataItem.listenCount]];
+        }
+        [_bottomBackView addSubview:musicCountLabel];
+
+        [self addTarget:self action:@selector(onButtonClick:) forControlEvents:UIControlEventTouchUpInside];
+        //[self showDefaultImage:CImageMgr::GetImageEx("RecoCellDefaultBookImage.png")];
+    }
+    return self;
+}
+
+-(void)showDefaultImage:(UIImage *)defaultImage
+{
+    [self setBackgroundImage:defaultImage forState:UIControlStateNormal];
+}
+-(void)startLoadImage
+{
+    __block void* imageData = NULL;
+    __block unsigned length = 0;;
+    __block BOOL outOfDate;
+    NSLog(@"%@",_dataItem.imageURL);
+    if (_dataItem.imageURL && CCacheMgr::GetInstance()->Read([_dataItem.imageURL UTF8String], imageData, length, outOfDate)) {
+        NSLog(@"load image from cache");
+        NSData *cacheImageData=[[NSData alloc] initWithBytesNoCopy:imageData length:length freeWhenDone:YES];
+        UIImage *image = [[UIImage alloc] initWithData:cacheImageData];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self setAlpha:0.0];
+            CGContextRef context=UIGraphicsGetCurrentContext();
+            [UIView beginAnimations:nil context:context];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+            [UIView setAnimationDuration:1.5];
+            [self setAlpha:1.0];
+            [_bottomBackView setHidden:NO];
+            [_imageView setImage:image];
+            [UIView commitAnimations];
+        });
+    }
+    else{
+        NSLog(@"load image from web");
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSData *imageData = [NSData dataWithContentsOfURL:[NSURL URLWithString:_dataItem.imageURL]];
+            if (imageData) {
+                UIImage *image = [[UIImage alloc] initWithData:imageData];
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self setAlpha:0.0];
+                    CGContextRef context=UIGraphicsGetCurrentContext();
+                    [UIView beginAnimations:nil context:context];
+                    [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+                    [UIView setAnimationDuration:1.5];
+                    [self setAlpha:1.0];
+                    [_bottomBackView setHidden:NO];
+                    [_imageView setImage:image];
+                    [UIView commitAnimations];
+                    CCacheMgr::GetInstance()->Cache(T_DAY, 3, [_dataItem.imageURL UTF8String], [imageData bytes], [imageData length]);
+                });
+            }
+            else{
+                NSLog(@"load image fail");
+            }
+        });
+    }
+
+}
+-(void)onButtonClick:(id)sender
+{
+    NSLog(@"click type:%@",_dataItem.type);
+    if ([_dataItem.type isEqualToString:@"1"] || [_dataItem.type isEqualToString:@"2"]) {
+        CBookInfo info;
+        info.m_strBookId = [_dataItem.bookId UTF8String];
+        info.m_strArtist = [_dataItem.artistName UTF8String];
+        info.m_strBookTitle = [_dataItem.bookName UTF8String];
+        info.m_unListenCnt = [_dataItem.listenCount integerValue];
+        info.m_unCount = [_dataItem.musicCount integerValue];
+        info.m_unType = [_dataItem.type integerValue];
+        info.m_strSummary = [_dataItem.desc UTF8String];
+        info.m_strImgUrl = [_dataItem.imageURL UTF8String];
+        
+        KBBookDetailViewController *detailViewController = [[KBBookDetailViewController alloc] initWithBookInfo:&info];
+        [ROOT_NAVI_CONTROLLER pushViewController:detailViewController animated:YES];
+    }
+}
+
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    UIImage *backImage = CImageMgr::GetImageEx("RecoCellBack.png");
+    [backImage drawInRect:rect];
+    //bookname最多显示12个字，作者名字最多显示8个字
+    //_dataItem.bookName = @"aaaaaaaaaaaaaaa";
+    _dataItem.artistName = @"赵薇";
+    
+    int bookNameLength = _dataItem.bookName.length;
+    int artistNameLength = _dataItem.artistName.length;
+    
+    NSMutableString *bookName   = [NSMutableString stringWithString:_dataItem.bookName];
+    NSMutableString *artistName = [NSMutableString stringWithString:_dataItem.artistName];
+    
+    if (bookNameLength > 12) {
+        bookName = [[[bookName substringToIndex:12] stringByAppendingString:@"..."] mutableCopy];
+        bookNameLength = 15;
+    }
+    if (artistNameLength > 8) {
+        artistName = [[[artistName substringToIndex:7] stringByAppendingString:@"..."] mutableCopy];
+        artistNameLength = 10;
+    }
+    NSString *strName = [NSString stringWithFormat:@"%@\n%@",bookName,artistName];
+    NSMutableAttributedString *attriString = [[NSMutableAttributedString alloc] initWithString:strName];
+    [attriString addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:13.0] range:NSMakeRange(0, bookNameLength)];
+    [attriString addAttribute:NSFontAttributeName value:[UIFont systemFontOfSize:11.0] range:NSMakeRange(bookNameLength+1, artistNameLength)];
+    [attriString addAttribute:NSForegroundColorAttributeName value:defaultBlackColor() range:NSMakeRange(0, bookNameLength)];
+    [attriString addAttribute:NSForegroundColorAttributeName value:defaultGrayColor() range:NSMakeRange(bookNameLength+1, artistNameLength)];
+    
+    [attriString drawInRect:CGRectMake(7.5, 105, 90, 52)];
+}
+
+
+@end

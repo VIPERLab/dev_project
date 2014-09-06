@@ -1,0 +1,165 @@
+//
+//  KBDatabaseManagement.m
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-5.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#import "KBDatabaseManagement.h"
+#import "FMDatabaseQueue.h"
+#import "FMDatabase.h"
+#include "KwTools.h"
+#include "BookManagement.h"
+
+#define STR_DATABASE_URL @"kwbook.sqlite"
+
+@interface KBDatabaseManagement (){
+}
+
+@property (nonatomic, strong)FMDatabaseQueue* databaseQueue;
+
+@end
+
+@implementation KBDatabaseManagement
+
+static KBDatabaseManagement* s_shared_instance = nil;
+
++(KBDatabaseManagement*)sharedInstance{
+    @synchronized(self){
+        if (nil == s_shared_instance)
+            s_shared_instance = [[KBDatabaseManagement alloc] init];
+    }
+    
+    return s_shared_instance;
+}
+
+- (void)dealloc{
+    _databaseQueue = nil;
+}
+
+-(id)init{
+    self = [super init];
+    if (self) {
+        NSString* str_database_path = [NSString stringWithFormat:@"%@/%@", KwTools::Dir::GetPath(KwTools::Dir::PATH_DATABASE), STR_DATABASE_URL];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:str_database_path]) {
+            //如果数据库存在，打开数据库，读取数据表中的数据；
+             _databaseQueue = [FMDatabaseQueue databaseQueueWithPath:str_database_path];
+            //初始化 内存数据；
+            if (_databaseQueue) {
+                [_databaseQueue inDatabase:^(FMDatabase *db) {
+                    [db setShouldCacheStatements:YES];
+                }];
+                [self loadData];
+            }
+            
+        }else {//如果数据库不存在，创建数据库和数据表；
+            _databaseQueue = [FMDatabaseQueue databaseQueueWithPath:str_database_path];
+            if (_databaseQueue) {
+                [_databaseQueue inDatabase:^(FMDatabase *database) {
+                    [database open];
+                    [database setShouldCacheStatements:YES];
+                    [database executeUpdate:@"CREATE TABLE BookList(BookId integer PRIMARY KEY NOT NULL,BookName text,Artist text,Count integer,HotIndex integer, ListenCnt integer, ImgUrl text, NewChapter integer, Digest text, Type         integer, Summary text)"];
+                    [database executeUpdate:@"CREATE TABLE ChapterList(Rid integer PRIMARY KEY NOT NULL, BookId integer NOT NULL, BookName text, Artist text, ChapterName text, HotIndex integer, Download integer, FileSize integer, Duration integer, Url text, Sig text, LocalPath text, LocalSize integer)"];
+                    [database close];
+                }];
+            }
+        }
+    }
+    
+    return self;
+}
+
+-(void)addBook : (CBookInfo*) book_info{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        NSString* str_sql = @"insert into BookList(BookId, BookName, Artist, Count, HotIndex, ListenCnt, ImgUrl, NewChapter, Digest, Type, Summary) values (%d, %@, %@, %d, %d, %d, %@, %d, %@, %d, %@)";
+        [db executeUpdate:str_sql, [[NSString stringWithUTF8String:book_info->m_strBookId.c_str()] intValue], [NSString stringWithUTF8String:book_info->m_strBookTitle.c_str()], [NSString stringWithUTF8String:book_info->m_strArtist.c_str()], book_info->m_unCount, book_info->m_unHotIndex, book_info->m_unListenCnt, [NSString stringWithUTF8String:book_info->m_strImgUrl.c_str()], book_info->m_unNewChapter, [NSString stringWithUTF8String:book_info->m_strDigest.c_str()], book_info->m_unType, [NSString stringWithUTF8String:book_info->m_strSummary.c_str()]];
+    }];
+}
+
+-(void)deleteBook : (std::string)str_book_id{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        [db executeUpdate:@"delete from BookList where BookId = ?", [NSString stringWithUTF8String:str_book_id.c_str()]];
+    }];
+}
+
+-(void)addChapter : (CChapterInfo*)chapter_info{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        NSString* str_sql = @"insert into ChapterList(Rid, BookId, BookName, Artist, ChapterName, HotIndex, Download, FileSize, Duration, Url, Sig, LocalPath, LocalSize) values (%d, %d, %@, %@, %@, %d, %d, %d, %d, %@, %@, %@, %d)";
+        [db executeUpdate:str_sql, chapter_info->m_unRid, [[NSString stringWithUTF8String:chapter_info->m_strBookId.c_str()] intValue], [NSString stringWithUTF8String:chapter_info->m_strBookName.c_str()], [NSString stringWithUTF8String:chapter_info->m_strArtist.c_str()], [NSString stringWithUTF8String:chapter_info->m_strName.c_str()], chapter_info->m_unHotIndex, chapter_info->m_unDownload, chapter_info->m_unFileSize, chapter_info->m_unDuration, [NSString stringWithUTF8String:chapter_info->m_strUrl.c_str()], [NSString stringWithUTF8String:chapter_info->m_strSig.c_str()], [NSString stringWithUTF8String:chapter_info->m_strLocalPath.c_str()], chapter_info->m_unLocalSize];
+    }];
+}
+
+-(void)addChapters : (std::vector<CChapterInfo*>&) vec_chapter{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        NSString* str_sql = @"insert into ChapterList(Rid, BookId, BookName, Artist, ChapterName, HotIndex, Download, FileSize, Duration, Url, Sig, LocalPath, LocalSize) values (%d, %d, %@, %@, %@, %d, %d, %d, %d, %@, %@, %@, %d)";
+        for (std::vector<CChapterInfo*>::iterator iter = vec_chapter.begin(); iter != vec_chapter.end(); ++iter) {
+            [db executeUpdate:str_sql, (*iter)->m_unRid, [[NSString stringWithUTF8String:(*iter)->m_strBookId.c_str()] intValue], [NSString stringWithUTF8String:(*iter)->m_strBookName.c_str()], [NSString stringWithUTF8String:(*iter)->m_strArtist.c_str()], [NSString stringWithUTF8String:(*iter)->m_strName.c_str()], (*iter)->m_unHotIndex, (*iter)->m_unDownload, (*iter)->m_unFileSize, (*iter)->m_unDuration, [NSString stringWithUTF8String:(*iter)->m_strUrl.c_str()], [NSString stringWithUTF8String:(*iter)->m_strSig.c_str()], [NSString stringWithUTF8String:(*iter)->m_strLocalPath.c_str()], (*iter)->m_unLocalSize];
+        }
+    }];
+}
+
+-(void)deleteChapter : (unsigned)n_rid{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        [db executeUpdate:@"delete from ChapterList where Rid = %d", n_rid];
+    }];
+}
+
+-(void)deleteChapters : (std::string)str_book_id{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        [db executeUpdate:@"delete from ChapterList where BookId = %s", str_book_id.c_str()];
+    }];
+}
+
+-(void)updateChapter : (CChapterInfo*)chapter_info{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        NSString* str_sql = @"update ChapterList set Download = %d, FileSize = %d, Url = %@, Sig = %@, LocalPath = %@, LocalSize = %d";
+        [db executeUpdate:str_sql, chapter_info->m_unDownload, chapter_info->m_unFileSize, [NSString stringWithUTF8String:chapter_info->m_strUrl.c_str()], [NSString stringWithUTF8String:chapter_info->m_strSig.c_str()], [NSString stringWithUTF8String:chapter_info->m_strLocalPath.c_str()], chapter_info->m_unLocalSize];
+    }];
+}
+
+-(void)loadData{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        FMResultSet* query_result = [db executeQuery:@"select * from ChapterList"];
+        while ([query_result next]) {
+            CLocalTask chapter_info;
+            chapter_info.m_unRid = [query_result intForColumn:@"Rid"];
+            chapter_info.m_strBookId = [[query_result stringForColumn:@"BookId"] UTF8String];
+            chapter_info.m_strBookName = [[query_result stringForColumn:@"BookName"] UTF8String];
+            chapter_info.m_strArtist = [[query_result stringForColumn:@"Artist"] UTF8String];
+            chapter_info.m_strName = [[query_result stringForColumn:@"ChapterName"] UTF8String];
+            chapter_info.m_unHotIndex = [query_result intForColumn:@"HotIndex"];
+            chapter_info.m_unDownload = [query_result intForColumn:@"Download"];
+            chapter_info.m_unFileSize = [query_result intForColumn:@"FileSize"];
+            chapter_info.m_unDuration = [query_result intForColumn:@"Duration"];
+            chapter_info.m_strUrl = [[query_result stringForColumn:@"Url"] UTF8String];
+            chapter_info.m_strSig = [[query_result stringForColumn:@"Sig"] UTF8String];
+            chapter_info.m_strLocalPath = [[query_result stringForColumn:@"LocalPath"] UTF8String];
+            chapter_info.m_unLocalSize = [query_result intForColumn:@"LocalSize"];
+            chapter_info.taskStatus = (0 == chapter_info.m_unDownload) ? TaskStatus_Pause : TaskStatus_Finish;
+            
+            CBookManagement::GetInstance()->AddChapter(&chapter_info);
+        }
+        
+        query_result = nil;
+        query_result = [db executeQuery:@"select * from BookList"];
+        while ([query_result next]) {
+            CBookInfo book_info;
+            book_info.m_strBookId = [[query_result stringForColumn:@"BookId"] UTF8String];
+            book_info.m_strBookTitle = [[query_result stringForColumn:@"BookName"] UTF8String];
+            book_info.m_strArtist = [[query_result stringForColumn:@"Artist"] UTF8String];
+            book_info.m_unCount = [query_result intForColumn:@"Count"];
+            book_info.m_unHotIndex = [query_result intForColumn:@"HotIndex"];
+            book_info.m_unListenCnt = [query_result intForColumn:@"ListenCnt"];
+            book_info.m_strImgUrl = [[query_result stringForColumn:@"ImgUrl"] UTF8String];
+            book_info.m_unNewChapter = [query_result intForColumn:@"NewChapter"];
+            book_info.m_strDigest = [[query_result stringForColumn:@"Digest"] UTF8String];
+            book_info.m_unType = [query_result intForColumn:@"Type"];
+            book_info.m_strSummary = [[query_result stringForColumn:@"Summary"] UTF8String];
+            
+            CBookManagement::GetInstance()->AddBook(&book_info);
+        }
+    }];
+}
+
+@end

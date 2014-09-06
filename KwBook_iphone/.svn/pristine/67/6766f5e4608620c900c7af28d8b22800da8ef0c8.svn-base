@@ -1,0 +1,45 @@
+//
+//  BookManagement.h
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-6.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#ifndef __kwbook__BookManagement__
+#define __kwbook__BookManagement__
+
+#include <iostream>
+#include <map>
+
+#ifndef __kwbook__LocalTask__
+#include "LocalTask.h"
+#endif
+
+
+class CBookManagement {
+private:
+    CBookManagement(){}
+public:
+    virtual~ CBookManagement(){}
+    
+    CBookManagement* GetInstance();
+    
+    void AddChapter(CChapterInfo* chapter_info);
+    void AddChapters(std::vector<CChapterInfo*> vec_chapter);
+    
+    void DeleteChapter(CChapterInfo* chapter_info);
+    void DeleteChapters(std::string str_book_id);
+    
+    void ResetChapter(CChapterInfo* chapter_info);
+    
+    bool HasBook(std::string str_book_id);
+    bool HasChapter(CChapterInfo* chapter_info);
+    
+    std::map<int, CChapterInfo*>* GetChapterList(std::string str_book_id);
+    
+private:
+    std::map<std::string, std::map<int, CChapterInfo*>* >  m_BookList;
+};
+
+#endif /* defined(__kwbook__BookManagement__) */

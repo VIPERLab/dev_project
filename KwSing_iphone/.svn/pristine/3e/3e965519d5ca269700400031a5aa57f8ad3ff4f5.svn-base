@@ -1,0 +1,227 @@
+//
+//  ButtonItem.m
+//  KwSing
+//
+//  Created by 熊 改 on 12-11-20.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "ButtonItem.h"
+#import "ASIHTTPRequest.h"
+#import "ASIDownloadCache.h"
+#import <QuartzCore/QuartzCore.h>
+#import "ImageMgr.h"
+#import "KSAppDelegate.h"
+#import "NowPlayViewController.h"
+#import "BaseWebViewController.h"
+#import "CacheMgr.h"
+#import "Block.h"
+#import "HttpRequest.h"
+#import "MessageManager.h"
+#import "globalm.h"
+#include "iToast.h"
+#import "ActivityViewController.h"
+#import "Locate.h"
+
+
+@implementation ButtonItem
+@synthesize songId,type=_type,upString=_upString,donwString=_downString;
+-(id)initWithFrame:(CGRect)frame
+{
+    self=[super initWithFrame:frame];
+    if (self) {
+        _isFistShow=true;
+        CGRect upRect=CGRectMake(8.5, frame.size.height-40, frame.size.width-8.5, 20);
+        CGRect downRect=CGRectMake(8.5, frame.size.height-22, frame.size.width-8.5, 20);
+        upLabel=[[[UILabel alloc] initWithFrame:upRect] autorelease];
+        downLabel=[[[UILabel alloc] initWithFrame:downRect] autorelease];
+
+        [upLabel setTextColor:[UIColor whiteColor]];
+        [upLabel setBackgroundColor:[UIColor clearColor]];
+        [upLabel setFont:[UIFont systemFontOfSize:14.0]];
+        upLabel.shadowColor=UIColorFromRGBValue(0x2b2b2b);
+        upLabel.shadowOffset=CGSizeMake(0, 1);
+        upLabel.lineBreakMode=UILineBreakModeTailTruncation;
+        
+        [downLabel setTextColor:[UIColor whiteColor]];
+        [downLabel setBackgroundColor:[UIColor clearColor]];
+        [downLabel setFont:[UIFont systemFontOfSize:12]];
+        downLabel.shadowOffset=CGSizeMake(0, 1);
+        downLabel.shadowColor=[UIColor blackColor];
+        downLabel.lineBreakMode=UILineBreakModeTailTruncation;
+        
+        [self addSubview:upLabel];
+        [self addSubview:downLabel];
+        
+        [self addTarget:self action:@selector(onSingNow:) forControlEvents:UIControlEventTouchUpInside];
+    }
+    return self;
+}
+-(void)setType:(BUTTON_TYPE)type
+{
+    _type=type;
+    if (type == OTHER_BUTTON) {
+        [upLabel setHidden:true];
+        [downLabel setHidden:true];
+    }
+    else{
+        [upLabel setHidden:false];
+        [downLabel setHidden:false];
+    }
+}
+-(void)initDefaulfImage:(bool)isSmall
+{
+    if (isSmall) {
+        [self setBackgroundImage:CImageMgr::GetImageEx("defaultHeadPicSmall.png") forState:UIControlStateNormal];
+    }
+    else{
+        [self setBackgroundImage:CImageMgr::GetImageEx("defaultHeadPicBig.png") forState:UIControlStateNormal];
+    }
+}
+-(void)loadImage:(NSString*)imageUrl
+{
+    //NSLog(@"load image url:%@",imageUrl);
+    [imageUrl retain];
+    [_imageUrl release];
+    _imageUrl=imageUrl;
+    
+    __block void* imageData(NULL);
+    __block unsigned length(0);
+    BOOL outOfTime(true);
+    if ((nil != imageUrl) && CCacheMgr::GetInstance()->Read([imageUrl UTF8String], imageData, length, outOfTime)) {
+        //NSLog(@"read cache");
+        NSData *cacheImageData=[[NSData alloc] initWithBytesNoCopy:imageData length:length freeWhenDone:YES];
+        UIImage *image=[[UIImage alloc] initWithData:cacheImageData];
+        
+        if (_isFistShow) {
+            //[self setTransform:CGAffineTransformMakeScale(0.25, 0.25)];
+            [self setAlpha:0.0];
+            CGContextRef context=UIGraphicsGetCurrentContext();
+            [UIView beginAnimations:nil context:context];
+            [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+            [UIView setAnimationDuration:1.5];
+            [self setBackgroundImage:image forState:UIControlStateNormal];
+            [self setAlpha:1.0];
+            //[self setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
+            [UIView commitAnimations];
+            _isFistShow=false;
+        }
+        [cacheImageData release];
+        [image release];
+    }
+    else
+    {
+        //NSLog(@"load from web");
+        KS_BLOCK_DECLARE{
+            bool retRes=CHttpRequest::QuickSyncGet([_imageUrl UTF8String], imageData, length);
+            KS_BLOCK_DECLARE{
+            if (retRes) {
+                //NSLog(@"load from web success");
+                NSData* webImageData=[[NSData alloc] initWithBytesNoCopy:imageData length:length freeWhenDone:true];
+                CCacheMgr::GetInstance()->Cache(T_DAY, 3, [_imageUrl UTF8String], [webImageData bytes], [webImageData length]);
+                UIImage *image=[[UIImage alloc] initWithData:webImageData];
+                
+                if (_isFistShow) {
+                    //[self setTransform:CGAffineTransformMakeScale(0.25, 0.25)];
+                    [self setAlpha:0.0];
+                    CGContextRef context=UIGraphicsGetCurrentContext();
+                    [UIView beginAnimations:nil context:context];
+                    [UIView setAnimationCurve:UIViewAnimationCurveEaseInOut];
+                    [UIView setAnimationDuration:1.5];
+                    [self setAlpha:1.0];
+                    [self setBackgroundImage:image forState:UIControlStateNormal];
+                    //[self setTransform:CGAffineTransformMakeScale(1.0, 1.0)];
+                    [UIView commitAnimations];
+                    _isFistShow=false;
+                }
+                [webImageData release];
+                [image release];
+            }
+            else{
+                //NSLog(@"load fail");
+            }
+            }KS_BLOCK_SYNRUN()
+        }KS_BLOCK_RUN_THREAD()
+    }
+}
+-(void)setUpString:(NSString *)upString{
+    [upString retain];
+    [_upString release];
+    _upString=upString;
+    [upLabel setText:_upString];
+}
+-(void)setDonwString:(NSString *)donwString{
+    [donwString retain];
+    [_downString release];
+    _downString=donwString;
+    [downLabel setText:_downString];
+}
+-(void)onSingNow:(ButtonItem *)sender
+{
+    if(_type == HOTSONG_BUTTON || _type == NEWSONG_BUTTON)
+    {
+        if(CHttpRequest::GetNetWorkStatus() == NETSTATUS_WWAN)
+        {
+            static bool btip = false;
+            if(!btip)
+            {
+                [[[[iToast makeText:NSLocalizedString(@"您当前使用的是2G/3G网络\r\n播放作品将产生一定的流量", @"")]setGravity:iToastGravityCenter]setDuration:2000]show];
+                btip = true;
+            }
+        }
+    }
+    switch (_type) {
+        case HOTSONG_BUTTON:
+            if (sender.songId) {
+                NowPlayViewController *nowPlay=[[[NowPlayViewController alloc] init] autorelease];
+                [nowPlay setKid:sender.songId];
+                [nowPlay setPlayType:false];
+                [ROOT_NAVAGATION_CONTROLLER pushViewController:nowPlay animated:YES];
+            }
+            break;
+        case KSONG_BUTTON:
+            if (sender.songId) {
+                BaseWebViewController *homePage=[[[BaseWebViewController alloc] init] autorelease];
+                [homePage setStrUrl:[NSString stringWithFormat:@"http://changba.kuwo.cn/kge/webmobile/ios/userhome.html?=111=%@",sender.songId]];
+                [homePage setTitle:[NSString stringWithFormat:@"%@的个人主页",sender.donwString]];
+                [ROOT_NAVAGATION_CONTROLLER pushViewController:homePage animated:YES];
+            }
+            break;
+        case NEWSONG_BUTTON:
+            if (sender.songId) {
+                NowPlayViewController *nowPlay=[[[NowPlayViewController alloc] init] autorelease];
+                [nowPlay setPlayType:false];
+                [nowPlay setKid:sender.songId];
+                [ROOT_NAVAGATION_CONTROLLER pushViewController:nowPlay animated:YES];
+//                [nowPlay playId:sender.songId];
+            }
+        case OTHER_BUTTON:
+            if (sender.url) {
+//                [[KSLocate sharedInstance] startLocate];
+                ActivityViewController *actViewController=[[[ActivityViewController alloc] initWithFrame:[UIScreen mainScreen].bounds] autorelease];
+                [actViewController setUrl:sender.url];
+                [actViewController setTitle:sender.upString];
+                [ROOT_NAVAGATION_CONTROLLER pushViewController:actViewController animated:YES];
+            }
+            break;
+        case APPSTORE_BUTTON:
+            if (sender.url) {
+                NSURL *url = [NSURL URLWithString:sender.url];
+                [[UIApplication sharedApplication]  openURL:url];
+            }
+        default:
+            break;
+    }
+    }
+
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

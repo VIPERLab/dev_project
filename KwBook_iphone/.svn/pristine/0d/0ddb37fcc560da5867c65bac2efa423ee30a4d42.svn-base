@@ -1,0 +1,96 @@
+//
+//  KBDatabaseManagement.m
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-5.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#import "KBDatabaseManagement.h"
+#import "FMDatabaseQueue.h"
+#import "FMDatabase.h"
+#include "KwTools.h"
+
+#define STR_DATABASE_URL @"kwbook.sqlite"
+
+@interface KBDatabaseManagement (){
+}
+
+@property (nonatomic, strong)FMDatabaseQueue* databaseQueue;
+
+@end
+
+@implementation KBDatabaseManagement
+
+static KBDatabaseManagement* s_shared_instance = nil;
+
++(KBDatabaseManagement*)sharedInstance{
+    @synchronized(self){
+        if (nil == s_shared_instance)
+            s_shared_instance = [[KBDatabaseManagement alloc] init];
+    }
+    
+    return s_shared_instance;
+}
+
+-(id)init{
+    self = [super init];
+    if (self) {
+        NSString* str_database_path = [NSString stringWithFormat:@"%@/%@", KwTools::Dir::GetPath(KwTools::Dir::PATH_DATABASE), STR_DATABASE_URL];
+        if ([[NSFileManager defaultManager] fileExistsAtPath:str_database_path]) {
+            //如果数据库存在，打开数据库，读取数据表中的数据；
+             _databaseQueue = [FMDatabaseQueue databaseQueueWithPath:str_database_path];
+            //初始化 内存数据；
+            if (_databaseQueue) {
+                
+            }
+            
+        }else {//如果数据库不存在，创建数据库和数据表；
+            _databaseQueue = [FMDatabaseQueue databaseQueueWithPath:str_database_path];
+            if (_databaseQueue) {
+                [_databaseQueue inDatabase:^(FMDatabase *database) {
+                    [database open];
+                    [database setShouldCacheStatements:YES];
+                    [database executeUpdate:@"CREATE TABLE BookList(BookId integer PRIMARY KEY NOT NULL,BookName text,Artist text,Count integer,HotIndex integer, ListenCnt integer, ImgUrl text, NewChapter integer, Digest text, Type         integer, Summary text)"];
+                    [database executeUpdate:@"CREATE TABLE ChapterList(Rid integer PRIMARY KEY NOT NULL, BookId integer NOT NULL, BookName text, Artist text, ChapterName text, HotIndex integer, Download integer, FileSize integer, Duration integer, Url text, Sig text, LocalPath text, LocalSize integer)"];
+                    [database close];
+                }];
+            }
+        }
+    }
+    
+    return self;
+}
+
+-(void)addBook : (CBookInfo*) book_info{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        [db open];
+        NSString* str_sql = @"insert into BookList(BookId, BookName, Artist, Count, HotIndex, ListenCnt, ImgUrl, NewChapter, Digest, Type, Summary) values (%d, %@, %@, %d, %d, %d, %@, %d, %@, %d, %@)";
+        [db executeUpdate:str_sql, [[NSString stringWithUTF8String:book_info->m_strBookId.c_str()] intValue], [NSString stringWithUTF8String:book_info->m_strBookTitle.c_str()], [NSString stringWithUTF8String:book_info->m_strArtist.c_str()], book_info->m_unCount, book_info->m_unHotIndex, book_info->m_unListenCnt, [NSString stringWithUTF8String:book_info->m_strImgUrl.c_str()], book_info->m_unNewChapter, [NSString stringWithUTF8String:book_info->m_strDigest.c_str()], book_info->m_unType, [NSString stringWithUTF8String:book_info->m_strSummary.c_str()]];
+        [db close];
+    }];
+}
+
+-(void)deleteBook : (std::string)str_book_id{
+    [_databaseQueue inTransaction:^(FMDatabase *db, BOOL *rollback) {
+        [db open];
+        [db executeUpdate:@"delete from BookList where BookId = ?", [NSString stringWithUTF8String:str_book_id.c_str()]];
+        [db close];
+    }];
+}
+
+-(void)addChapter : (CChapterInfo*)chapter_info{
+    
+}
+-(void)deleteChapter : (unsigned)n_rid{
+    
+}
+-(void)updateChapter : (CChapterInfo*)chapter_info{
+    
+}
+
+-(void)loadData{
+    
+}
+
+@end

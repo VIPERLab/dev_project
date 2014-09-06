@@ -1,0 +1,90 @@
+//
+//  KBLocalAudioPlayer.m
+//  kwbook
+//
+//  Created by 单 永杰 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "KBLocalAudioPlayer.h"
+
+@implementation KBLocalAudioPlayer
+
+- (BOOL) resetPlayer : (CSongInfoBase*) song_info{
+    if (nil == m_AudioPlayer) {
+        m_AudioPlayer = [[AVAudioPlayer alloc] init];
+    }
+    
+    [m_AudioPlayer stop];
+    NSURL* audio_url = [NSURL fileURLWithPath:[NSString stringWithFormat:@"%s", song_info->bookRes.strLocalPath.c_str()]];
+    m_AudioPlayer = [m_AudioPlayer initWithContentsOfURL:audio_url error:nil];
+    if ([m_AudioPlayer prepareToPlay]) {
+        [m_AudioPlayer play];
+        return YES;
+    }else{
+        return NO;
+    }
+}
+
+- (BOOL) pause{
+    if (m_AudioPlayer.isPlaying) {
+        [m_AudioPlayer pause];
+    }
+    
+    return YES;
+}
+
+- (BOOL) resume{
+    if (m_AudioPlayer.isPlaying) {
+        return YES;
+    }
+    
+    [m_AudioPlayer play];
+    
+    return YES;
+}
+
+- (BOOL) stop{
+    [m_AudioPlayer stop];
+    
+    return YES;
+}
+
+- (BOOL) seek : (float) f_seek_sec{
+    m_AudioPlayer.currentTime = f_seek_sec;
+    if (!m_AudioPlayer.isPlaying) {
+        [m_AudioPlayer play];
+        [m_AudioPlayer pause];
+    }
+    
+    return YES;
+}
+
+- (float)currentTime{
+    if (m_AudioPlayer) {
+        return m_AudioPlayer.currentTime;
+    }else {
+        return 0.0;
+    }
+}
+
+- (float)duration{
+    if (m_AudioPlayer) {
+        return m_AudioPlayer.duration;
+    }else {
+        return 0.0;
+    }
+}
+
+- (void) audioPlayerDidFinishPlaying:(AVAudioPlayer *)player successfully:(BOOL)flag{
+    if (player == m_AudioPlayer) {
+        if (flag) {
+//            SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayStop);
+        }else {
+//            SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayErr);
+        }
+        
+    }
+}
+
+@end

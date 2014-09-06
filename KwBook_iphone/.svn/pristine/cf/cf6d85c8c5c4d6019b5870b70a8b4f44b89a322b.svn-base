@@ -1,0 +1,93 @@
+//
+//  KBSetTimming.m
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-3.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#import "KBSetTimming.h"
+#include "AudioPlayerManager.h"
+#include "MessageManager.h"
+#include "IObserverAudioPlayState.h"
+
+@interface KBSetTimming (){
+    NSTimer* m_Timmer;
+    int n_MinLeft;
+    bool b_TimmerSet;
+}
+
+@end
+
+@implementation KBSetTimming
+
+static KBSetTimming* sharedInstance = nil;
+
++(KBSetTimming*)sharedInstance{
+    @synchronized(self){
+        if (nil == sharedInstance) {
+            sharedInstance = [[KBSetTimming alloc] init];
+        }
+    }
+    
+    return sharedInstance;
+}
+
+-(id)init{
+    self = [super init];
+    
+    m_Timmer = nil;
+    n_MinLeft = 0;
+    b_TimmerSet = false;
+    
+    return  self;
+}
+
+-(bool)isTimingSet{
+    return  b_TimmerSet;
+}
+-(int)getLeftTime
+{
+    return n_MinLeft;
+}
+-(void)setTimming : (int)n_min{
+    if (m_Timmer) {
+        [m_Timmer invalidate];
+        m_Timmer = nil;
+    }
+    
+    if (0 == n_min) {
+        b_TimmerSet = false;
+        return;
+    }
+    
+    n_MinLeft = n_min;
+    b_TimmerSet = true;
+    
+    SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::TimmingLeft, n_MinLeft);
+    
+    m_Timmer = [NSTimer scheduledTimerWithTimeInterval:60 target:self selector:@selector(checkTimming) userInfo:nil repeats:YES];
+}
+
+-(void)checkTimming{
+    --n_MinLeft;
+    if (0 > n_MinLeft) {
+        if (E_AUDIO_PLAY_PLAYING == CAudioPlayerManager::getInstance()->getCurPlayState()) {
+            CAudioPlayerManager::getInstance()->pause();
+        }
+        
+        b_TimmerSet = false;
+        
+        [m_Timmer invalidate];
+        m_Timmer = nil;
+        
+        n_MinLeft = 0;
+    }else if(0 == n_MinLeft){
+        b_TimmerSet = false;
+        SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::TimmingLeft, n_MinLeft);
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::TimmingLeft, n_MinLeft);
+    }
+}
+
+@end

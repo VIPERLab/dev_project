@@ -1,0 +1,172 @@
+//
+//  RankRecoViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "RankRecoViewController.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+#import "RankBookListViewController.h"
+
+
+#define TAG_IMAGE       31
+#define TAG_RANK_NAME   32
+#define TAG_FIRST_NAME  33
+#define TAG_SECOND_NAME 34
+#define TAG_THIRD_NAME  35
+
+@interface RankRecoViewController ()<UITableViewDataSource,UITableViewDelegate>
+@property (nonatomic , strong) UITableView *tableView;
+@property (nonatomic , strong) NSArray *dataArray;
+@end
+
+@implementation RankRecoViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    [[self view] setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    
+    self.tableView = ({
+        UITableView *tableView = [[UITableView alloc] initWithFrame:self.view.bounds];
+        [tableView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        [tableView setDelegate:self];
+        [tableView setDataSource:self];
+        tableView;
+    });
+    [[self view] addSubview:self.tableView];
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+#pragma mark
+#pragma mark table view data source
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return 10;//self.dataArray.count;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *rankCellIdentifier = @"rankCellIdentifier";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:rankCellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:rankCellIdentifier];
+        [cell setSeparatorInset:UIEdgeInsetsZero];
+        [[cell contentView] setBackgroundColor:CImageMgr::GetBackGroundColor()];
+        
+        UIImageView *headBack = [[UIImageView alloc] initWithFrame:CGRectMake(2.5, 10.5, 79, 79)];
+        [headBack setImage:CImageMgr::GetImageEx("RankHeadBack.png")];
+        UIImageView *headView = [[UIImageView alloc] initWithFrame:CGRectMake(4.5, 4.5, 140, 140)];
+        [headView setTag:TAG_IMAGE];
+        [headBack addSubview:headView];
+        [cell.contentView addSubview:headBack];
+        
+        UIView *contentView  = [[UIView alloc] initWithFrame:CGRectMake(90.5, 6, 229.5, 94)];
+        [contentView setBackgroundColor:[UIColor clearColor]];
+        UILabel *rankNameLabel = [[UILabel alloc] initWithFrame:CGRectMake(0, 0, 200, 17)];
+        [rankNameLabel setTag:TAG_RANK_NAME];
+        [contentView addSubview:rankNameLabel];
+        
+        UILabel *one = [[UILabel alloc] initWithFrame:CGRectMake(0, 26, 13, 13)];
+        UILabel *two = [[UILabel alloc] initWithFrame:CGRectMake(0, 46.5, 13, 13)];
+        UILabel *three = [[UILabel alloc] initWithFrame:CGRectMake(0, 67, 13, 13)];
+        
+        [one setTextAlignment:NSTextAlignmentCenter];
+        [two setTextAlignment:NSTextAlignmentCenter];
+        [three setTextAlignment:NSTextAlignmentCenter];
+        
+        [one setFont:[UIFont systemFontOfSize:12.0]];
+        [two setFont:[UIFont systemFontOfSize:12.0]];
+        [three setFont:[UIFont systemFontOfSize:12.0]];
+        
+        [one setBackgroundColor:UIColorFromRGBValue(0xee7270)];
+        [two setBackgroundColor:UIColorFromRGBValue(0xee7270)];
+        [three setBackgroundColor:UIColorFromRGBValue(0xee7270)];
+        
+        [one setTextColor:[UIColor whiteColor]];
+        [two setTextColor:[UIColor whiteColor]];
+        [three setTextColor:[UIColor whiteColor]];
+        
+        [one setText:@"1"];
+        [two setText:@"2"];
+        [three setText:@"3"];
+        
+        [contentView addSubview:one];
+        [contentView addSubview:two];
+        [contentView addSubview:three];
+        
+        UILabel *first = [[UILabel alloc] initWithFrame:CGRectMake(14, 26, 186, 13)];
+        UILabel *second = [[UILabel alloc] initWithFrame:CGRectMake(14, 46.5, 186, 13)];
+        UILabel *third = [[UILabel alloc] initWithFrame:CGRectMake(14, 67, 186, 13)];
+        
+        [first setFont:[UIFont systemFontOfSize:13.0]];
+        [second setFont:[UIFont systemFontOfSize:13.0]];
+        [third setFont:[UIFont systemFontOfSize:13.0]];
+        
+        [first setTag:TAG_FIRST_NAME];
+        [second setTag:TAG_SECOND_NAME];
+        [third setTag:TAG_THIRD_NAME];
+        
+        [first setBackgroundColor:[UIColor clearColor]];
+        [second setBackgroundColor:[UIColor clearColor]];
+        [third setBackgroundColor:[UIColor clearColor]];
+        
+        [first setTextColor:defaultGrayColor()];
+        [second setTextColor:defaultGrayColor()];
+        [third setTextColor:defaultGrayColor()];
+        
+        [contentView addSubview:first];
+        [contentView addSubview:second];
+        [contentView addSubview:third];
+        
+        UIImageView *moreView  = [[UIImageView alloc] initWithFrame:CGRectMake(50, 85, 19, 1.5)];
+        [moreView setImage:CImageMgr::GetImageEx("RankCellMore.png")];
+        [contentView addSubview:moreView];
+        
+        UIImageView *accessoryView  = [[UIImageView alloc] initWithImage:CImageMgr::GetImageEx("cellIndicator.png")];
+        [accessoryView setCenter:CGPointMake(300, 50)];
+        [accessoryView setBackgroundColor:[UIColor clearColor]];
+        [cell.contentView addSubview:accessoryView];
+        
+         [cell.contentView addSubview:contentView];
+    }
+    UILabel *ranklabel = (UILabel *)[cell.contentView viewWithTag:TAG_RANK_NAME];
+    [ranklabel setText:@"热门读物榜"];
+    UILabel *firstLabel = (UILabel *)[cell.contentView viewWithTag:TAG_FIRST_NAME];
+    [firstLabel setText:@"《郭德纲2013相声合集》"];
+    UILabel *secondLabel = (UILabel *)[cell.contentView viewWithTag:TAG_SECOND_NAME];
+    [secondLabel setText:@"《失宠弃妃》"];
+    UILabel *thirdLabel = (UILabel *)[cell.contentView viewWithTag:TAG_THIRD_NAME];
+    [thirdLabel setText:@"《失宠弃妃》"];
+    
+    return cell;
+}
+#pragma mark
+#pragma mark table view delegate
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    return 100.0f;
+}
+-(void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    [tableView deselectRowAtIndexPath:indexPath animated:YES];
+    RankBookListViewController *bookList = [[RankBookListViewController alloc] init];
+    [self.navigationController pushViewController:bookList animated:YES];
+}
+@end

@@ -1,0 +1,26 @@
+//
+//  RecoCellDataItem.h
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import <Foundation/Foundation.h>
+
+typedef enum{
+    RECO_NEW,
+    RECO_HOT
+}RECO_TYPE;
+
+@interface RecoCellDataItem : NSObject
+@property (nonatomic , assign) RECO_TYPE recoType;
+@property (nonatomic , strong) NSString *bookId;
+@property (nonatomic , strong) NSString *musicCount;        //更新到多少回 for RECO_NEW
+@property (nonatomic , strong) NSString *bookName;
+@property (nonatomic , strong) NSString *artistName;
+@property (nonatomic , strong) NSString *imageURL;
+@property (nonatomic , strong) NSString *listenCount;       //多少人在听 for RECO_HOT
+@property (nonatomic , strong) NSString *type;
+@property (nonatomic , strong) NSString *desc;
+@end

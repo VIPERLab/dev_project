@@ -1,0 +1,22 @@
+//
+//  KwUMengElement.h
+//  KwSing
+//
+//  Created by 单 永杰 on 13-2-18.
+//  Copyright (c) 2013年 酷我音乐. All rights reserved.
+//
+
+#ifndef KwSing_KwUMengElement_h
+#define KwSing_KwUMengElement_h
+
+#define KB_CATEGORY         "KB_CATEGORY"
+#define KB_PLAY_CONTROL     "KB_PLAY_CONTROL"
+#define KB_PLAY_SOURCE      "KB_PLAY_SOURCE"
+#define KB_PLAY_TYPE        "KB_PLAY_TYPE"
+#define KB_RECOMMEND        "KB_RECOMMEND"
+#define KB_ARTIST           "KB_ARTIST"
+#define KB_PLAY_LOCAL       "KB_PLAY_LOCAL"
+#define KB_PLAY_NET         "KB_PLAY_NET"
+#define KB_DOWNLOAD         "KB_DOWNLOAD"
+
+#endif

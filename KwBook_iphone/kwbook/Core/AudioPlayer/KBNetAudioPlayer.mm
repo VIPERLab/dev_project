@@ -1,0 +1,219 @@
+//
+//  KBNetAudioPlayer.m
+//  kwbook
+//
+//  Created by 单 永杰 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "KBNetAudioPlayer.h"
+#import "DOUAudioStreamer.h"
+#import "DOUAudioStreamer+Options.h"
+#import "MessageManager.h"
+#include "IObserverAudioPlayState.h"
+#include "IObserverNetBufferringState.h"
+#import "iToast.h"
+#include "UMengLog.h"
+#include "KwUMengElement.h"
+
+static void *kStatusKVOKey = &kStatusKVOKey;
+static void *kDurationKVOKey = &kDurationKVOKey;
+static void *kBufferingRatioKVOKey = &kBufferingRatioKVOKey;
+
+@interface Track : NSObject <DOUAudioFile>{
+    @public CChapterInfo chapter_info;
+}
+@end
+
+@implementation Track
+- (NSURL *)audioFileURL
+{
+    return [NSURL URLWithString:[NSString stringWithFormat:@"%s", chapter_info.m_strUrl.c_str()]];
+}
+- (CChapterInfo*)chapterInfo{
+    return &chapter_info;
+}
+
+@end
+
+@interface KBNetAudioPlayer (){
+@private
+    DOUAudioStreamer *_streamer;
+}
+
+@end
+
+@implementation KBNetAudioPlayer
+
+- (id)init{
+    [DOUAudioStreamer setOptions:[DOUAudioStreamer options] | DOUAudioStreamerRequireSHA256];
+    self = [super init];
+    
+    return self;
+}
+
+- (BOOL) resetPlayer{
+    if (_streamer != nil) {
+        [_streamer pause];
+        [_streamer removeObserver:self forKeyPath:@"status"];
+        [_streamer removeObserver:self forKeyPath:@"duration"];
+        [_streamer removeObserver:self forKeyPath:@"bufferingRatio"];
+        _streamer = nil;
+    }
+    
+    return YES;
+}
+
+- (BOOL) resetPlayer : (CChapterInfo*) song_info atTime : (float)f_cur_time{
+    
+    
+    if (_streamer != nil) {
+        [_streamer pause];
+        [_streamer removeObserver:self forKeyPath:@"status"];
+        [_streamer removeObserver:self forKeyPath:@"duration"];
+        [_streamer removeObserver:self forKeyPath:@"bufferingRatio"];
+        _streamer = nil;
+    }
+    
+    //  Track *track = [_tracks objectAtIndex:_currentIndex];
+    Track* track = [[Track alloc] init];
+    track->chapter_info = *song_info;
+    
+    _streamer = [DOUAudioStreamer streamerWithAudioFile:track];
+    [_streamer addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionNew context:kStatusKVOKey];
+    [_streamer addObserver:self forKeyPath:@"duration" options:NSKeyValueObservingOptionNew context:kDurationKVOKey];
+    [_streamer addObserver:self forKeyPath:@"bufferingRatio" options:NSKeyValueObservingOptionNew context:kBufferingRatioKVOKey];
+    
+    [_streamer play];
+    
+    if (f_cur_time) {
+        [_streamer setCurrentTime:f_cur_time];
+    }
+
+    [self _updateBufferingStatus];
+    [DOUAudioStreamer setHintWithAudioFile:track];
+    
+    return YES;
+}
+
+
+//use for notify net audio player playing state. By Shan Yongjie
+- (void)_updateStatus
+{
+    switch ([_streamer status]) {
+        case DOUAudioStreamerPlaying:
+//            [_labelInfo setText:@"playing"];
+//            [_buttonPlayPause setTitle:@"Pause" forState:UIControlStateNormal];
+            SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_PLAYING);
+            break;
+            
+        case DOUAudioStreamerPaused:
+//            [_labelInfo setText:@"paused"];
+//            [_buttonPlayPause setTitle:@"Play" forState:UIControlStateNormal];
+            SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_PAUSE);
+            break;
+            
+        case DOUAudioStreamerIdle:
+//            [_labelInfo setText:@"idle"];
+//            [_buttonPlayPause setTitle:@"Play" forState:UIControlStateNormal];
+            SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_STOP);
+            break;
+            
+        case DOUAudioStreamerFinished:
+//            [_labelInfo setText:@"finished"];
+//            [self actionNext:nil];
+            SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_FINISH);
+            break;
+            
+        case DOUAudioStreamerBuffering:
+//            [_labelInfo setText:@"buffering"];
+            SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_BUFFERING);
+            break;
+            
+        case DOUAudioStreamerError:
+//            [_labelInfo setText:@"error"];
+            [iToast defaultShow:@"播放失败，请检查网络连接"];
+            UMengLog(KB_PLAY_NET, "Fail");
+            SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlayStatusChanged, E_AUDIO_PLAY_NONE);
+            break;
+    }
+}
+
+- (void)_updateBufferingStatus
+{
+    //NSLog(@"bufferring ratio %f", _streamer.bufferingRatio);
+    SYN_NOTIFY(OBSERVER_ID_BUFFER_STATE, IObserverNetBufferringState::BufferringRatioChanged, _streamer.bufferingRatio);
+}
+
+//use for notify net audio player buffering state. By Shan Yongjie
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context
+{
+    if (context == kStatusKVOKey) {
+        [self performSelector:@selector(_updateStatus)
+                     onThread:[NSThread mainThread]
+                   withObject:nil
+                waitUntilDone:NO];
+    }
+    else if (context == kBufferingRatioKVOKey) {
+        [self performSelector:@selector(_updateBufferingStatus)
+                     onThread:[NSThread mainThread]
+                   withObject:nil
+                waitUntilDone:NO];
+    }
+    else if (context == kDurationKVOKey){
+        return;
+    }else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    }
+}
+
+- (BOOL) resume{
+    if (DOUAudioStreamerPaused == [_streamer status] || DOUAudioStreamerIdle == [_streamer status]) {
+        [_streamer play];
+        
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL) pause{
+    if (!(DOUAudioStreamerPaused == [_streamer status] || DOUAudioStreamerIdle == [_streamer status])) {
+        [_streamer pause];
+        
+        return YES;
+    }
+    
+    return NO;
+}
+
+- (BOOL) stop{
+    [_streamer stop];
+    
+    return YES;
+}
+
+- (BOOL) seek : (float) f_seek_sec{
+    [_streamer setCurrentTime : f_seek_sec];
+    
+    return YES;
+}
+
+- (float) currentTime{
+    return [_streamer currentTime];
+}
+
+- (float) duration{
+    return [_streamer duration];
+}
+
+- (float)bufferRatio{
+    if (nil != _streamer && [_streamer expectedLength]) {
+        return (float)[_streamer receivedLength] / [_streamer expectedLength];
+    }else {
+        return 0;
+    }
+    
+}
+
+@end

@@ -1,0 +1,51 @@
+//
+//  KwUMengElement.h
+//  KwSing
+//
+//  Created by 单 永杰 on 13-2-18.
+//  Copyright (c) 2013年 酷我音乐. All rights reserved.
+//
+
+#ifndef KwSing_KwUMengElement_h
+#define KwSing_KwUMengElement_h
+
+#define KS_DOWN_LYRIC     "KS_DOWN_LYRIC"
+#define KS_DOWN_MUSIC     "KS_DOWN_MUSIC"
+#define KS_DOWN_SONGLIST  "KS_DOWN_SONGLIST"
+#define KS_GET_SONGURL    "KS_GET_SONGURL"
+#define KS_PLAY_MUSIC     "KS_PLAY_MUSIC"
+#define KS_RECORD_MUSIC   "KS_RECORD_MUSIC"
+#define KS_SAVE_MUSIC     "KS_SAVE_MUSIC"
+#define KS_SEARCH_MUSIC   "KS_SEARCH_MUSIC"
+#define KS_SHARE_MUSIC    "KS_SHARE_MUSIC"
+#define KS_UPDATE         "KS_UPDATE"
+#define KS_UPLOAD_MUSIC   "KS_UPLOAD_MUSIC"
+#define KS_USER_LOGIN     "KS_USER_LOGIN"
+#define KS_AUTHORIZATION  "KS_AUTHORIZATION"
+
+
+
+#define KS_RECORD_TYPE    "KS_RECORD_TYPE"
+#define KS_DOWN_SONG_TIME "KS_DOWN_SONG_TIME"
+#define KS_SAVE_TIME      "KS_SAVE_TIME"
+#define KS_UPLOAD_TIME    "KS_UPLOAD_TIME"
+#define KS_RECORD_TIME    "KS_RECORD_TIME"
+
+#define KS_RANKLIST_DOWN  "KS_RANKLIST_DOWN"
+#define KS_ARTIST_DOWN    "KS_ARTIST_DOWN"
+
+#define KS_RECORD_SING_VOLUME  "KS_RECORD_SING_VOLUME"
+#define KS_RECORD_ACCOM_VOLUME "KS_RECORD_ACCOM_VOLUME"
+#define KS_EFFECT_ADJUST  "KS_EFFECT_ADJUST"
+#define KS_OA_CHANGE      "KS_OA_CHANGE"
+#define KS_TRY_LISTEN     "KS_TRY_LISTEN"
+#define KS_RESING         "KS_RESING"
+#define KS_AUDITION       "KS_AUDITION"
+#define KS_CLOSE_RECORD   "KS_CLOSE_RECORD"
+
+#define KS_SONG_LACK      "KS_SONG_LACK"
+
+#define KS_BLUE_OPUS      "KS_BLUE_OPUS"
+#define KS_BLUE_COMMENT   "KS_BLUE_COMMENT"
+
+#endif

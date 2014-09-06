@@ -1,0 +1,520 @@
+//
+//  HttpRequest.mm
+//  KwSing
+//
+//  Created by 海平 翟 on 12-7-19.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "HttpRequest.h"
+#include "IHttpNotify.h"
+#include "Block.h"
+#include "HttpRequestHelper.h"
+#include "ASIHTTP/Reachability.h"
+#include "Encrypt.h"
+#include "StringUtility.h"
+#include "ASIHTTP/ASIFormDataRequest.h"
+#include <CoreTelephony/CTTelephonyNetworkInfo.h>
+#include <CoreTelephony/CTCarrier.h>
+#include <map>
+#include "UMengLog.h"
+#include "KwUMengElement.h"
+
+KSNetworkStatus CHttpRequest::GetNetWorkStatus()
+{
+    static Reachability* pReachAbility=[[Reachability reachabilityForInternetConnection] retain];
+    return (KSNetworkStatus)[pReachAbility currentReachabilityStatus];
+}
+
+std::string CHttpRequest::GetNetWorkProviderName()
+{
+    static CTTelephonyNetworkInfo* pInfo=[[CTTelephonyNetworkInfo alloc] init];
+    if(pInfo.subscriberCellularProvider)
+        return [pInfo.subscriberCellularProvider.carrierName UTF8String];
+    else
+        return "";
+}
+
+BOOL CHttpRequest::ConvertUrl(IN const CONVERT_URL_PARA& para,OUT std::string& strFormat,OUT std::string& strBitrate,OUT std::string& strUrl,OUT std::string& strSig)
+{
+    strUrl.clear();
+    
+    while(TRUE) {
+        if (GetNetWorkStatus()==NETSTATUS_NONE) {
+            break;
+        }
+        std::string strParam="type=convert_url&network=";
+//        strParam += GetNetWorkStatus()==NETSTATUS_WIFI?"WIFI":"3G";
+//        strParam += "&format=mp3&mode=audition&rid="+para.strRid;
+        strParam += "&format=mp3&mode=&rid="+para.strRid;
+        strParam += para.bOnlyMusic?"&ktype=1":"&ktype=2";
+        
+        if (!para.strBitrate.empty()) {
+            strParam += "&br="+para.strBitrate;
+        }
+        
+        if (!para.strContinueSig.empty()) {
+            strParam += "&sig="+para.strContinueSig;
+        }
+        
+        std::string strEncryptParam=KwTools::Encrypt::CreateDesUrl(strParam);
+        
+        std::string strData;
+        if ( !QuickSyncGet(strEncryptParam, strData) || strData.empty()) {
+            break;
+        }
+        std::map<std::string,std::string> mapDatas;
+        KwTools::StringUtility::TokenizeKeyValueEx(strData,mapDatas,"\r\n");
+        if (mapDatas.empty()) {
+            break;
+        }
+        strFormat=mapDatas["format"];
+        strBitrate=mapDatas["bitrate"];
+        strUrl=mapDatas["url"];
+        strSig=mapDatas["sig"];
+        break;
+    }
+    
+    if (strUrl.empty()) {
+        UMengLog(KS_GET_SONGURL, "1");
+    }else {
+        UMengLog(KS_GET_SONGURL, "0");
+    }
+    
+    return !strUrl.empty();
+}
+
+BOOL CHttpRequest::QuickSyncGet(IN const std::string& strUrl,OUT std::string& strOut)
+{
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    strOut.clear();
+
+    NSURL* url=[NSURL URLWithString:[NSString stringWithUTF8String:strUrl.c_str()]];
+    
+    int nRetryTimes(0);
+    while (nRetryTimes++ <=3) {
+        ASIHTTPRequest* request=[ASIHTTPRequest requestWithURL:url];
+        request.allowCompressedResponse=TRUE;
+        [request startSynchronous];
+        
+        if (![request error] && [request responseStatusCode]<300) {
+            if ([[request responseString] length]) {
+                strOut=[[request responseString] UTF8String];
+            }
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
+BOOL CHttpRequest::QuickSyncGet(IN const std::string& strUrl,OUT void*&pData,OUT unsigned& len)
+{
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    NSURL* url=[NSURL URLWithString:[NSString stringWithUTF8String:strUrl.c_str()]];
+    
+    int nRetryTimes(0);
+    while (nRetryTimes++ <=1) {
+        ASIHTTPRequest* request=[ASIHTTPRequest requestWithURL:url];
+        request.allowCompressedResponse=TRUE;
+        [request startSynchronous];
+        if (![request error] && [request responseStatusCode]<300) {
+            NSData* data=[request responseData];
+            len=[data length];
+            if (len>0) {
+                pData=new char[len+1];
+                memset(pData,0,len+1);
+                memcpy(pData,[data bytes],len);
+            } else {
+                pData=NULL;
+                len=0;
+            }
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+BOOL CHttpRequest::QuickSyncPost(IN const std::string& strUrl,IN  const void* pData,IN unsigned len,IN const std::string& strKey/*=std::string()*/)
+{
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    NSURL* url=[NSURL URLWithString:[NSString stringWithUTF8String:strUrl.c_str()]];
+    NSData* data=[NSData dataWithBytes:pData length:len];
+    
+    int nRetryTimes(0);
+    while (nRetryTimes++ <=3) {
+        ASIHTTPRequest* request(NULL);
+        if (strKey.empty()) {
+            request=[ASIHTTPRequest requestWithURL:url];
+            [request setRequestMethod:@"POST"];
+            [request appendPostData:data];
+        } else {
+            ASIFormDataRequest* pReq=[ASIFormDataRequest requestWithURL:url];
+            [pReq addData:data forKey:[NSString stringWithUTF8String:strKey.c_str()]];
+            request=pReq;
+        }
+        request.allowCompressedResponse=TRUE;
+        [request startSynchronous];
+        if (![request error] && [request responseStatusCode]<300) {
+            return TRUE;
+        }
+    }
+    
+    return FALSE;
+}
+
+BOOL CHttpRequest::QuickSyncPost(IN const std::string& strUrl,IN  const std::string& strSend,IN const std::string& strKey/*=std::string()*/)
+{
+    return QuickSyncPost(strUrl,strSend.c_str(),strSend.size()+1,strKey);
+}
+
+BOOL CHttpRequest::QuickSyncPost(IN NSString* strUrl,IN  NSString* strSend,IN NSString* strKey/*=NULL*/)
+{
+    return QuickSyncPost([strUrl UTF8String],[strSend UTF8String],[strSend lengthOfBytesUsingEncoding:NSUTF8StringEncoding]+1,strKey?[strKey UTF8String]:"");
+}
+
+BOOL CHttpRequest::QuickAsyncGet(IN const std::string& strUrl
+                          ,void(^block_start)(CHttpRequest*)
+                          ,void(^block_process)(CHttpRequest*,unsigned uiTotalSize,unsigned uiCurrentSize,unsigned uiSpeed)/*=NULL*/
+                          ,void(^block_stop)(CHttpRequest*,BOOL bSuccess)/*=NULL*/
+                          ,NSThread* pNotifyTargetThread/*=NULL main thread*/
+                          )
+{
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    __block CHttpRequest* pReq=new CHttpRequest(strUrl);
+    BLOCK_STOP stop=^(CHttpRequest* p,BOOL bSuccess)
+    {
+        block_stop(p,bSuccess);
+        delete pReq;
+    };
+    return pReq->AsyncSendRequest(block_start,block_process,stop);
+}
+
+CHttpRequest::CHttpRequest(const std::string& strUrl)
+{
+    m_pHttp=[ASIHTTPRequest alloc];
+    Init(strUrl);
+}
+
+CHttpRequest::CHttpRequest(const std::string& strUrl
+             ,const std::string& strSendFile
+             ,const std::string& strKey/*=std::string()*/
+             ,NSDictionary* dictKeyValue/*=NULL*/ )
+{
+    if (strKey.empty()) {
+        m_pHttp=[ASIHTTPRequest alloc];
+    } else {
+        m_pHttp=[ASIFormDataRequest alloc];
+    }
+    Init(strUrl);
+    [m_pHttp setRequestMethod:@"POST"];
+
+    if (strKey.empty()) {
+        [m_pHttp setPostBodyFilePath:[NSString stringWithUTF8String:strSendFile.c_str()]];
+        [m_pHttp setShouldStreamPostDataFromDisk:YES];
+    } else {
+        __block ASIFormDataRequest* p=(ASIFormDataRequest*)m_pHttp;
+        [p setFile:[NSString stringWithUTF8String:strSendFile.c_str()] forKey:[NSString stringWithUTF8String:strKey.c_str()]];
+        if (dictKeyValue) {
+            [dictKeyValue enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop){
+                [p addPostValue:obj forKey:key];
+            }];
+        }
+    }
+    
+    m_pHelper.bUpload=TRUE;
+}
+
+CHttpRequest::CHttpRequest(const std::string& strUrl,const void* pData,unsigned len,const std::string& strKey/*=std::string()*/)
+{
+    if (strKey.empty()) {
+        m_pHttp=[ASIHTTPRequest alloc];
+    } else {
+        m_pHttp=[ASIFormDataRequest alloc];
+    }
+    Init(strUrl);
+    [m_pHttp setRequestMethod:@"POST"];
+    NSData* data=[NSData dataWithBytes:pData length:len];
+    if (strKey.empty()) {
+        [m_pHttp appendPostData:data];
+    } else {
+        [((ASIFormDataRequest*)m_pHttp) setData:data forKey:[NSString stringWithUTF8String:strKey.c_str()]];
+    }
+}
+
+CHttpRequest::CHttpRequest(const std::string& strUrl,NSString* strPost,NSString* strKey/*=NULL*/)
+{
+    if (!strKey || [strKey length]==0) {
+        m_pHttp=[ASIHTTPRequest alloc];
+    } else {
+        m_pHttp=[ASIFormDataRequest alloc];
+    }
+    Init(strUrl);
+    [m_pHttp setRequestMethod:@"POST"];
+    NSData* data=[NSData dataWithBytes:[strPost UTF8String] length:[strPost lengthOfBytesUsingEncoding:NSUTF8StringEncoding]+1];
+    if (!strKey || [strKey length]==0) {
+        [m_pHttp appendPostData:data];
+    } else {
+        [((ASIFormDataRequest*)m_pHttp) setData:data forKey:strKey];
+    }
+}
+
+CHttpRequest::CHttpRequest(const std::string& strUrl,NSDictionary* dictKeyValue)
+{
+    m_pHttp=[ASIFormDataRequest alloc];
+    Init(strUrl);
+    [m_pHttp setRequestMethod:@"POST"];
+    __block ASIFormDataRequest* pReq=(ASIFormDataRequest*)m_pHttp;
+    [dictKeyValue enumerateKeysAndObjectsUsingBlock:^(id key, id obj, BOOL *stop){
+        [pReq addPostValue:obj forKey:key];
+    }];
+}
+
+void CHttpRequest::Init(const std::string& strUrl)
+{
+    NSURL* url=[NSURL URLWithString:[NSString stringWithUTF8String:strUrl.c_str()]];
+    [m_pHttp initWithURL:url];
+    m_pHelper=[[KSHttpRequestHelper alloc] init];
+    m_pHelper.http=m_pHttp;
+    [m_pHelper setPRequest:this];
+    [m_pHttp setAllowCompressedResponse:YES];
+    [m_pHttp setNumberOfTimesToRetryOnTimeout:3];
+    [m_pHttp setShouldContinueWhenAppEntersBackground:NO];
+    [m_pHttp setTimeOutSeconds:20];
+    [m_pHttp setShouldWaitToInflateCompressedResponses:NO];
+    [m_pHttp setShouldAttemptPersistentConnection:YES];
+    [m_pHttp setDelegate:m_pHelper];
+    [m_pHttp setUploadProgressDelegate:m_pHelper];
+    [m_pHttp setDownloadProgressDelegate:m_pHelper];
+    [m_pHttp setShowAccurateProgress:YES];
+    m_lPos=0;
+}
+
+CHttpRequest::~CHttpRequest()
+{
+    StopRequest();
+}
+
+BOOL CHttpRequest::SyncSendRequest(const std::string& strSaveFile/*=std::string()*/,BOOL bAllowContinue/*=FALSE*/)
+{
+    assert(m_pHttp);
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    if (!strSaveFile.empty()) {
+        if (!CheckWriteFile(strSaveFile,bAllowContinue)) {
+            return FALSE;
+        }
+        m_pHelper.strSaveFile=[NSString stringWithUTF8String:strSaveFile.c_str()];
+    }
+    [m_pHttp startSynchronous];
+    return IsSuccess();
+}
+
+BOOL CHttpRequest::AsyncSendRequest(IHttpRequestNotify* pNotify/*=NULL*/
+                     ,const std::string& strSaveFile/*=std::string()*/
+                     ,BOOL bAllowContinue/*=FALSE*/)
+{
+    assert(m_pHttp);
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    if (!strSaveFile.empty()) {
+        if (!CheckWriteFile(strSaveFile,bAllowContinue)) {
+            return FALSE;
+        }
+        m_pHelper.strSaveFile=[NSString stringWithUTF8String:strSaveFile.c_str()];
+    }
+    m_pHelper.pNotify=pNotify;
+    m_pHelper.pNotifyThread=[NSThread currentThread];
+    [m_pHttp startAsynchronous];
+    return ![m_pHttp error];  
+}
+
+BOOL CHttpRequest::AsyncSendRequest(id<IHttpRequestNotify> idNotify
+                     ,const std::string& strSaveFile/*=std::string()*/
+                     ,BOOL bAllowContinue/*=FALSE*/)
+{
+    assert(m_pHttp);
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    if (!strSaveFile.empty()) {
+        if (!CheckWriteFile(strSaveFile,bAllowContinue)) {
+            return FALSE;
+        }
+        m_pHelper.strSaveFile=[NSString stringWithUTF8String:strSaveFile.c_str()];
+    }
+    m_pHelper.idNotify=idNotify;
+    m_pHelper.pNotifyThread=[NSThread currentThread];
+    [m_pHttp startAsynchronous];
+    return ![m_pHttp error];   
+}
+
+BOOL CHttpRequest::AsyncSendRequest(void(^block_start)(CHttpRequest*)
+                      ,void(^block_process)(CHttpRequest*,unsigned uiTotalSize,unsigned uiCurrentSize,unsigned uiSpeed)/*=NULL*/
+                      ,void(^block_stop)(CHttpRequest*,BOOL bSuccess)/*=NULL*/
+                      ,const std::string& strSaveFile/*=std::string()*/
+                      ,BOOL bAllowContinue/*=FALSE*/
+                      )
+{
+    assert(m_pHttp);
+    if (GetNetWorkStatus()==NETSTATUS_NONE) {
+        return FALSE;
+    }
+    if (!strSaveFile.empty()) {
+        if (!CheckWriteFile(strSaveFile,bAllowContinue)) {
+            return FALSE;
+        }
+        m_pHelper.strSaveFile=[NSString stringWithUTF8String:strSaveFile.c_str()];
+    }
+    m_pHelper.pNotifyThread=[NSThread currentThread];
+    m_pHttp.allowResumeForFileDownloads=bAllowContinue;
+
+    [m_pHelper setBlock_start:Block_copy(block_start)];
+    [m_pHelper setBlock_process:Block_copy(block_process)];
+    [m_pHelper setBlock_stop:Block_copy(block_stop)];
+    
+    [m_pHttp startAsynchronous];
+    return ![m_pHttp error];    
+}
+
+BOOL CHttpRequest::CheckWriteFile(const std::string& strFile,BOOL bAllowContinue)
+{
+    NSFileManager* fileMgr=[NSFileManager defaultManager];
+    NSString* str=[NSString stringWithUTF8String:strFile.c_str()];
+    if (![fileMgr fileExistsAtPath:str]) {
+        return TRUE;
+    }
+    if (!bAllowContinue) {
+        if ([fileMgr isReadableFileAtPath:str]) {
+            [fileMgr removeItemAtPath:str error:nil];
+        }
+    } else {
+        long long llSize=[[fileMgr attributesOfItemAtPath:str error:nil] fileSize];
+        if (llSize>0) {
+            [m_pHttp addRequestHeader:@"Range" value:[NSString stringWithFormat:@"bytes=%llu-",llSize]];
+            [m_pHelper setLContinueSize:llSize];
+        }
+    }
+     return TRUE;
+}
+
+void CHttpRequest::StopRequest()
+{
+    [m_pHttp clearDelegatesAndCancel];
+    m_pHelper.cancled=YES;
+    [m_pHttp release];
+    [m_pHelper release];
+    
+    m_pHttp=NULL;
+    m_pHelper=NULL;
+}
+
+BOOL CHttpRequest::IsFinished() const
+{
+    return !m_pHttp || [m_pHelper finished];
+}
+
+BOOL CHttpRequest::IsSuccess() const
+{
+    return m_pHttp && IsFinished() && ![m_pHttp error] && ([m_pHttp responseStatusCode]<300 || [m_pHttp responseStatusCode]==416);
+}
+
+unsigned CHttpRequest::GetRetCode() const
+{
+    return m_pHttp.responseStatusCode;
+}
+
+void CHttpRequest::SetTimeOut(unsigned t)
+{
+    if (m_pHttp) {
+        [m_pHttp setTimeOutSeconds:t/1000];
+    }
+}
+
+BOOL CHttpRequest::ReadData(OUT void* pBuf,IN OUT unsigned& uiSize)
+{
+    if (uiSize==0) {
+        return TRUE;
+    }
+    if (!IsSuccess()) {
+        return FALSE;  
+    }
+
+    while (m_pHttp && ![m_pHttp isFinished] && ![m_pHttp isCancelled] && [m_pHttp contentLength]==0) {
+        [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]];
+    }
+    if (!m_pHttp || [m_pHttp isCancelled] || [m_pHttp error]) {
+        return FALSE;
+    }
+
+    unsigned uiTotalSize=[m_pHttp contentLength];
+    if (m_lPos>=uiTotalSize) {
+        return FALSE;
+    }
+    if (m_lPos+uiSize>uiTotalSize) {
+        uiSize=uiTotalSize-m_lPos;
+    }
+    
+    unsigned uiReadSize=(unsigned)m_pHttp.totalBytesRead;
+    if (m_lPos+uiSize>=uiReadSize) {
+        while (m_pHttp && ![m_pHttp isFinished] && ![m_pHttp isCancelled]) {
+            uiReadSize=(unsigned)m_pHttp.totalBytesRead;
+            if (m_lPos+uiSize<uiReadSize) {
+                break;
+            }
+            [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate dateWithTimeIntervalSinceNow:.25]];
+        }
+        if (!m_pHttp || [m_pHttp isCancelled] || [m_pHttp error]) {
+            return FALSE;
+        }
+    }
+    
+    NSData* data=[m_pHttp responseData];
+    if (m_lPos+uiSize>[data length]) {
+        uiSize=0;
+        return FALSE;
+    }
+    memcpy(pBuf, ((char*)[data bytes])+m_lPos, uiSize);
+    m_lPos+=uiSize;
+    return TRUE;
+}
+
+BOOL CHttpRequest::ReadAll(OUT void*& pBuf,IN OUT unsigned& uiSize) const
+{
+    if (!IsSuccess()) {
+        return FALSE;
+    }
+    NSData* data=[m_pHttp responseData];
+    uiSize=[data length];
+    if (!data || !uiSize) {
+        return FALSE;
+    }
+    pBuf=new char[uiSize];
+    memcpy(pBuf,[data bytes],uiSize);
+    return uiSize>0;
+}
+
+unsigned CHttpRequest::GetSize() const
+{
+    if (!IsSuccess()) {
+        return 0;
+    }
+    return [[m_pHttp responseData] length];
+}
+
+ASIHTTPRequest* CHttpRequest::GetOriginalRequestObject()
+{
+    return m_pHttp;
+}
+
+

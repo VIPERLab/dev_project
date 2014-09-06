@@ -1,0 +1,144 @@
+//
+//  CommentDetailViewController.m
+//  KwSing
+//
+//  Created by Qian Hu on 12-9-24.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "CommentDetailViewController.h"
+#include "ImageMgr.h"
+#include "globalm.h"
+#import <QuartzCore/QuartzCore.h>
+#include "KSWebView.h"
+#include "KSAppDelegate.h"
+#include "MobClick.h"
+
+@interface CommentDetailViewController ()<UITextViewDelegate>
+{
+    UITextView *commentTextView;
+    std::string m_strUserID;
+    KSWebView * m_webView;
+    std::string m_strText;
+    std::string m_strReplyUserID;
+}
+
+@end
+
+@implementation CommentDetailViewController
+
+-(void)SetWebView:(KSWebView*)view Text:(std::string)text ReplyUID:(std::string)uid
+{
+    m_webView = view;
+    m_strText = text;
+    m_strReplyUserID = uid;
+}
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+//    if ([[[UIDevice currentDevice] systemVersion] compare:@"7.0"] == NSOrderedSame) {
+//        [[self view] setFrame:CGRectMake(0, 20, 320, [UIScreen mainScreen].bounds.size.height-20)];
+//    }
+//    NSLog(@"self view:%@",[self.view description]);
+    UIImageView * imageView = [[[UIImageView alloc]init]autorelease];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER_BOUNDS];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    
+    UIImageView * topshadowView = [[[UIImageView alloc]init]autorelease];
+    CGRect rcshadow = ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y += rcshadow.size.height;
+    rcshadow.size.height = 5;
+    [topshadowView setFrame:rcshadow];
+    [topshadowView setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadowView];
+    
+    UIButton* btn = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btn setTitle:@"取消" forState: UIControlStateNormal];
+    [btn setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+    [btn setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    btn.titleLabel.font = [UIFont systemFontOfSize:14];
+    btn.frame = CGRectMake(10, 9, 47,28);
+    [btn addTarget:self action:@selector(ReturnBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:btn];
+    
+    UIButton* btnsend = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btnsend setTitle:@"发送" forState: UIControlStateNormal];
+    [btnsend setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+    [btnsend setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    btnsend.titleLabel.font = [UIFont systemFontOfSize:14];
+    btnsend.frame = CGRectMake(self.view.bounds.size.width-10-47, 9, 47,28);
+    [btnsend addTarget:self action:@selector(SendBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:btnsend];
+    
+    UILabel* lable = [[UILabel alloc]initWithFrame:CGRectMake(60, 15, ROOT_NAVAGATION_CONTROLLER_BOUNDS.size.width-120,15)];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = @"新评论";
+    lable.Font = [UIFont systemFontOfSize:17];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    [lable release];
+
+    CGRect rc = [self view].bounds;
+    CGRect rcnav = ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rc = BottomRect(rc,rc.size.height-rcnav.size.height,0);
+
+    commentTextView = [[[UITextView alloc]initWithFrame:CGRectMake(10,rc.origin.y + 10, rc.size.width - 20, 100)]autorelease];
+    commentTextView.Font = [UIFont systemFontOfSize:15];
+    [commentTextView setDelegate:self];
+    commentTextView.contentInset = UIEdgeInsetsZero; 
+    commentTextView.layer.cornerRadius = 6;
+    commentTextView.layer.masksToBounds = YES;
+    [[self view] addSubview:commentTextView];
+    commentTextView.text = [NSString stringWithUTF8String:m_strText.c_str()];
+    [commentTextView becomeFirstResponder];
+    commentTextView.returnKeyType = UIReturnKeyDefault;
+    
+    [[self view] setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    
+    [MobClick beginLogPageView:[NSString stringWithUTF8String:object_getClassName(self)]];
+}
+
+- (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)interfaceOrientation
+{
+    return (interfaceOrientation == UIInterfaceOrientationPortrait);
+}
+
+-(void) SendBtnClick:(id)sender
+{
+    if(![commentTextView.text isEqualToString:@""])
+    {
+        NSString *strvalue;
+        if(m_strReplyUserID == "")
+            strvalue = commentTextView.text;
+        else
+            strvalue = [NSString stringWithFormat:@"%@||%s",commentTextView.text,m_strReplyUserID.c_str()];
+        [m_webView executeJavaScriptFunc: @"onSendComment" parameter:strvalue];
+        commentTextView.text = @"";
+        [commentTextView resignFirstResponder];
+        [self dismissModalViewControllerAnimated:NO];
+    }
+}
+
+-(void) ReturnBtnClick:(id)sender
+{
+    [MobClick endLogPageView:[NSString stringWithUTF8String:object_getClassName(self)]];
+    //[self dismissModalViewControllerAnimated:NO];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+@end

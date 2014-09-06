@@ -1,0 +1,16 @@
+//
+//  KBUrls.h
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-29.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#ifndef kwbook_KBUrls_h
+#define kwbook_KBUrls_h
+
+
+#define BASE_URL    @"http://60.28.200.79:8180/tingshu/mobile/GetHotTingshuHotServlet?"
+
+
+#endif

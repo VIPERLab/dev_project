@@ -1,0 +1,140 @@
+ //
+//  KSVideoPlayer.m
+//  KwSing
+//
+//  Created by 永杰 单 on 12-8-23.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "KSVideoPlayer.h"
+#import "MessageManager.h"
+#import <AudioToolbox/AudioServices.h>
+#import <AVFoundation/AVAudioSession.h>
+
+@implementation KSVideoPlayer
+
+- (bool)initVideoPlayer:(UIView *)p_view VideoFilePath:(const char *)str_video_path{
+    m_pMoviePlayer = [[MPMoviePlayerController alloc] initWithContentURL:[NSURL fileURLWithPath:[NSString stringWithUTF8String:str_video_path]]];
+    m_pMoviePlayer.controlStyle = MPMovieControlStyleNone;
+    m_pMoviePlayer.scalingMode = MPMovieScalingModeAspectFill;
+    m_pMoviePlayer.repeatMode = MPMovieRepeatModeNone;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(MovieFinishedCallback:)name:MPMoviePlayerPlaybackDidFinishNotification object:m_pMoviePlayer];
+    
+    [m_pMoviePlayer prepareToPlay];
+    
+    [m_pMoviePlayer.view setFrame: p_view.bounds];  // player's frame must match parent's
+    [p_view addSubview: m_pMoviePlayer.view];
+    
+    m_bPlaying = false;
+    
+    return true;
+}
+
+- (void)deinitVideoPlayer{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name: MPMoviePlayerPlaybackDidFinishNotification object:m_pMoviePlayer];
+    [m_pMoviePlayer release];
+    m_pMoviePlayer = nil;
+}
+
+- (bool)start{
+    if (m_pMoviePlayer) {
+        [m_pMoviePlayer play];
+        m_bPlaying = true;
+        
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_VIDEOSTATUS, IVideoStateObserver::PlayErr);
+        return false;
+    }
+}
+
+- (bool)stop{
+    if (m_pMoviePlayer) {
+        [m_pMoviePlayer stop];
+        m_bPlaying = false;
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_VIDEOSTATUS, IVideoStateObserver::PlayErr);
+        return false;
+    }
+}
+
+- (bool)pause{
+    if (m_pMoviePlayer) {
+        [m_pMoviePlayer pause];
+        m_bPlaying = false;
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_VIDEOSTATUS, IVideoStateObserver::PlayErr);
+        return false;
+    }
+}
+
+- (bool)resume{
+    if (m_pMoviePlayer) {
+        [m_pMoviePlayer play];
+        m_bPlaying = true;
+
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_VIDEOSTATUS, IVideoStateObserver::PlayErr);
+        return false;
+    }
+}
+
+- (bool)seek:(float)f_seek_time{
+    if (m_pMoviePlayer && (f_seek_time < m_pMoviePlayer.playableDuration)) {
+        if (m_bPlaying) {
+            [m_pMoviePlayer pause];
+            m_pMoviePlayer.currentPlaybackTime = f_seek_time;
+            [m_pMoviePlayer play];
+            
+            return true;
+        }else {
+            [m_pMoviePlayer pause];
+            m_pMoviePlayer.currentPlaybackTime = f_seek_time;
+            [m_pMoviePlayer play];
+            [m_pMoviePlayer pause];
+            return true;
+        }
+    }else {
+        return false;
+    }
+}
+
+- (float)currentTime{
+    if (m_pMoviePlayer && 0 < m_pMoviePlayer.duration) {
+        return m_pMoviePlayer.currentPlaybackTime;
+    }else {
+        return 0;
+    }
+}
+
+- (float)duration{
+    if (m_pMoviePlayer) {
+        return m_pMoviePlayer.duration;
+    }else {
+        return 0;
+    }
+}
+
+- (float)playableDuration{
+    if (m_pMoviePlayer) {
+        return m_pMoviePlayer.playableDuration;
+    }else {
+        return 0;
+    }
+}
+
+- (void)MovieFinishedCallback:(NSNotification*)aNotification{
+    if (m_pMoviePlayer && (m_pMoviePlayer.currentPlaybackTime == m_pMoviePlayer.duration)) {
+        m_pMoviePlayer.initialPlaybackTime = 0.f;
+        m_pMoviePlayer.currentPlaybackTime = 0.f;
+        [m_pMoviePlayer play];
+        [m_pMoviePlayer pause];
+        SYN_NOTIFY(OBSERVER_ID_VIDEOSTATUS, IVideoStateObserver::PlayStop);
+    }
+}
+
+@end

@@ -1,0 +1,86 @@
+//
+//  AboutViewController.m
+//  KwSing
+//
+//  Created by 改 熊 on 12-9-11.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "AboutViewController.h"
+#import "KSAppDelegate.h"
+#import "ImageMgr.h"
+#import "globalm.h"
+#import "KSWebView.h"
+
+@interface AboutViewController ()
+{
+    UIWebView *aboutWebView;
+}
+@end
+
+@implementation AboutViewController
+
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+
+    [self setTitle:@"关于酷我"];
+    [[self view] setBackgroundColor:[UIColor whiteColor]];
+
+    UIImageView * imageView=[[[UIImageView alloc] init] autorelease];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER_BOUNDS];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    
+    UIButton* returnButton= [UIButton buttonWithType:UIButtonTypeCustom];
+    [returnButton setTitle:@"返回" forState: UIControlStateNormal];
+    [[returnButton titleLabel] setShadowColor:[UIColor blackColor]];
+    [[returnButton titleLabel] setShadowOffset:CGSizeMake(0, 1)];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    returnButton.titleLabel.font=[UIFont systemFontOfSize:14];
+    returnButton.frame = CGRectMake(10, 9, 47,28);
+    [returnButton addTarget:self action:@selector(ReturnBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:returnButton];
+    
+    UILabel* lable = [[UILabel alloc] initWithFrame:CGRectMake(60, 15, self.navigationController.navigationBar.bounds.size.width-120,18)];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = [self title];
+    lable.Font = [UIFont systemFontOfSize:18];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    [lable release];
+    
+    UIImageView * topshadow=[[[UIImageView alloc] init] autorelease];
+    CGRect rcshadow=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y+=rcshadow.size.height;
+    rcshadow.size.height=5;
+    [topshadow setFrame:rcshadow];
+    [topshadow setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadow];
+    
+    CGRect rc=[self view].bounds;
+    CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rc=BottomRect(rc, rc.size.height-rcna.size.height, 0);
+    aboutWebView=[[UIWebView alloc] initWithFrame:rc];
+
+    NSString *resourcePath = [ [NSBundle mainBundle] resourcePath];
+    NSString *filePath = [resourcePath stringByAppendingPathComponent:@"about.html"];
+    NSURL *fileURL = [NSURL fileURLWithPath:filePath];
+    NSURLRequest *req = [NSURLRequest requestWithURL:fileURL];
+    [aboutWebView loadRequest:req];
+    [aboutWebView setBackgroundColor:UIColorFromRGBValue(0xededed)];
+    
+    [[self view] addSubview:aboutWebView];
+}
+
+-(void)ReturnBtnClick:(id)sender
+{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+@end

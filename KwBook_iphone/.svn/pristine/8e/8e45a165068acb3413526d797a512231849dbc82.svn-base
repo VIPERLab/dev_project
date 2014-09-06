@@ -1,0 +1,32 @@
+//
+//  UINavigationController+PushAddButton.h
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-19.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+enum AudioPlayControlState
+{
+    E_AUDIO_PLAY_CONTROL_NONE,
+    E_AUDIO_PLAY_CONTROL_BUFFERING,
+    E_AUDIO_PLAY_CONTROL_PLAYING,
+    E_AUDIO_PLAY_CONTROL_PAUSE,
+    E_AUDIO_PLAY_CONTROL_STOP,
+    E_AUDIO_PLAY_CONTROL_FINISH
+};
+
+@interface UINavigationController (PushAddButton)
+
+@property (nonatomic , strong) UIView *topView;
+
+-(void)pushAddButtonViewController:(UIViewController *)viewController animated:(BOOL)animated;
+
+-(void)showCenterButton;
+-(void)hideCenterButton;
+
+-(void)setStatus:(enum AudioPlayControlState)status;
+
+@end

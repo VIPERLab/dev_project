@@ -1,0 +1,208 @@
+//
+//  KSOnlineVideoPlayer.m
+//  KwSing
+//
+//  Created by 永杰 单 on 12-8-22.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "KSOnlineVideoPlayer.h"
+#include "MessageManager.h"
+#import "IAudioStateObserver.h"
+#import "IVideoStateObserver.h"
+#import "AudioHelper.h"
+#import <AudioToolbox/AudioServices.h>
+#import <AVFoundation/AVAudioSession.h>
+
+@implementation KSOnlineVideoPlayer
+
+- (bool)initVideoPlayer:(UIView *)p_view VideoFilePath:(const char *)str_video_path{
+    m_pMoviePlayer = [[MPMoviePlayerController alloc] initWithContentURL:[NSURL URLWithString:[NSString stringWithUTF8String:str_video_path]]];
+    m_pMoviePlayer.controlStyle = MPMovieControlStyleNone;
+    m_pMoviePlayer.scalingMode = MPMovieScalingModeAspectFit;
+    m_pMoviePlayer.repeatMode = MPMovieRepeatModeNone;
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(MovieFinishedCallback:)name:MPMoviePlayerPlaybackDidFinishNotification object:m_pMoviePlayer];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(DownloadStatusChanged:)name:MPMoviePlayerLoadStateDidChangeNotification object:m_pMoviePlayer];
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_APP, IObserverApp);
+    
+    [m_pMoviePlayer prepareToPlay];
+    
+    [m_pMoviePlayer.view setFrame: p_view.bounds];  // player's frame must match parent's
+    [p_view addSubview: m_pMoviePlayer.view];
+
+    m_CurPlayStatus = PLAY_STATUS_NONE;
+    
+    UInt32 audio_route_override = [[AudioHelper getInstance] hasHeadset] ? kAudioSessionOverrideAudioRoute_None : kAudioSessionOverrideAudioRoute_Speaker;
+    AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(audio_route_override), &audio_route_override);
+    
+    return true;
+}
+
+- (void)deinitVideoPlayer{
+    [[NSNotificationCenter defaultCenter] removeObserver:self name: MPMoviePlayerPlaybackDidFinishNotification object:m_pMoviePlayer];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name: MPMoviePlayerLoadStateDidChangeNotification object:m_pMoviePlayer];
+    [m_pMoviePlayer release];
+    m_pMoviePlayer = nil;
+}
+
+- (void) dealloc{
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_APP, IObserverApp);
+    [super dealloc];
+}
+
+- (bool)start{
+    if (m_pMoviePlayer) {
+//        if (PLAY_STATUS_PAUSED == m_CurPlayStatus) {
+//            [m_pMoviePlayer play];
+//            SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::Playing);
+//            m_CurPlayStatus = PLAY_STATUS_PLAYING;
+//            return true;
+//        }
+        
+        [m_pMoviePlayer play];
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::Playing);
+        m_CurPlayStatus = PLAY_STATUS_PLAYING;
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayErr);
+        m_CurPlayStatus = PLAY_STATUS_ERR;
+        return false;
+    }
+}
+
+- (bool)stop{
+    if (m_pMoviePlayer) {
+        [m_pMoviePlayer stop];
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayStop);
+        m_CurPlayStatus = PLAY_STATUS_STOP;
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayErr);
+        m_CurPlayStatus = PLAY_STATUS_ERR;
+        return false;
+    }
+}
+
+- (bool)pause{
+    if (m_pMoviePlayer) {
+        [m_pMoviePlayer pause];
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayPaused);
+        m_CurPlayStatus = PLAY_STATUS_PAUSED;
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayErr);
+        m_CurPlayStatus = PLAY_STATUS_ERR;
+        return false;
+    }
+}
+
+- (bool)resume{
+    if (m_pMoviePlayer) {
+        [m_pMoviePlayer play];
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::Playing);
+        m_CurPlayStatus = PLAY_STATUS_PLAYING;
+        return true;
+    }else {
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayErr);
+        m_CurPlayStatus = PLAY_STATUS_ERR;
+        return false;
+    }
+}
+
+- (bool)seek:(float)f_seek_time{
+    if (m_pMoviePlayer && (f_seek_time < m_pMoviePlayer.playableDuration)) {
+        if (MPMoviePlaybackStatePlaying == m_pMoviePlayer.playbackState) {
+            [m_pMoviePlayer pause];
+            m_pMoviePlayer.currentPlaybackTime = f_seek_time;
+            [m_pMoviePlayer play];
+            return true;
+        }else {
+            [m_pMoviePlayer pause];
+            m_pMoviePlayer.currentPlaybackTime = f_seek_time;
+            [m_pMoviePlayer play];
+            [m_pMoviePlayer pause];
+
+            return true;
+        }
+        [m_pMoviePlayer pause];
+        m_pMoviePlayer.currentPlaybackTime = f_seek_time;
+        [m_pMoviePlayer play];
+        return true;
+    }else {
+        return false;
+    }
+}
+
+- (float)currentTime{
+    if (m_pMoviePlayer) {
+        return 1000 * m_pMoviePlayer.currentPlaybackTime;
+    }else {
+        return 0;
+    }
+}
+
+- (float)duration{
+    if (m_pMoviePlayer) {
+        return 1000 * m_pMoviePlayer.duration;
+    }else {
+        return 0;
+    }
+}
+
+- (float)playableDuration{
+    if (m_pMoviePlayer) {
+        return 1000 * m_pMoviePlayer.playableDuration;
+    }else {
+        return 0;
+    }
+}
+
+- (EMediaPlayStatus)getCurPlayStatus{
+    return m_CurPlayStatus;
+}
+
+- (void)IObserverApp_ResignActive{
+    [self pause];
+    m_CurPlayStatus = PLAY_STATUS_PAUSED;
+    SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayPaused);
+}
+
+- (void)MovieFinishedCallback:(NSNotification*)aNotification{
+//    NSLog(@"%f---%f", m_pMoviePlayer.currentPlaybackTime, m_pMoviePlayer.duration);
+    if (NULL != m_pMoviePlayer && m_pMoviePlayer.currentPlaybackTime == m_pMoviePlayer.duration) {
+//        [m_pMoviePlayer stop];
+        m_pMoviePlayer.initialPlaybackTime = 0.0;
+        m_pMoviePlayer.currentPlaybackTime = 0.0;
+        [m_pMoviePlayer play];
+        [m_pMoviePlayer pause];
+        SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::OnlinePlayFinish);
+    }
+}
+
+- (void)DownloadStatusChanged:(NSNotification*)aNotification{
+    if (MPMovieLoadStatePlayable == [m_pMoviePlayer loadState]) {
+        SYN_NOTIFY(OBSERVER_ID_VIDEOSTATUS, IVideoStateObserver::PlayIsReady);
+    }else if (MPMovieLoadStateStalled == [m_pMoviePlayer loadState]) {
+        SYN_NOTIFY(OBSERVER_ID_VIDEOSTATUS, IVideoStateObserver::PLayIsNotReady);
+    }else {
+        return;
+    }
+}
+
+-(void)IObserverApp_HeadsetStatusChanged:(BOOL)bHasHeadset{
+    if (!bHasHeadset) {
+        sleep(1);
+        [m_pMoviePlayer play];
+    }
+    UInt32 audio_route_override = bHasHeadset ? kAudioSessionOverrideAudioRoute_None : kAudioSessionOverrideAudioRoute_Speaker;
+    AudioSessionSetProperty(kAudioSessionProperty_OverrideAudioRoute, sizeof(audio_route_override), &audio_route_override);
+}
+
+-(void)IObserverApp_CallInComing{
+    [self pause];
+    m_CurPlayStatus = PLAY_STATUS_PAUSED;
+    SYN_NOTIFY(OBSERVER_ID_AUDIOSTATUS, IAudioStateObserver::PlayPaused);
+}
+
+@end

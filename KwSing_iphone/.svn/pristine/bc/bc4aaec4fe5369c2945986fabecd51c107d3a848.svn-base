@@ -1,0 +1,117 @@
+//
+//  SongInfo.h
+//  KwSing
+//
+//  Created by 海平 翟 on 12-7-17.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#ifndef KwSing_SongInfo_h
+#define KwSing_SongInfo_h
+
+#include <string>
+
+//***基础数据结构里不放指针，不放自身为浅拷贝的对象，保证不需要显式拷贝构造即可拷贝***
+
+//歌曲文件类型及码率
+typedef enum {
+    FMT_UNKNOWN = 0
+    ,FMT_AAC_24
+    ,FMT_AAC_32
+    ,FMT_AAC_48
+    ,FMT_MP3_128
+    ,FMT_VIDEO
+    ,FMT_MAX
+} MUSIC_FORMAT;
+
+const char* GetFormatName(MUSIC_FORMAT t);
+int         GetBitRate(MUSIC_FORMAT t);
+
+
+//歌曲资源，一首歌可能有多个资源，比如伴唱、原唱、录制后放在本地的、录制上传的
+typedef struct
+{
+    MUSIC_FORMAT    eumFormat;
+    unsigned        uiDuration;     //时长，毫秒
+    unsigned        uiFileSize;     //文件大小，字节
+    std::string     strUrl;         //播放url
+    std::string     strSig;         //断点续传用
+    std::string     strLocalPath;   //本地缓存
+    unsigned        uiLocalSize;    //已缓存大小
+}MUSIC_RESOURCE;
+
+//歌曲基本属性
+class CSongInfoBase
+{
+public:
+    CSongInfoBase();
+    virtual void LoadFromDict(NSDictionary* dict);
+    virtual void SaveToDict(NSMutableDictionary* dict);
+    
+    std::string     strRid;
+    std::string     strKid;
+    std::string     strSongName;
+    std::string     strArtist;
+    std::string     strAlbum;
+    unsigned        uiPopularity;   //热度
+    MUSIC_RESOURCE  accompanyRes;   //伴奏
+    MUSIC_RESOURCE  originalRes;    //原唱
+    bool            hasMv;          //是否具有mv资源
+    unsigned        uiFlower;       //鲜花
+    unsigned        uiComment;      //评论
+    unsigned        uiCare;         //关注
+};
+
+//正在录制、我的歌曲列表歌曲信息
+class CRecoSongInfo:public CSongInfoBase
+{
+public:
+    CRecoSongInfo();
+    virtual void LoadFromDict(NSDictionary* dict);
+    virtual void SaveToDict(NSMutableDictionary* dict);
+    
+    //录制结果保存和上传状态
+    typedef enum {
+        STATE_NOSAVE
+        ,STATE_NOUPLOAD
+        ,STATE_UPLOADING
+        ,STATE_UPLOADED
+        ,STATE_DELETING
+    } LOCAL_STATE;
+    
+    unsigned        uiPoints;       //得分
+    unsigned        uiDefeat;       //击败了全国百分之多少的用户
+    MUSIC_RESOURCE  recoRes;        //录制合成后的歌曲
+    std::string     strLocalPicPack;//本地打好的图片包
+    LOCAL_STATE     eumLocalState;
+    unsigned        uiUploadPercent;
+    std::string     strSaveTime;    //录制保存日期
+};
+
+//来自网上用来播放的已经录好的歌曲信息
+class CPlaySongInfo:public CSongInfoBase
+{
+public:
+    CPlaySongInfo();
+    virtual void LoadFromDict(NSDictionary* dict);
+    virtual void SaveToDict(NSMutableDictionary* dict);
+    
+    MUSIC_RESOURCE  recoRes;
+    std::string     strSid;         //歌曲对象的评论列表标识
+    std::string     strPicPackUrl;  //服务器上的图片包
+    std::string     strUserName;
+    std::string     strUserId;
+    unsigned        uiPoints;
+    
+    std::string     strUserPic;
+};
+
+
+#endif
+
+
+
+
+
+
+

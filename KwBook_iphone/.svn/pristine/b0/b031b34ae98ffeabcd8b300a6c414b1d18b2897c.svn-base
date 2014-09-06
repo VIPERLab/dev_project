@@ -1,0 +1,177 @@
+//
+//  BookManagement.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 14-1-6.
+//  Copyright (c) 2014年 单 永杰. All rights reserved.
+//
+
+#include "BookManagement.h"
+
+CBookManagement* CBookManagement::GetInstance(){
+    static CBookManagement s_book_management;
+    
+    return &s_book_management;
+}
+
+void CBookManagement::AddBook(CBookInfo* book_info){
+    if (m_BookList.end() != m_BookList.find(book_info->m_strBookId)) {
+        return;
+    }else {
+        CBookInfo* cur_book = new CBookInfo;
+        *cur_book = *book_info;
+        m_BookList.insert(std::map<std::string, CBookInfo*>::value_type(cur_book->m_strBookId, cur_book));
+    }
+}
+
+CBookInfo* CBookManagement::GetBookInfo(std::string str_book_id){
+    std::map<std::string, CBookInfo*>::iterator iter = m_BookList.find(str_book_id);
+    if (m_BookList.end() != iter) {
+        return iter->second;
+    }else {
+        return NULL;
+    }
+}
+
+CChapterInfo* CBookManagement::GetChapterInfo(std::string str_book_id, unsigned un_rid){
+    std::map<std::string, std::map<int, CChapterInfo*>* >::iterator iter = m_BookDetailList.find(str_book_id);
+    if (m_BookDetailList.end() != iter) {
+        std::map<int, CChapterInfo*>::iterator iter_chapter = iter->second->find(un_rid);
+        if (iter->second->end() != iter_chapter) {
+            return iter_chapter->second;
+        }
+    }
+    
+    return NULL;
+}
+
+void CBookManagement::AddChapter(CChapterInfo* chapter_info){
+    if (HasBook(chapter_info->m_strBookId)) {
+        if (HasChapter(chapter_info)) {
+            ResetChapter(chapter_info);
+            return;
+        }
+        CChapterInfo* cur_chapter = new CChapterInfo;
+        *cur_chapter = *chapter_info;
+        m_BookDetailList.find(cur_chapter->m_strBookId)->second->insert(std::map<int, CChapterInfo*>::value_type(cur_chapter->m_unRid, cur_chapter));
+    }else {
+        std::map<int, CChapterInfo*>* map_book = new std::map<int, CChapterInfo*>;
+        CChapterInfo* cur_chapter = new CChapterInfo;
+        *cur_chapter = *chapter_info;
+        map_book->insert(std::map<int, CChapterInfo*>::value_type(cur_chapter->m_unRid, cur_chapter));
+        m_BookDetailList.insert(std::map<std::string, std::map<int, CChapterInfo*>*>::value_type(cur_chapter->m_strBookId, map_book));
+    }
+    
+    //发送添加通知；
+}
+void CBookManagement::AddChapters(std::vector<CChapterInfo*>& vec_chapter){
+    for (std::vector<CChapterInfo*>::iterator iter = vec_chapter.begin(); iter != vec_chapter.end(); ++iter) {
+        if (HasBook((*iter)->m_strBookId)) {
+            if (HasChapter(*iter)) {
+                ResetChapter(*iter);
+                return;
+            }
+            CChapterInfo* cur_chapter = new CChapterInfo;
+            *cur_chapter = **iter;
+            m_BookDetailList.find(cur_chapter->m_strBookId)->second->insert(std::map<int, CChapterInfo*>::value_type(cur_chapter->m_unRid, cur_chapter));
+        }else {
+            std::map<int, CChapterInfo*>* map_book = new std::map<int, CChapterInfo*>;
+            CChapterInfo* cur_chapter = new CChapterInfo;
+            *cur_chapter = **iter;
+            map_book->insert(std::map<int, CChapterInfo*>::value_type(cur_chapter->m_unRid, cur_chapter));
+            m_BookDetailList.insert(std::map<std::string, std::map<int, CChapterInfo*>*>::value_type(cur_chapter->m_strBookId, map_book));
+        }
+    }
+    
+    //发送批量添加通知；
+}
+
+void CBookManagement::DeleteChapter(CChapterInfo* chapter_info){
+    if (HasBook(chapter_info->m_strBookId)) {
+        if (HasChapter(chapter_info)) {
+            CChapterInfo* cur_chapter = m_BookDetailList.find(chapter_info->m_strBookId)->second->find(chapter_info->m_unRid)->second;
+            delete cur_chapter;
+            cur_chapter = NULL;
+            m_BookDetailList.find(chapter_info->m_strBookId)->second->erase(chapter_info->m_unRid);
+            
+            if (0 == m_BookDetailList.find(chapter_info->m_strBookId)->second->size()) {
+                std::map<int, CChapterInfo*>* map_book = m_BookDetailList.find(chapter_info->m_strBookId)->second;
+                delete map_book;
+                map_book = NULL;
+                m_BookDetailList.erase(chapter_info->m_strBookId);
+                
+                CBookInfo* book_info = m_BookList.find(chapter_info->m_strBookId)->second;
+                delete book_info;
+                book_info = NULL;
+                
+                m_BookList.erase(chapter_info->m_strBookId);
+            }
+            
+            //发送 删除 通知；
+        }
+    }
+}
+void CBookManagement::DeleteChapters(std::string str_book_id){
+    std::map<std::string, std::map<int, CChapterInfo*>* >::iterator iter = m_BookDetailList.find(str_book_id);
+    if (m_BookDetailList.end() != iter){
+        std::map<int, CChapterInfo*>* chapter_list = iter->second;
+        for (std::map<int, CChapterInfo*>::iterator iter_chapter = chapter_list->begin(); iter_chapter != chapter_list->end(); ++iter_chapter) {
+            CChapterInfo* chapter_info = iter_chapter->second;
+            delete chapter_info;
+            chapter_info = NULL;
+        }
+        
+        chapter_list->clear();
+        
+        delete iter->second;
+        iter->second = NULL;
+        m_BookDetailList.erase(iter);
+        
+        CBookInfo* book_info = m_BookList.find(str_book_id)->second;
+        delete book_info;
+        book_info = NULL;
+        
+        m_BookList.erase(str_book_id);
+        
+        //发送 批量删除 通知；
+    }
+}
+
+void CBookManagement::ResetChapter(CChapterInfo* chapter_info){
+    CChapterInfo* dest_chapter_info = m_BookDetailList.find(chapter_info->m_strBookId)->second->find(chapter_info->m_unRid)->second;
+    *dest_chapter_info = *chapter_info;
+    
+    //发送 更新 通知；
+}
+
+bool CBookManagement::HasBook(std::string str_book_id){
+    if (m_BookDetailList.end() != m_BookDetailList.find(str_book_id)){
+        return true;
+    }
+    else{
+        return false;
+    }
+}
+bool CBookManagement::HasChapter(CChapterInfo* chapter_info){
+    std::map<std::string, std::map<int, CChapterInfo*>* >::iterator iter = m_BookDetailList.find(chapter_info->m_strBookId);
+    if (m_BookDetailList.end() != iter){
+        if (iter->second->end() !=iter->second->find(chapter_info->m_unRid)) {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else{
+        return false;
+    }
+}
+
+std::map<int, CChapterInfo*>* CBookManagement::GetChapterList(std::string str_book_id){
+    if (m_BookDetailList.end() != m_BookDetailList.find(str_book_id)) {
+        return (m_BookDetailList.find(str_book_id)->second);
+    }else {
+        return NULL;
+    }
+}

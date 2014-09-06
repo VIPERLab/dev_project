@@ -1,0 +1,50 @@
+//
+//  DownloadViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "DownloadViewController.h"
+
+@interface DownloadViewController ()
+
+@end
+
+@implementation DownloadViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    [[self view] setBackgroundColor:[UIColor grayColor]];
+}
+-(void)viewWillAppear:(BOOL)animated
+{
+    NSLog(@"%s",__func__);
+}
+-(void)viewDidAppear:(BOOL)animated
+{
+    NSLog(@"%s",__func__);
+}
+-(void)viewWillDisappear:(BOOL)animated
+{
+    NSLog(@"%s",__func__);
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+@end

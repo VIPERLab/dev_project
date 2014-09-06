@@ -1,0 +1,450 @@
+//
+//  KsWebView.mm
+//  KwSing
+//
+//  Created by 海平 翟 on 12-7-27.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include "KSWebView.h"
+#include "KwTools.h"
+#include "HttpRequest.h"
+#include "ImageMgr.h"
+#include <QuartzCore/QuartzCore.h>
+#include "globalm.h"
+#include "MessageManager.h"
+
+id<KSWebViewGlobalDelegate> g_WebViewGlobalDelegate;
+
+@interface KSWebView()<UIWebViewDelegate>
+{
+    id<KSWebViewDelegate> idWebDelegate;
+    BOOL bUseLoadingView;
+    BOOL bLoading;
+    BOOL bSuccessed;
+    UIWebView* pWebView;
+    UIView* pLoadingView;
+    UIView* pErrorView;
+    NSURLRequest* pRequest;
+    UIImageView* pBackgroundImageView;
+}
+
+typedef enum
+{
+    PAGE_LOADING
+    ,PAGE_ERROR
+    ,PAGE_WEBVIEW
+}SHOW_PAGE_TYPE;
+
+- (void)initWebView:(BOOL)bounce opaque:(BOOL)bOpaque;
+
+- (void)dealloc;
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
+- (void)webViewDidStartLoad:(UIWebView *)webView;
+- (void)webViewDidFinishLoad:(UIWebView *)webView;
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error;
+
+- (void)singleTapErrorViewGestureRecognizer:(UIGestureRecognizer *)gestureRecognizer;
+
+- (void)showErrorPage:(BOOL)bShow;
+- (void)showLoadingPage:(BOOL)bShow descript:(NSString*)strDescript;
+- (void)showPage:(SHOW_PAGE_TYPE)type;
+
+@end
+
+@implementation KSWebView
+
++ (void)setGlobalDelegate:(id<KSWebViewGlobalDelegate>)delegate
+{
+    g_WebViewGlobalDelegate=delegate;
+}
+
+- (void)initWebView:(BOOL)bounce opaque:(BOOL)bOpaque
+{
+    pWebView=[[[UIWebView alloc] initWithFrame:self.bounds] autorelease];
+    pWebView.backgroundColor=[UIColor clearColor];
+    pWebView.opaque=bOpaque;
+    pWebView.allowsInlineMediaPlayback=YES;
+    pWebView.mediaPlaybackRequiresUserAction=NO;
+    pWebView.dataDetectorTypes=UIDataDetectorTypeNone;
+    if([[[UIDevice currentDevice] systemVersion] floatValue]>=5.0){
+        pWebView.mediaPlaybackAllowsAirPlay=YES;
+    }
+    [pWebView setDelegate:self];
+    pWebView.scalesPageToFit=YES;
+    [self addSubview:pWebView];
+    
+    if (!bounce) {
+        for (id subview in pWebView.subviews) {
+            if ([[subview class] isSubclassOfClass:[UIScrollView class]]) {
+                ((UIScrollView*)subview).bounces=NO;
+            }
+        }
+    }
+}
+
+- (id)initWithFrame:(CGRect)frame
+{
+    return [self initWithFrame:frame allowBounce:NO useLoading:NO opaque:YES];
+}
+
+- (id)initWithFrame:(CGRect)frame allowBounce:(BOOL)bounce useLoading:(BOOL)loading opaque:(BOOL)bOpaque
+{
+    self=[super initWithFrame:frame];
+    [self initWebView:bounce opaque:bOpaque];
+    self.backgroundColor=[UIColor clearColor];
+    bUseLoadingView=loading;
+    return self;
+}
+
+- (void)setFrame:(CGRect)frame
+{
+	[super setFrame:frame];
+    [pLoadingView setFrame:self.bounds];
+    [pErrorView setFrame:self.bounds];
+    [pWebView setFrame:self.bounds];
+}
+
+- (void)setBackgroundImage:(UIImage*)img
+{
+    [pBackgroundImageView removeFromSuperview];
+    pBackgroundImageView=[[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, img.size.width, img.size.height)] autorelease];
+    [pBackgroundImageView setImage:img];
+    [self addSubview:pBackgroundImageView];
+    if(pWebView)[self bringSubviewToFront:pWebView];
+    if(pErrorView)[self bringSubviewToFront:pErrorView];
+    if(pWebView)[self bringSubviewToFront:pWebView];
+}
+
+- (void)scalesPageToFit:(BOOL)bFit
+{
+    pWebView.scalesPageToFit=bFit;
+}
+
+- (void)dealloc
+{
+    [pRequest release];
+    [super dealloc];
+}
+
+-(void)loadUrl:(NSString*)url
+{
+    [self stop];
+    
+    NSURL* pUrl=[NSURL URLWithString:url];
+    [pRequest release];
+    pRequest=[[NSURLRequest requestWithURL:pUrl] retain];
+    
+    bSuccessed=NO;
+    if (CHttpRequest::GetNetWorkStatus()==NETSTATUS_NONE) {
+        [self showPage:PAGE_ERROR];
+    } else {
+        [self showPage:PAGE_LOADING];
+        [pWebView loadRequest:pRequest];
+    }
+}
+
+- (void)loadFile:(NSString*)file
+{
+    [self stop];
+    
+    bSuccessed=NO;
+    [self showPage:PAGE_LOADING];
+    
+    NSURL* pUrl=[[[NSURL alloc] initFileURLWithPath:file] autorelease];
+    [pRequest release];
+    pRequest=[[NSURLRequest requestWithURL:pUrl] retain];
+    [pWebView loadRequest:pRequest];
+}
+
+-(void)stop
+{
+    [pWebView stopLoading];
+}
+
+-(void)reload
+{
+    [self stop];
+    
+    if (!pRequest) {
+        return;
+    }
+    
+    bSuccessed=NO;
+    if (CHttpRequest::GetNetWorkStatus()==NETSTATUS_NONE) {
+        [self showPage:PAGE_ERROR];
+    } else {
+        [self showPage:PAGE_LOADING];
+        [pWebView loadRequest:pRequest];
+    }
+}
+- (BOOL)canGoBack
+{
+    return [pWebView canGoBack];
+}
+
+- (BOOL)canGoForward
+{
+    return [pWebView canGoForward];
+}
+
+- (void)goBack
+{
+    if (pWebView){
+        [pWebView goBack];
+    }
+}
+
+-(void)goForward
+{
+    if (pWebView) {
+        [pWebView goForward];
+    }
+}
+- (BOOL)isLoading
+{
+    return bLoading;
+}
+
+- (BOOL)isSuccessed
+{
+    return bSuccessed;
+}
+
+- (NSString*) executeJavaScriptFunc:(NSString*)func
+{
+    if ( !func) {
+        return nil;
+    }
+    NSString* pJS=[NSString stringWithFormat:@"%@();",func];
+    return [pWebView stringByEvaluatingJavaScriptFromString:pJS];
+}
+
+- (NSString*) executeJavaScriptFunc:(NSString*)func parameter:(NSString*)paras
+{
+    if ( !func) {
+        return nil;
+    }
+    if (!paras || [paras length]==0) {
+        return [self executeJavaScriptFunc:func];
+    }
+    NSString* pJS=[NSString stringWithFormat:@"%@('%@');",func,KwTools::Encoding::UrlEncode(paras)];
+    
+    return [pWebView stringByEvaluatingJavaScriptFromString:pJS];
+}
+
+- (void)setDelegate:(id<KSWebViewDelegate>)delegate
+{
+    idWebDelegate=delegate;
+}
+
+- (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType
+{
+    NSURL* requestURL=[request URL];
+    if ([[[requestURL scheme] lowercaseString] isEqualToString:@"kwsing"]) {
+        if (CHttpRequest::GetNetWorkStatus()==NETSTATUS_NONE) {
+            [self showPage:PAGE_ERROR];
+        } else if( g_WebViewGlobalDelegate || (idWebDelegate
+             && [idWebDelegate respondsToSelector:@selector(webViewRunActionWithParam:action:parameter:)]
+             )
+           ) {
+            NSString* act=[requestURL host];
+            NSString* params=[requestURL query];
+            NSArray* array=[params componentsSeparatedByString:@"&"];
+            NSMutableDictionary* dict=[NSMutableDictionary dictionary];
+
+            NSAutoreleasePool* pool=[[NSAutoreleasePool alloc] init];
+            int n(0);
+            for (NSString* s in array) {
+             NSRange r=[s rangeOfString:@"="];
+             NSString* key(NULL),*value(NULL);
+             if (r.length==0) {
+                 key=@"key";
+                 value=s;
+             } else {
+                key =[s substringToIndex:r.location];
+                value =[s substringFromIndex:r.location+1];
+             }
+             
+             NSString *obj = KwTools::Encoding::UrlDecode(value);
+             [dict setObject:obj forKey:key];
+             ++n;
+             if (n%10==0) {
+                 [pool release];
+                 pool=[[NSAutoreleasePool alloc] init];
+             }
+            }
+            [pool release];
+            
+            [self runActionWithParam:self action:act parameter:dict];
+        }
+        return NO;
+    }
+    return YES;
+}
+
+- (void)runActionWithParam:(KSWebView*)view action:(NSString*)act parameter:(NSDictionary*)paras
+{
+    if ([act isEqual:@"reload"]) {
+        [self reload];
+    } else if([act isEqual:@"stop"]) {
+        [self stop];
+    } else if([act isEqual:@"showloading"]) {
+        NSString* strDescript=[paras objectForKey:@"descript"];
+        pWebView.hidden=NO;
+        [self showLoadingPage:YES descript:strDescript];
+    } else if([act isEqual:@"hideloading"]) {
+        [self showPage:PAGE_WEBVIEW];
+    } else if([act isEqual:@"showerror"]) {
+        [self showPage:PAGE_ERROR];
+    } else if([act isEqual:@"hideerror"]) {
+        [self showPage:PAGE_WEBVIEW];
+    } else if (!g_WebViewGlobalDelegate || ![g_WebViewGlobalDelegate webViewRunActionWithParam:self action:act parameter:paras]) {
+        if(idWebDelegate && [idWebDelegate respondsToSelector:@selector(webViewRunActionWithParam:action:parameter:)]){
+            [idWebDelegate webViewRunActionWithParam:self action:act parameter:paras];
+        }
+    }
+}
+
+- (void)webViewDidStartLoad:(UIWebView *)webView
+{
+    if(idWebDelegate && [idWebDelegate respondsToSelector:@selector(webViewDidStartLoad:)]){
+        [idWebDelegate webViewDidStartLoad:self];
+    }
+}
+
+- (void)webViewDidFinishLoad:(UIWebView *)webView
+{
+    //if (bLoading) {
+        bSuccessed=YES;
+        
+        [self showPage:PAGE_WEBVIEW];
+        
+        if(idWebDelegate && [idWebDelegate respondsToSelector:@selector(webViewDidFinishLoad:success:)]){
+            [idWebDelegate webViewDidFinishLoad:self success:YES];
+        }
+    //}
+}
+
+- (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error
+{
+    if (bSuccessed || [error code]==NSURLErrorCancelled) {
+        return;
+    }
+    [self showPage:PAGE_ERROR];
+    
+    if(idWebDelegate && [idWebDelegate respondsToSelector:@selector(webViewDidFinishLoad:success:)]){
+        [idWebDelegate webViewDidFinishLoad:self success:NO];
+    }
+}
+
+- (void)singleTapErrorViewGestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+{
+    
+    if (bLoading) {
+        return;
+    }
+    
+    bSuccessed=NO;
+    
+    [self showPage:PAGE_LOADING];
+    
+    KS_BLOCK_DECLARE
+    {
+        [self reload];
+    }
+    KS_BLOCK_ASYNRUN(1000);
+}
+
+- (void)showLoadingPage:(BOOL)bShow descript:(NSString*)strDescript
+{
+    if (!bUseLoadingView) {
+        return;
+    }
+    if (bShow) {
+        if (!pLoadingView) {
+            pLoadingView=[[[UIView alloc] initWithFrame:self.bounds] autorelease];
+            [self addSubview:pLoadingView];
+            
+            CGRect rc=CGRectMake(0, 0, 86, 86);
+            rc=CenterRectForBounds(rc,pLoadingView.bounds);
+            UIView* pBlackFrameView=[[[UIView alloc] initWithFrame:rc] autorelease];
+            [pBlackFrameView setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:0.5]];
+            pBlackFrameView.layer.cornerRadius=10;
+            pBlackFrameView.layer.masksToBounds=YES;
+            [pLoadingView addSubview:pBlackFrameView];
+            
+            UIActivityIndicatorView* pActIndView=[[[UIActivityIndicatorView alloc] initWithFrame:CGRectMake(26, 16, 34, 34)] autorelease];
+            [pActIndView setActivityIndicatorViewStyle:UIActivityIndicatorViewStyleWhiteLarge];
+            [pBlackFrameView addSubview:pActIndView];
+            [pActIndView startAnimating];
+            
+            UILabel* text=[[[UILabel alloc] initWithFrame:CGRectMake(0, 50, 86, 30)] autorelease];
+            [text setBackgroundColor:[UIColor clearColor]];
+            [text setTextAlignment:UITextAlignmentCenter];
+            [text setText:strDescript?strDescript:@"正在加载中"];
+            [text setTextColor:[UIColor whiteColor]];
+            [text setFont: [UIFont systemFontOfSize:13]];
+            [pBlackFrameView addSubview:text];
+        }
+        pLoadingView.hidden=NO;
+        bLoading=YES;
+    } else {
+        [pLoadingView removeFromSuperview];
+        pLoadingView=NULL;
+        bLoading=NO;
+    }
+}
+
+- (void)showErrorPage:(BOOL)bShow
+{
+    if (bShow) {
+        if (!pErrorView) {
+            pErrorView=[[[UIView alloc] initWithFrame:self.bounds] autorelease];
+            [pErrorView setBackgroundColor:[UIColor clearColor]];
+            [self addSubview:pErrorView];
+            
+            UITapGestureRecognizer *tapGestureRecognize=[[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singleTapErrorViewGestureRecognizer:)] autorelease];
+            tapGestureRecognize.numberOfTapsRequired=1;
+            [pErrorView addGestureRecognizer:tapGestureRecognize];
+            
+            UIImage* pIco=CHttpRequest::GetNetWorkStatus()==NETSTATUS_NONE?CImageMgr::GetImageEx("failmsgNoNet.png"):CImageMgr::GetImageEx("failmsgLoadFail.png");
+            UIImageView* pIcoView=[[[UIImageView alloc] initWithImage:pIco] autorelease];
+            CGRect rcIco=CGRectMake(0, 0, pIco.size.width, pIco.size.height);
+            rcIco=CenterRectForBounds(rcIco,pErrorView.bounds);
+            [pIcoView setFrame:rcIco];
+            [pErrorView addSubview:pIcoView];
+        }
+        pErrorView.hidden=NO;
+    } else {
+        [pErrorView removeFromSuperview];
+        pErrorView=NULL;
+    }
+}
+
+- (void)showPage:(SHOW_PAGE_TYPE)type
+{
+    switch (type) {
+        case PAGE_LOADING:
+            pWebView.hidden=YES;
+            [self showLoadingPage:YES descript:nil];
+            [self showErrorPage:NO];
+            break;
+        case PAGE_ERROR:
+            pWebView.hidden=YES;
+            [self showLoadingPage:NO descript:nil];
+            [self showErrorPage:YES];
+            break;
+        case PAGE_WEBVIEW:
+            pWebView.hidden=NO;
+            [self showLoadingPage:NO descript:nil];
+            [self showErrorPage:NO];
+            break;
+    }
+}
+
+
+@end
+
+

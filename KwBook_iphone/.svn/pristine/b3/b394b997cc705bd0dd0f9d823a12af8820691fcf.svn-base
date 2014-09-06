@@ -1,0 +1,167 @@
+//
+//  KBAppDelegate.m
+//  kwbook
+//
+//  Created by 单 永杰 on 13-11-27.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "KBAppDelegate.h"
+#import "MainViewController.h"
+#import "CAppInit.h"
+#import "MessageManager.h"
+#import "ImageMgr.h"
+#import "Reachability.h"
+#import <CoreTelephony/CTCall.h>
+#import <CoreTelephony/CTCallCenter.h>
+#import <MediaPlayer/MPMusicPlayerController.h>
+#import "IObserverApp.h"
+#import "HttpRequest.h"
+#include "MobClick.h"
+#include "KuwoConstants.h"
+
+#include "AudioPlayerManager.h"
+
+
+
+UINavigationController *rootNavigationController;
+
+@interface KBAppDelegate ()
+{
+    CTCallCenter* pCallCenter;
+    Reachability* pReachability;
+}
+@end
+
+@implementation KBAppDelegate
+
++(UINavigationController *)rootNavigationController
+{
+    return rootNavigationController;
+}
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+    // Override point for customization after application launch.
+    [MobClick startWithAppkey:UM_APPKEY reportPolicy:SEND_INTERVAL channelId:KWSING_CHANNEL]; //umeng
+    [MobClick updateOnlineConfig];
+    [MobClick setAppVersion:@KWSING_VERSION_STRING];
+    [MobClick setCrashReportEnabled:YES];
+    
+    CAppInit::GetInstance()->OnLaunchFinished();
+    
+    MainViewController *mainViewController = [[MainViewController alloc] init];
+    rootNavigationController = [[UINavigationController alloc] initWithRootViewController:mainViewController];
+    [rootNavigationController setNavigationBarHidden:YES];
+    [self.window setRootViewController:rootNavigationController];
+    [self.window makeKeyAndVisible];
+    
+    //侦听网络情况
+    pReachability=[Reachability reachabilityForInternetConnection];
+    [pReachability startNotifier];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(OnNetWorkStatusChanged:) name: kReachabilityChangedNotification object: nil];
+    
+    //侦听 音量键 按动情况
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onVolumeControlChanged:) name:MPMusicPlayerControllerVolumeDidChangeNotification object:nil];
+    
+    //响应来电
+    pCallCenter=[[CTCallCenter alloc] init];
+    pCallCenter.callEventHandler=^(CTCall* call){
+        if ([call.callState isEqualToString:@"CTCallStateIncoming"]) {
+            ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::CallInComing,0);
+        } else if([call.callState isEqualToString:@"CTCallStateDisconnected"]){
+            ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::CallDisconnecte,0);
+        }
+    };
+    
+    [application beginReceivingRemoteControlEvents];
+    [self becomeFirstResponder];
+    
+    return YES;
+}
+
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+    CAppInit::GetInstance()->OnResignActive();
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    [[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+    CAppInit::GetInstance()->OnEnterBackground();
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+    [[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+    CAppInit::GetInstance()->OnEnterForeground();
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+    CAppInit::GetInstance()->OnBecomeActive();
+}
+
+- (void)applicationWillTerminate:(UIApplication *)application
+{
+    // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+}
+-(void)OnNetWorkStatusChanged:(NSNotification *)notification
+{
+    ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::NetWorkStatusChanged,0,CHttpRequest::GetNetWorkStatus());
+}
+- (void) onVolumeControlChanged:(NSNotification*)notification{
+    ASYN_NOTIFY(OBSERVER_ID_APP, IObserverApp::VolumeControlChanged, 0);
+}
+- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application
+{
+    //NSLog(@"Memory Warning");
+    ASYN_NOTIFY(OBSERVER_ID_APP, IObserverApp::MemoryWarning, 0);
+}
+
+-(void)remoteControlReceivedWithEvent:(UIEvent *)event{
+    if(event.type == UIEventTypeRemoteControl && CPlayBookList::getInstance()->getCurChapter()){
+        switch (event.subtype) {
+            case UIEventSubtypeRemoteControlTogglePlayPause:{
+                if (E_AUDIO_PLAY_PLAYING == CAudioPlayerManager::getInstance()->getCurPlayState()) {
+                    CAudioPlayerManager::getInstance()->pause();
+                }else if(E_AUDIO_PLAY_PAUSE == CAudioPlayerManager::getInstance()->getCurPlayState()){
+                    CAudioPlayerManager::getInstance()->resume();
+                }else {
+                    CAudioPlayerManager::getInstance()->play();
+                }
+                break;
+            }
+            case UIEventSubtypeRemoteControlPlay:{
+                if(E_AUDIO_PLAY_PAUSE == CAudioPlayerManager::getInstance()->getCurPlayState()){
+                    CAudioPlayerManager::getInstance()->resume();
+                }else {
+                    CAudioPlayerManager::getInstance()->play();
+                }
+                break;
+            }
+            case UIEventSubtypeRemoteControlPause:{
+                if (E_AUDIO_PLAY_PLAYING == CAudioPlayerManager::getInstance()->getCurPlayState()) {
+                    CAudioPlayerManager::getInstance()->pause();
+                }
+                break;
+            }
+            case UIEventSubtypeRemoteControlNextTrack:{
+                CAudioPlayerManager::getInstance()->playNextChapter();
+                break;
+            }
+            case UIEventSubtypeRemoteControlPreviousTrack:{
+                CAudioPlayerManager::getInstance()->playPreChapter();
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}
+
+- (BOOL)canBecomeFirstResponder{
+    return YES;
+}
+@end

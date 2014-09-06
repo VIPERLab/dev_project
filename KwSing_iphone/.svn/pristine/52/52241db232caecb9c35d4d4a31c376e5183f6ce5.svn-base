@@ -1,0 +1,151 @@
+//
+//  MyTidingsViewController.m
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-12-14.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#import "MyTidingsViewController.h"
+#include "KSWebView.h"
+#include "globalm.h"
+#include "ImageMgr.h"
+#include "User.h"
+#include "MessageManager.h"
+#include "KSAppDelegate.h"
+#include "LoginViewController.h"
+#include "IUserStatusObserver.h"
+#include "MobClick.h"
+
+#define MYTIDINGS_PAGE_URL @"http://changba.kuwo.cn/kge/webmobile/ios/dynamic.html"
+//#define MYTIDINGS_PAGE_URL @"60.28.205.41:8180/kge/webmobile/ios/dynamic.html"
+
+@interface MyTidingsViewController ()<KSWebViewDelegate,IUserStatusObserver>
+{
+    KSWebView* webView;
+    UIView* pNeedLoginMsgView;
+    
+}
+@end
+
+@implementation MyTidingsViewController
+
+-(id)initWithFrame:(CGRect)frame{
+    self = [super initWithFrame:frame];
+    
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS,IUserStatusObserver);
+    
+    return self;
+}
+
+- (void)viewDidLoad
+{	
+    [super viewDidLoad];
+	[self setTitle:@"好友动态"];
+    [[self view] setBackgroundColor:[UIColor whiteColor]];
+    
+    UIImageView * imageView=[[UIImageView alloc] init];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER_BOUNDS];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    [imageView release];
+    
+    CGRect rcLabel=CGRectMake(0, 15, 320,18);
+    UILabel* lable = [[[UILabel alloc]initWithFrame:rcLabel] autorelease];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = [self title];
+    lable.Font = [UIFont systemFontOfSize:18];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    
+    UIImageView * topshadow=[[UIImageView alloc] init];
+    CGRect rcshadow=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y+=rcshadow.size.height;
+    rcshadow.size.height=5;
+    [topshadow setFrame:rcshadow];
+    [topshadow setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadow];
+    [topshadow release];
+    
+    //UIImage *imageBack=CImageMgr::GetBackGroundImage();
+    CGRect rc=[self view].bounds;
+    CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    CGRect back=BottomRect(rc, rc.size.height-rcna.size.height, 0);
+    //UIImageView *background=[[UIImageView alloc] initWithImage:imageBack];
+    //[background setFrame:back];
+    //[[self view] addSubview:background];
+    //[background release];
+    
+    webView = [[[KSWebView alloc] initWithFrame:back allowBounce:TRUE useLoading:YES opaque:NO] autorelease];
+    [webView setDelegate:self];
+    [webView setBackgroundColor:UIColorFromRGBValue(0xededed)];
+    [[self view] addSubview:webView];
+    
+    if (User::GetUserInstance()->isOnline()) {
+        [webView loadUrl:[NSString stringWithFormat:@"%@?%d",MYTIDINGS_PAGE_URL,rand()]];
+    } else {
+        [self showNeedLoginView];
+    }
+}
+
+-(void)dealloc
+{
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS,IUserStatusObserver);
+    [MobClick endLogPageView:[NSString stringWithUTF8String:object_getClassName(self)]];
+    [webView setDelegate:nil];
+    [super dealloc];
+}
+
+- (void)showNeedLoginView
+{
+    if (!pNeedLoginMsgView) {
+        CGRect rc=[self view].bounds;
+        CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+        CGRect back=BottomRect(rc, rc.size.height-rcna.size.height, 0);
+        pNeedLoginMsgView=[[UIView alloc] initWithFrame:back];
+        [pNeedLoginMsgView setBackgroundColor:[UIColor whiteColor]];
+        UIImage *needLoginImage=CImageMgr::GetImageEx("needLogin.png");
+        UIImageView *needLoginView=[[[UIImageView alloc] initWithFrame:CGRectMake(35, 116, needLoginImage.size.width,needLoginImage.size.height)] autorelease];
+        [needLoginView setImage:needLoginImage];
+        [pNeedLoginMsgView addSubview:needLoginView];
+        [self.view addSubview:pNeedLoginMsgView];
+        
+        UITapGestureRecognizer *tapGestureRecognize=[[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singleTapErrorViewGestureRecognizer:)] autorelease];
+        tapGestureRecognize.numberOfTapsRequired=1;
+        [pNeedLoginMsgView addGestureRecognizer:tapGestureRecognize];
+    }
+    pNeedLoginMsgView.hidden=NO;
+}
+
+- (void)singleTapErrorViewGestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+{
+    KSLoginViewController* loginController=[[[KSLoginViewController alloc] init] autorelease];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:loginController animated:YES];
+}
+
+-(void)IUserStatusObserver_LoginFinish:(LOGIN_TYPE) type :(LOGIN_TIME)first
+{
+    if (pNeedLoginMsgView) {
+        [pNeedLoginMsgView removeFromSuperview];
+        [pNeedLoginMsgView release];
+        pNeedLoginMsgView=NULL;
+    }
+    if (!User::GetUserInstance()->isOnline()) {
+        [self showNeedLoginView];
+    }else {
+        [webView loadUrl:[NSString stringWithFormat:@"%@?%d",MYTIDINGS_PAGE_URL,rand()]];
+    }
+}
+-(void)IUserStatusObserver_Logout
+{
+    [self showNeedLoginView];
+}
+-(void)IUserStatusObserver_StateChange
+{
+    [webView reload];
+}
+
+@end

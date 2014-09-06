@@ -1,0 +1,597 @@
+//
+//  KBSearchViewController.m
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-4.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "KBSearchViewController.h"
+#import "globalm.h"
+#import "ImageMgr.h"
+#include "HotSearchWords.h"
+#include "SearchHistory.h"
+#include "BookInfo.h"
+#include "MessageManager.h"
+#include "HttpRequest.h"
+#include "KwTools.h"
+#include "SBJson4Parser.h"
+
+#define URL_SEARCH @"http://60.28.200.79:8180/tingshu/mobile/GetHotTingshuHotServlet?stype=json&srcver=storynew&type=story_search&searchwords="
+
+enum TableViewType {
+    E_TABLE_SEARCH_HOT_WORDS,
+    E_TABLE_SEARCH_HISTORY,
+    E_TABLE_SEARCH_RESULT
+};
+
+#define TAG_FIRST_BTN  101
+#define TAG_SECOND_BTN 102
+#define TAG_THIRD_BTN  103
+#define TAG_CANCEL     104
+#define TAG_CLEAR_BTN  105
+#define TAG_DELETE_BTN 106
+
+#define TAG_RESULT_TITLE  107
+#define TAG_RESULT_DETAIL 108
+
+@interface KBSearchViewController () <UITableViewDataSource, UITableViewDelegate, UISearchBarDelegate>{
+    TableViewType e_table_type;
+    std::vector<CBookInfo> searchResult;
+}
+
+@property (nonatomic , strong) UIView           *topBar;
+@property (nonatomic , strong) UISearchBar      *searchBar;
+@property (nonatomic , strong) NSArray          *hotSearchWords;
+@property (nonatomic , strong) NSArray          *searchHistory;
+@property (nonatomic , strong) UITableView      *tableView;
+
+- (void) search : (NSString*) str_search_url;
+
+@end
+
+@implementation KBSearchViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+        // Custom initialization
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    float gap = 0.0;
+    if (isIOS7()) {
+        gap = 20;
+    }
+    float width  = self.view.bounds.size.width;
+//    float height = self.view.bounds.size.height;
+    self.topBar = ({
+        UIView *topBar = [[UIView alloc] initWithFrame:CGRectMake(0, 0, width, 44+gap)];
+        UIImageView *backView = [[UIImageView alloc] initWithFrame:topBar.bounds];
+        if (isIOS7()) {
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor7.png")];
+        }
+        else{
+            [backView setImage:CImageMgr::GetImageEx("RecoTopBackFor6.png")];
+        }
+        [topBar addSubview:backView];
+        UIButton *backBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [backBtn setImage:CImageMgr::GetImageEx("TopBackBtn.png") forState:UIControlStateNormal];
+        [backBtn setFrame:CGRectMake(0, gap, 44, 44)];
+        [backBtn addTarget:self action:@selector(onBackBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        [topBar addSubview:backBtn];
+        
+        UILabel *titleLabel = [[UILabel alloc] initWithFrame:CGRectMake(70, gap, 180, 44)];
+        [titleLabel setText:@"搜索"];
+        [titleLabel setBackgroundColor:[UIColor clearColor]];
+        [titleLabel setTextAlignment:NSTextAlignmentCenter];
+        [titleLabel setTextColor:[UIColor whiteColor]];
+        [titleLabel setFont:[UIFont systemFontOfSize:20.0]];
+        [topBar addSubview:titleLabel];
+        
+        topBar;
+    });
+    [[self view] addSubview:self.topBar];
+    
+    NSLog(@"search view height %f", self.view.frame.size.height);
+    
+    UIView* back_view = [[UIView alloc] init];
+    back_view.frame = CGRectMake(0, 44+gap, width, 64);
+    [back_view setBackgroundColor:UIColorFromRGB(204, 200, 194)];
+    [[self view] addSubview:back_view];
+    
+    _searchBar = [[UISearchBar alloc] initWithFrame:CGRectMake(12, 17.5, 296, 29)];
+    [_searchBar setBackgroundColor:[UIColor clearColor]];
+    if (isIOS7()) {
+        [_searchBar setBarTintColor:[UIColor clearColor]];
+    }else {
+        [[[_searchBar subviews] objectAtIndex:0] removeFromSuperview];
+    }
+    [back_view addSubview:_searchBar];
+    [_searchBar setDelegate:self];
+    
+    UIButton* btn_cancel = [UIButton buttonWithType:UIButtonTypeCustom];
+    btn_cancel.frame = CGRectMake(264, 17.5, 40, 29);
+    [btn_cancel setBackgroundColor:[UIColor clearColor]];
+    [btn_cancel setTitle:@"取消" forState:UIControlStateNormal];
+    [btn_cancel setTag:TAG_CANCEL];
+    [btn_cancel addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+    [back_view addSubview:btn_cancel];
+    [btn_cancel setHidden:YES];
+    
+    _hotSearchWords = CHotSearchWords::GetInstance()->GetHotSearchWords();
+    _searchHistory = CSearchHistroy::GetInstance()->GetSearchHistory();
+    
+    _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 108 + gap, width, self.view.frame.size.height - 108 - gap)];
+    [_tableView setBackgroundColor:CImageMgr::GetBackGroundColor()];
+    [self.view addSubview:_tableView];
+    [_tableView setDataSource:self];
+    [_tableView setDelegate:self];
+    
+    e_table_type = E_TABLE_SEARCH_HOT_WORDS;
+//    _tableView.separatorStyle = UITableViewCellSeparatorStyleNone;
+    _tableView.allowsSelection = NO;
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)onBackBtnClick{
+    [self.navigationController popViewControllerAnimated:YES];
+}
+
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (0 == indexPath.row) {
+        return 38;
+    }
+    
+    switch (e_table_type) {
+        case E_TABLE_SEARCH_HOT_WORDS:
+            return 107;
+            
+        case E_TABLE_SEARCH_RESULT:
+            return 62;
+            
+        default:
+            return 44;
+    }
+}
+
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    switch (e_table_type){
+        case E_TABLE_SEARCH_HOT_WORDS:
+        {
+            if (_hotSearchWords && [_hotSearchWords count]) {
+                return 1 + roundl([_hotSearchWords count] / 3.0) ;
+            }else {
+                return 0;
+            }
+        }
+            
+        case E_TABLE_SEARCH_HISTORY:
+        {
+            if (_searchHistory && [_searchHistory count]) {
+                return 1 + [_searchHistory count];
+            }else {
+                return 1;
+            }
+        }
+        case E_TABLE_SEARCH_RESULT:
+        {
+            return 1 + searchResult.size();
+        }
+            
+        default:
+            return 0;
+    }
+}
+
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    static NSString *s_hotsearchwords_identifier = @"hotSearchWordsIdentifier";
+    static NSString *s_history_identifier = @"histroyIdentifier";
+    static NSString *s_searchresult_identifier = @"searchResultIdentifier";
+    UITableViewCell* cell = nil;
+    NSInteger row = [indexPath row];
+    switch (e_table_type) {
+        case E_TABLE_SEARCH_HOT_WORDS:
+        {
+            if (0 == row) {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+                
+                [cell setBackgroundColor:[UIColor clearColor]];
+                
+                UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(17.5, 12.5, 320, 15)];
+                [label setText:@"大家都在搜"];
+                [label setTextColor:defaultGrayColor()];
+                [label setBackgroundColor:[UIColor clearColor]];
+                [cell.contentView addSubview:label];
+            }else {
+                if (3 * row > [_hotSearchWords count]) {
+                    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+                    if (1 == [_hotSearchWords count] % 3) {
+                        [cell setBackgroundColor:[UIColor clearColor]];
+                        UIButton* first_button = [UIButton buttonWithType:UIButtonTypeCustom];
+                        first_button.frame = CGRectMake(17.5, 0, 73, 73);
+                        first_button.titleLabel.numberOfLines = 0;
+                        [first_button setBackgroundColor:[UIColor clearColor]];
+                        [first_button setBackgroundImage:CImageMgr::GetImageEx("HotKeyWord.png") forState:UIControlStateNormal];
+                        [first_button setTitle:[_hotSearchWords objectAtIndex:(3 * row - 3)] forState:UIControlStateNormal];
+                        [first_button setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+                        [first_button setTag:TAG_FIRST_BTN];
+                        [first_button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                        
+                        [cell.contentView addSubview:first_button];
+                    }else {
+                        [cell setBackgroundColor:[UIColor clearColor]];
+                        UIButton* first_button = [UIButton buttonWithType:UIButtonTypeCustom];
+                        first_button.frame = CGRectMake(17.5, 0, 73, 73);
+                        first_button.titleLabel.numberOfLines = 0;
+                        [first_button setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+                        [first_button setBackgroundColor:[UIColor clearColor]];
+                        [first_button setBackgroundImage:CImageMgr::GetImageEx("HotKeyWord.png") forState:UIControlStateNormal];
+                        [first_button setTitle:[_hotSearchWords objectAtIndex:(3 * row - 3)] forState:UIControlStateNormal];
+                        [first_button setTag:TAG_FIRST_BTN];
+                        [first_button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                        
+                        [cell.contentView addSubview:first_button];
+                        
+                        UIButton* second_button = [UIButton buttonWithType:UIButtonTypeCustom];
+                        second_button.frame = CGRectMake(124, 0, 73, 73);
+                        second_button.titleLabel.numberOfLines = 0;
+                        [second_button setBackgroundColor:[UIColor clearColor]];
+                        [second_button setBackgroundImage:CImageMgr::GetImageEx("HotKeyWord.png") forState:UIControlStateNormal];
+                        [second_button setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+                        [second_button setTitle:[_hotSearchWords objectAtIndex:(3 * row - 2)] forState:UIControlStateNormal];
+                        [second_button setTag:TAG_SECOND_BTN];
+                        [second_button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                        
+                        [cell.contentView addSubview:second_button];
+                    }
+                }else {
+                    cell = [tableView dequeueReusableCellWithIdentifier:s_hotsearchwords_identifier];
+                    if (nil == cell) {
+                        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:s_hotsearchwords_identifier];
+                        [cell setBackgroundColor:[UIColor clearColor]];
+                        UIButton* first_button = [UIButton buttonWithType:UIButtonTypeCustom];
+                        first_button.frame = CGRectMake(17.5, 0, 73, 73);
+                        first_button.titleLabel.numberOfLines = 0;
+                        [first_button setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+                        [first_button setBackgroundColor:[UIColor clearColor]];
+                        [first_button setBackgroundImage:CImageMgr::GetImageEx("HotKeyWord.png") forState:UIControlStateNormal];
+                        
+                        [first_button setTag:TAG_FIRST_BTN];
+                        [first_button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                        
+                        [cell.contentView addSubview:first_button];
+                        
+                        UIButton* second_button = [UIButton buttonWithType:UIButtonTypeCustom];
+                        second_button.frame = CGRectMake(124, 0, 73, 73);
+                        second_button.titleLabel.numberOfLines = 0;
+                        [second_button setBackgroundColor:[UIColor clearColor]];
+                        [second_button setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+                        [second_button setBackgroundImage:CImageMgr::GetImageEx("HotKeyWord.png") forState:UIControlStateNormal];
+                        [second_button setTag:TAG_SECOND_BTN];
+                        [second_button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                        
+                        [cell.contentView addSubview:second_button];
+                        
+                        UIButton* third_button = [UIButton buttonWithType:UIButtonTypeCustom];
+                        third_button.frame = CGRectMake(230.5, 0, 73, 73);
+                        third_button.titleLabel.numberOfLines = 0;
+                        [third_button setBackgroundColor:[UIColor clearColor]];
+                        [third_button setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+                        [third_button setBackgroundImage:CImageMgr::GetImageEx("HotKeyWord.png") forState:UIControlStateNormal];
+                        [third_button setTag:TAG_THIRD_BTN];
+                        [third_button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                        
+                        [cell.contentView addSubview:third_button];
+                    }
+                    
+                    UIButton* first_button = (UIButton*)[cell.contentView viewWithTag:TAG_FIRST_BTN];
+                    if (first_button) {
+                        [first_button setTitle:[_hotSearchWords objectAtIndex:(3 * row - 3)] forState:UIControlStateNormal];
+                    }
+                    
+                    UIButton* second_button = (UIButton*)[cell.contentView viewWithTag:TAG_SECOND_BTN];
+                    if (second_button) {
+                        [second_button setTitle:[_hotSearchWords objectAtIndex:(3 * row - 2)] forState:UIControlStateNormal];
+                    }
+                    
+                    UIButton* third_button = (UIButton*)[cell.contentView viewWithTag:TAG_THIRD_BTN];
+                    if (third_button) {
+                        [third_button setTitle:[_hotSearchWords objectAtIndex:(3 * row - 1)] forState:UIControlStateNormal];
+                    }
+                }
+                
+            }
+            break;
+        }
+            
+        case E_TABLE_SEARCH_HISTORY:
+        {
+            if (0 == row){
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+                
+                [cell setBackgroundColor:[UIColor clearColor]];
+                if (_searchHistory && 0 != [_searchHistory count]) {
+                    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(17.5, 0, 80, 38)];
+                    [label setBackgroundColor:[UIColor clearColor]];
+                    [label setText:@"搜索历史: "];
+                    [label setTextColor:defaultGrayColor()];
+                    [cell.contentView addSubview:label];
+                    
+                    UIButton* button = [UIButton buttonWithType:UIButtonTypeCustom];
+                    button.frame = CGRectMake(213, 4, 89, 29);
+                    [button setBackgroundColor:[UIColor clearColor]];
+                    [button setBackgroundImage:CImageMgr::GetImageEx("ClearHistoryUp.png") forState:UIControlStateNormal];
+                    [button setBackgroundImage:CImageMgr::GetImageEx("ClearHistoryDown.png") forState:UIControlStateHighlighted];
+                    [cell.contentView addSubview:button];
+                    [button setTag:TAG_CLEAR_BTN];
+                    [button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                    
+                }else {
+                    UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(17.5, 0, 200, 38)];
+                    [label setBackgroundColor:[UIColor clearColor]];
+                    [label setText:@"暂无搜索历史"];
+                    [label setTextColor:defaultGrayColor()];
+                    [cell.contentView addSubview:label];
+                }
+            }else {
+                int n_total = [_searchHistory count];
+                cell = [tableView dequeueReusableCellWithIdentifier:s_history_identifier];
+                if (nil == cell) {
+                    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:s_history_identifier];
+                    [cell setBackgroundColor:[UIColor clearColor]];
+                    
+                    UIButton* button = [UIButton buttonWithType:UIButtonTypeCustom];
+                    button.frame = CGRectMake(280, 11, 21, 21);
+                    [button setBackgroundColor:[UIColor clearColor]];
+                    [button setBackgroundImage:CImageMgr::GetImageEx("SearchHistoryDelete.png") forState:UIControlStateNormal];
+                    [button setTag:TAG_DELETE_BTN];
+                    [button addTarget:self action:@selector(btnClicked:) forControlEvents:UIControlEventTouchUpInside];
+                    
+                    [cell.contentView addSubview:button];
+                }
+                
+                [cell.textLabel setText:[_searchHistory objectAtIndex:(n_total - row)]];
+            }
+            break;
+        }
+            
+        case E_TABLE_SEARCH_RESULT:
+        {
+            if (0 == row) {
+                cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+                
+                [cell setBackgroundColor:[UIColor clearColor]];
+                UILabel* label = [[UILabel alloc] initWithFrame:CGRectMake(17.5, 0, 200, 38)];
+                [label setBackgroundColor:[UIColor clearColor]];
+                [label setTextColor:defaultGrayColor()];
+                if (0 != searchResult.size()) {
+                    [label setText:[NSString stringWithFormat:@"共搜到%lu个相关结", searchResult.size()]];
+                }else {
+                    [label setText:@"共搜到0个相关结果"];
+                }
+                
+                [cell.contentView addSubview:label];
+            }else {
+                cell = [tableView dequeueReusableCellWithIdentifier:s_searchresult_identifier];
+                if (nil == cell) {
+                    cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:s_searchresult_identifier];
+                    [cell setBackgroundColor:[UIColor clearColor]];
+                    cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
+                    
+                    UILabel* lab_title = [[UILabel alloc] initWithFrame:CGRectMake(17.5, 12.5, 200, 17)];
+                    [lab_title setTag:TAG_RESULT_TITLE];
+                    [lab_title setTextColor:defaultBlackColor()];
+                    [lab_title setFont:[UIFont systemFontOfSize:18]];
+                    [lab_title setBackgroundColor:[UIColor clearColor]];
+                    [cell.contentView addSubview:lab_title];
+                    
+                    UILabel* lab_detail = [[UILabel alloc] initWithFrame:CGRectMake(17.5, 41, 200, 11.5)];
+                    [lab_detail setTag:TAG_RESULT_DETAIL];
+                    [lab_detail setTextColor:defaultGrayColor()];
+                    [lab_detail setFont:[UIFont systemFontOfSize:10]];
+                    [lab_detail setBackgroundColor:[UIColor clearColor]];
+                    [cell.contentView addSubview:lab_detail];
+                }
+                
+                CBookInfo book_info = searchResult[(row - 1)];
+                UILabel* lab_title = (UILabel*)[cell.contentView viewWithTag:TAG_RESULT_TITLE];
+                if (lab_title) {
+                    [lab_title setText:[NSString stringWithFormat:@"%s", book_info.m_strBookTitle.c_str()]];
+                }
+                
+                UILabel* lab_detail = (UILabel*)[cell.contentView viewWithTag:TAG_RESULT_DETAIL];
+                if (lab_detail) {
+                    [lab_detail setText:[NSString stringWithFormat:@"播讲人:%s 共%d回 %d人在听", book_info.m_strArtist.c_str(), book_info.m_unCount, book_info.m_unListenCnt]];
+                }
+                
+            }
+            break;
+        }
+            
+        default:
+            break;
+    }
+    
+    return cell;
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath{
+    if (0 == indexPath.row) {
+        [tableView deselectRowAtIndexPath:indexPath animated:NO];
+        return;
+    }
+    switch (e_table_type) {
+        case E_TABLE_SEARCH_HISTORY:
+        {
+            NSString* str_search_key = [_tableView cellForRowAtIndexPath:indexPath].textLabel.text;
+            [_searchBar setText:str_search_key];
+            CSearchHistroy::GetInstance()->AddSearchKey(str_search_key);
+            [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+            [_searchBar resignFirstResponder];
+            NSString* str_search_url = [NSString stringWithFormat:@"%@%@", URL_SEARCH, KwTools::Encoding::UrlEncode(str_search_key)];
+            
+            [self search:str_search_url];
+            
+            break;
+        }
+            
+        case E_TABLE_SEARCH_RESULT:
+        {
+            [_tableView deselectRowAtIndexPath:indexPath animated:NO];
+            break;
+        }
+        default:
+            break;
+    }
+}
+
+- (void)searchBarTextDidBeginEditing:(UISearchBar *)searchBar{
+    [searchBar becomeFirstResponder];
+    [searchBar setText:@""];
+    searchBar.frame = CGRectMake(12, 17.5, 250, 29);
+    UIButton* btn_cancel = (UIButton*)[self.view viewWithTag:TAG_CANCEL];
+    if (btn_cancel) {
+        [btn_cancel setHidden:NO];
+    }
+    _tableView.allowsSelection = YES;
+    e_table_type = E_TABLE_SEARCH_HISTORY;
+    [_tableView reloadData];
+//    [table_friends setHidden:YES];
+}
+
+- (void)searchBarSearchButtonClicked:(UISearchBar *)searchBar{
+
+    CSearchHistroy::GetInstance()->AddSearchKey([searchBar text]);
+    _searchHistory = CSearchHistroy::GetInstance()->GetSearchHistory();
+    [searchBar resignFirstResponder];
+    
+    e_table_type = E_TABLE_SEARCH_RESULT;
+    _tableView.allowsSelection = YES;
+    
+    NSString* str_search_url = [NSString stringWithFormat:@"%@%@", URL_SEARCH, KwTools::Encoding::UrlEncode([searchBar text])];
+    
+    [self search:str_search_url];
+}
+
+-(void)btnClicked:(UIButton *)sender{
+    switch (sender.tag) {
+        case TAG_CANCEL:
+        {
+            [_searchBar resignFirstResponder];
+            _searchBar.frame = CGRectMake(12, 17.5, 296, 29);
+            [sender setHidden:YES];
+            
+            e_table_type = E_TABLE_SEARCH_HOT_WORDS;
+            _tableView.allowsSelection = NO;
+            [_tableView reloadData];
+            break;
+        }
+            
+        case TAG_CLEAR_BTN:
+        {
+            CSearchHistroy::GetInstance()->ClearHistory();
+            _searchHistory = CSearchHistroy::GetInstance()->GetSearchHistory();
+            
+            [_tableView reloadData];
+            break;
+        }
+            
+        case TAG_DELETE_BTN:
+        {
+            UITableViewCell* cell = nil;
+            if (NSOrderedAscending != [[[UIDevice currentDevice] systemVersion] compare:@"7.0"]) {
+                cell = (UITableViewCell*)[[[(UIButton*)sender superview]superview] superview];
+            }else {
+                cell = (UITableViewCell*)[[(UIButton*)sender superview]superview];
+            }
+            
+            CSearchHistroy::GetInstance()->DeleteSearchKey(cell.textLabel.text);
+            _searchHistory = CSearchHistroy::GetInstance()->GetSearchHistory();
+            
+            [_tableView reloadData];
+            
+            
+            break;
+        }
+            
+        default:
+            if (e_table_type == E_TABLE_SEARCH_HOT_WORDS) {
+                [_searchBar setText:sender.titleLabel.text];
+                NSString* str_search_url = [NSString stringWithFormat:@"%@%@", URL_SEARCH, KwTools::Encoding::UrlEncode(sender.titleLabel.text)];
+                [self search:str_search_url];
+            }
+            break;
+    }
+}
+
+- (void) search : (NSString*) str_search_url{
+    KS_BLOCK_DECLARE{
+        CHttpRequest* request = new CHttpRequest([str_search_url UTF8String]);
+        request->SetTimeOut(5000);
+        BOOL res = request->SyncSendRequest();
+        
+        if (res) {
+            //请求成功
+            void * buf(NULL);
+            unsigned l(0);
+            request->ReadAll(buf, l);
+            NSData *retData=[NSData dataWithBytesNoCopy:buf length:l freeWhenDone:YES];
+            
+            SBJson4ValueBlock block = ^(id item, BOOL *stop){
+                NSDictionary *dic = item;
+                
+                NSString* str_ret = [dic objectForKey:@"ret"];
+                if (200 == [str_ret intValue]) {
+                    NSArray *array = [dic objectForKey:@"album_list"];
+                    int n_total = [array count];
+                    if (n_total) {
+                        searchResult.clear();
+                        
+                        for(int n_itr = 0; n_itr < n_total; ++n_itr){
+                            CBookInfo book_info;
+                            NSDictionary* cur_dic = [array objectAtIndex:n_itr];
+                            book_info.m_strBookId = [[cur_dic valueForKey:@"id"] UTF8String];
+                            book_info.m_strBookTitle = [KwTools::Encoding::UrlDecode([cur_dic valueForKey:@"name"]) UTF8String];
+                            book_info.m_strArtist = [KwTools::Encoding::UrlDecode([cur_dic valueForKey:@"artist"]) UTF8String];
+                            book_info.m_unCount = [[cur_dic valueForKey:@"musiccnt"] intValue];
+                            book_info.m_unListenCnt = [[cur_dic valueForKey:@"listencnt"] intValue];
+                            searchResult.push_back(book_info);
+                        }
+                    }
+                }
+            };
+            SBJson4ErrorBlock eh = ^(NSError *error){
+                NSLog(@"parser json error:%@",error);
+            };
+            SBJson4Parser *parser = [SBJson4Parser parserWithBlock:block allowMultiRoot:NO unwrapRootArray:NO errorHandler:eh];
+            [parser parse:retData];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                e_table_type = E_TABLE_SEARCH_RESULT;
+                _tableView.allowsSelection = YES;
+                [_tableView reloadData];
+            });
+        }
+        
+        delete request;
+        request = NULL;
+    }
+    KS_BLOCK_RUN_THREAD();
+}
+
+@end

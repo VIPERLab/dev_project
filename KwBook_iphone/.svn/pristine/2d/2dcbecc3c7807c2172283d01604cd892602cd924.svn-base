@@ -1,0 +1,95 @@
+//
+//  PlayControlViewController.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-5.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "PlayControlViewController.h"
+#import "globalm.h"
+
+
+@interface PlayControlViewController ()
+{
+    NSTimer *_timer;
+}
+@property (nonatomic , strong) UIView *contentView;
+@end
+
+@implementation PlayControlViewController
+
+- (id)initWithNibName:(NSString *)nibNameOrNil bundle:(NSBundle *)nibBundleOrNil
+{
+    self = [super initWithNibName:nibNameOrNil bundle:nibBundleOrNil];
+    if (self) {
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	// Do any additional setup after loading the view.
+    [[self view] setBackgroundColor:[UIColor clearColor]];
+    
+    self.contentView = ({
+        UIView *contentView = [[UIView alloc] initWithFrame:CGRectMake(128, 536, 64, 64)];
+        [contentView.layer setCornerRadius:20.0];
+        [contentView setBackgroundColor:[UIColor colorWithRed:0 green:0 blue:0 alpha:0.8]];
+        contentView;
+    });
+    [[self view] addSubview:self.contentView];
+    [self showAnimation];
+    
+    [self setTimer];
+}
+-(void)showAnimation
+{
+    float height = [UIScreen mainScreen].bounds.size.height;
+    int gap = 0;
+    if (isIOS7()) {
+        gap = 39;
+    }
+    self.contentView.frame = CGRectMake(128, height - 32, 64, 64);
+    self.contentView.alpha = 0;
+    [UIView animateWithDuration:0.5f animations:^{
+        self.contentView.frame = CGRectMake(10, height/2 - 188 + gap, 300, 300);
+        self.contentView.alpha = 1;
+    } completion:^(BOOL finished) {
+    }];
+}
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+-(void)removeSelfFromSuperView
+{
+    [self willMoveToParentViewController:nil];
+    [self removeFromParentViewController];
+    [self.view removeFromSuperview];
+}
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [self removeSelfFromSuperView];
+}
+#pragma mark
+#pragma mark timer methods
+
+-(void)setTimer
+{
+    _timer = [NSTimer scheduledTimerWithTimeInterval:3 target:self selector:@selector(onTimer) userInfo:nil repeats:YES];
+}
+-(void)onTimer
+{
+    [self removeSelfFromSuperView];
+}
+-(void)resetTimer
+{
+    if (_timer) {
+        [_timer invalidate];
+        [self setTimer];
+    }
+}
+@end

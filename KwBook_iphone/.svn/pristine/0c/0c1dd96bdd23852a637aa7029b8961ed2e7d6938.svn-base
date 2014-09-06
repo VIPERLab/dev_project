@@ -1,0 +1,21 @@
+//
+//  KBViewController.h
+//  kwbook
+//
+//  Created by 熊 改 on 13-11-28.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import <UIKit/UIKit.h>
+
+@protocol FootDelegate <NSObject>
+
+-(void)showFoot;
+-(void)hideFoot;
+-(void)showCenterBtn;
+@end
+
+@interface KBViewController : UIViewController
+@property (nonatomic , weak) id<FootDelegate> footDelegate;
+-(id)initWithFrame:(CGRect)rect;
+@end

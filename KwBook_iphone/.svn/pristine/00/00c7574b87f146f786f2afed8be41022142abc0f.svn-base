@@ -1,0 +1,158 @@
+//
+//  CAppInit.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-20.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "CAppInit.h"
+#import "KwConfig.h"
+#import "KwConfigElements.h"
+#import "KuwoConstants.h"
+#import "CacheMgr.h"
+#import "KwUpdate.h"
+#import "IObserverApp.h"
+#import "MessageManager.h"
+#import "ASIHTTPRequest.h"
+#include "LocalBookRequest.h"
+#include "PlayBookList.h"
+#include "RecentBookList.h"
+#include "CollectBookList.h"
+#include "BookInfoList.h"
+
+
+
+CAppInit* CAppInit::GetInstance()
+{
+    static CAppInit sAppInit;
+    return &sAppInit;
+}
+
+CAppInit::CAppInit()
+:m_nStartTimes(0)
+{
+}
+
+BOOL CAppInit::IsFirstStart()
+{
+    return GetStartTimes()==1;
+}
+
+unsigned CAppInit::GetStartTimes()
+{
+    if (m_nStartTimes==0) {
+        KwConfig::GetConfigureInstance()->GetConfigIntValue("App", "starttimes"KWSING_VERSION_STRING, m_nStartTimes);
+        KwConfig::GetConfigureInstance()->SetConfigIntValue("App", "starttimes"KWSING_VERSION_STRING, ++m_nStartTimes);
+        KwConfig::GetConfigureInstance()->SaveConfig();
+    }
+    return m_nStartTimes;
+}
+
+//刚刚进入main函数
+void CAppInit::OnAppStart()
+{
+    //初始化
+    CCacheMgr::GetInstance();
+    //[AudioHelper getInstance];
+    [ASIHTTPRequest hideNetworkActivityIndicator];
+    KwConfig::GetConfigureInstance()->InitConfig();
+    
+    if (IsFirstStart()) {
+        
+        _SaveLastVersionInfo();
+
+        KwConfig::GetConfigureInstance()->SetConfigBoolValue(SECTION_COMMENT, BOOL_NEED_PROMPT, true);
+        CFUUIDRef p_uuid = CFUUIDCreate(nil);
+        CFStringRef str_uuid = CFUUIDCreateString(nil, p_uuid);
+        NSString* str_uuid_result = (NSString*)CFBridgingRelease(CFStringCreateCopy(NULL, str_uuid));
+        KwConfig::GetConfigureInstance()->SetConfigStringValue(DEVICE_INFO, DEVICE_UUID, [str_uuid_result UTF8String]);
+        
+        CFRelease(p_uuid);
+        CFRelease(str_uuid);
+        //[str_uuid_result release];
+        
+    }
+    
+    KS_BLOCK_DECLARE
+    {//第一次调用这个字体函数会卡很久，这玩意需要6s多来执行。。。提前后台load一下
+//        CFRelease(CTFontCreateWithName((CFStringRef)@"宋体",12,NULL));
+        dispatch_async(dispatch_get_main_queue(), ^{
+            CLocalBookRequest::GetInstance();
+        });
+        
+        CPlayBookList::getInstance();
+        CBookInfoList::getInstance();
+        CRecentBookList::GetInstance();
+        CCollectBookList::GetInstance();
+    }
+    KS_BLOCK_RUN_THREAD();
+}
+
+//刚刚alloc完window
+void CAppInit::OnLaunchFinished()
+{
+//    KwUpdate::GetUpdateInstance()->BackupLogFile();
+    KwUpdate::GetUpdateInstance()->UpdateConfig();
+}
+
+//启动画面显示完毕
+void CAppInit::OnSplashFinished(UIView* pRoot)
+{
+    ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::SplashFinished,0,pRoot);
+}
+
+//非活跃，比如来电或者按home键等
+void CAppInit::OnResignActive()
+{
+    SYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::ResignActive);
+}
+
+//恢复活跃
+void CAppInit::OnBecomeActive()
+{
+    SYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::BecomeActive);
+}
+
+//转入后台，在这之前会先触发OnResignActive
+void CAppInit::OnEnterBackground()
+{
+    //清理超期缓存
+    CCacheMgr::GetInstance()->CleanOutOfDate();
+    //保存配置数据
+    KwConfig::GetConfigureInstance()->SaveConfig();
+    
+    SYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::EnterBackground);
+}
+
+//转入后台后没被杀掉，再次运行被唤醒，在这之后会触发OnBecomeActive
+void CAppInit::OnEnterForeground()
+{
+    SYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::EnterForeground);
+}
+
+void CAppInit::_SaveLastVersionInfo()
+{
+    std::string strLastVersion;
+    std::string strLastInstallSrc;
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("App", "NowVersion", strLastVersion);
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("App", "NowInstallSrc", strLastInstallSrc);
+    if (strLastVersion!=KWSING_VERSION_STRING) {
+        KwConfig::GetConfigureInstance()->SetConfigStringValue("App", "LastVersion", strLastVersion);
+        KwConfig::GetConfigureInstance()->SetConfigStringValue("App", "LastInstallSrc", strLastInstallSrc);
+    }
+    KwConfig::GetConfigureInstance()->SetConfigStringValue("App", "NowVersion", KWSING_VERSION_STRING);
+    KwConfig::GetConfigureInstance()->SetConfigStringValue("App", "NowInstallSrc", KWSING_INSTALL_SOURCE);
+    KwConfig::GetConfigureInstance()->SaveConfig();
+}
+
+void CAppInit::_LogUpdateInfo()
+{
+    std::string strLastVersion;
+    std::string strLastInstallSrc;
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("App", "LastVersion", strLastVersion);
+    KwConfig::GetConfigureInstance()->GetConfigStringValue("App", "LastInstallSrc", strLastInstallSrc);
+    if (strLastVersion.empty()) {
+        return;
+    }
+}

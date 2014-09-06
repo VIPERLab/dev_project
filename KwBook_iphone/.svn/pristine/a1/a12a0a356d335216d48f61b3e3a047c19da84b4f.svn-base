@@ -1,0 +1,80 @@
+//
+//  UINavigationController+PushAddButton.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-19.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "UINavigationController+PushAddButton.h"
+#import "FooterTabBar.h"
+#import "ImageMgr.h"
+#import "PlayControlViewController.h"
+#import "globalm.h"
+
+#define TAG_CENTER_BTN  1001
+
+@implementation UINavigationController (PushAddButton)
+-(void)pushAddButtonViewController:(UIViewController *)viewController animated:(BOOL)animated
+{
+    [self pushViewController:viewController animated:animated];
+    [self addCenterBtn];
+}
+-(void)addCenterBtn
+{
+    UIView *topView = self.topViewController.view;
+    CGRect rect = CGRectMake(0, 0, FOOTER_TABBAR_CENTERBTN_WIDTH, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+    UIButton *btnCenter = [UIButton buttonWithType:UIButtonTypeCustom];
+    [btnCenter setTag:TAG_CENTER_BTN];
+    [btnCenter setFrame:rect];
+    [btnCenter setCenter:CGPointMake(topView.center.x, topView.bounds.size.height-FOOTER_TABBAR_CENTERBTN_HEIGHT/2)];
+    btnCenter.adjustsImageWhenHighlighted = NO;
+    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlay.png") forState:UIControlStateNormal];
+    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlayDown.png") forState:UIControlStateHighlighted];
+    [btnCenter setBackgroundImage:CImageMgr::GetImageEx("FooterBtnPlayDown.png") forState:UIControlStateDisabled];
+    [btnCenter addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [topView addSubview:btnCenter];
+    [topView bringSubviewToFront:btnCenter];
+}
+-(void)showCenterButton
+{
+    
+    UIView *topView = self.topViewController.view;
+    UIButton *centerBtn = (UIButton *)[topView viewWithTag:TAG_CENTER_BTN];
+    
+    if (centerBtn.isHidden) {
+        CGRect rect = centerBtn.frame;
+        CGRect endRect = MoveDownRect(rect, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+        
+        [UIView animateWithDuration:0.5 animations:^{
+            [centerBtn setFrame:endRect];
+        } completion:^(BOOL finished) {
+            [centerBtn setHidden:NO];
+        }];
+    }
+}
+-(void)hideCenterButton
+{
+    UIView *topView = self.topViewController.view;
+    UIButton *centerBtn = (UIButton *)[topView viewWithTag:TAG_CENTER_BTN];
+    
+    if (!centerBtn.isHidden) {
+        
+        CGRect rect = centerBtn.frame;
+        CGRect endRect = MoveUpRect(rect, FOOTER_TABBAR_CENTERBTN_HEIGHT);
+        
+        [UIView animateWithDuration:0.5 animations:^{
+            [centerBtn setFrame:endRect];
+        } completion:^(BOOL finished) {
+            [centerBtn setHidden:YES];
+        }];
+    }
+}
+-(void)onBtnClick:(id)sender
+{
+    PlayControlViewController *playControlVC = [[PlayControlViewController alloc] init];
+    [self addChildViewController:playControlVC];
+    [[self view] addSubview:playControlVC.view];
+    [playControlVC didMoveToParentViewController:self];
+}
+@end

@@ -1,0 +1,208 @@
+//
+//  CategoryList.m
+//  kwbook
+//
+//  Created by 熊 改 on 13-12-4.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "CategoryList.h"
+#import "ImageMgr.h"
+#import "globalm.h"
+
+#define TAG_BTN_1   51
+#define TAG_BTN_2   52
+#define TAG_BTN_3   53
+#define TAG_BTN_4   54
+
+@interface CategoryList ()<UITableViewDataSource,UITableViewDelegate>
+{
+    NSDictionary    *_cateDic;
+    NSArray         *_keyArray;
+    NSArray         *_valueArray;
+    NSMutableArray  *_btnArray;
+    int             _selectedIndex;
+    int             _numOfRows;
+}
+@property (nonatomic , strong) UITableView *tableView;
+@property (nonatomic , strong) NSString    *theKey;
+@end
+
+@implementation CategoryList
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
+-(id)initWithCateList:(NSDictionary *)cateDic andFrame:(CGRect)rect defaultKey:(NSString *)theKey
+{
+    return [self initWithCateList:cateDic andKeyArray:[cateDic allKeys] andFrame:rect defaultKey:theKey];
+}
+-(id)initWithCateList:(NSDictionary *)cateDic andKeyArray:(NSArray *)keys andFrame:(CGRect)rect defaultKey:(NSString *)theKey;
+{
+    self = [self initWithFrame:rect];
+    if (self) {
+        _theKey  = [theKey copy];
+        _cateDic = [cateDic copy];
+        _keyArray = [keys copy];
+        _valueArray = [_cateDic objectsForKeys:_keyArray notFoundMarker:@"未命名"];
+        _btnArray = [NSMutableArray array];
+        _selectedIndex = -1;
+        
+        float fcount = _cateDic.count;
+        _numOfRows = ceil((fcount/4)) + 1;
+        
+        
+        _tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, rect.size.width, 43*(_numOfRows-1)+24)];
+        [_tableView setScrollEnabled:NO];
+        [_tableView setBackgroundColor:[UIColor colorWithWhite:10 alpha:0.9]];
+        [_tableView setDelegate:self];
+        [_tableView setDataSource:self];
+        [self addSubview:_tableView];
+        [self setBackgroundColor:[UIColor clearColor]];
+    }
+    return self;
+}
+-(void)onCloseBtnClick
+{
+    [[self delegate] closeCateListViewWithSelectedKey:nil];
+}
+-(void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event
+{
+    [[self delegate] closeCateListViewWithSelectedKey:nil];
+    //[self onCloseBtnClick];
+}
+-(void)onBtnClick:(id)sender
+{
+    UIButton *btn = (UIButton *)sender;
+    [btn setSelected:!btn.isSelected];
+    
+    NSInteger btnTag = btn.tag;
+    self.theKey = [NSString stringWithFormat:@"%d",btnTag];
+
+    NSUInteger theIndex   = [_keyArray indexOfObject:self.theKey];
+    
+    if (btn.isSelected) {
+        if (_selectedIndex != -1) {
+            [(UIButton *)[_btnArray objectAtIndex:_selectedIndex] setSelected:NO];
+        }
+        _selectedIndex = theIndex;
+    }
+    else{
+        _selectedIndex = -1;
+    }
+    //NSString *value = _valueArray[theIndex];
+    
+    if (_selectedIndex == -1) {
+        [[self delegate] closeCateListViewWithSelectedKey:nil];
+    }
+    else{
+        [[self delegate] closeCateListViewWithSelectedKey:_keyArray[_selectedIndex]];
+    }
+}
+-(NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section
+{
+    return _numOfRows;
+}
+-(UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    
+    if (indexPath.row == _numOfRows - 1) {
+        UITableViewCell *cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:nil];
+        [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
+        UIButton *closeBtn = [UIButton buttonWithType:UIButtonTypeCustom];
+        [closeBtn setImage:CImageMgr::GetImageEx("pull.png") forState:UIControlStateNormal];
+        [closeBtn setImage:CImageMgr::GetImageEx("pullDown.png") forState:UIControlStateHighlighted];
+        [closeBtn setImage:CImageMgr::GetImageEx("pullDown.png") forState:UIControlStateDisabled];
+        [closeBtn setFrame:CGRectMake(140, 3, 20, 18)];
+        [closeBtn addTarget:self action:@selector(onCloseBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        [cell.contentView addSubview:closeBtn];
+        [cell setBackgroundColor:[UIColor clearColor]];
+        
+        return cell;
+    }
+    
+    static NSString *cateListCellIdentifier = @"cateListCellIdentifier";
+    UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:cateListCellIdentifier];
+    if (cell == nil) {
+        cell = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault reuseIdentifier:cateListCellIdentifier];
+        [cell setBackgroundColor:[UIColor clearColor]];
+        [cell setSelectionStyle:UITableViewCellSelectionStyleNone];
+        UIButton *btn1 = [UIButton buttonWithType:UIButtonTypeCustom];
+        [btn1 setTag:TAG_BTN_1];
+        [btn1 setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+        [btn1 setFrame:CGRectMake(0, 6, 80, 31)];
+        [btn1 setBackgroundImage:CImageMgr::GetImageEx("cateItemBack.png") forState:UIControlStateSelected];
+        [btn1.titleLabel setFont:[UIFont systemFontOfSize:17.0]];
+        [btn1 setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
+        [btn1 addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+        UIButton *btn2 = [UIButton buttonWithType:UIButtonTypeCustom];
+        [btn2 setFrame:CGRectMake(80, 6, 80, 31)];
+        [btn2 setTag:TAG_BTN_2];
+        [btn2 setBackgroundImage:CImageMgr::GetImageEx("cateItemBack.png") forState:UIControlStateSelected];
+        [btn2 setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+        [btn2.titleLabel setFont:[UIFont systemFontOfSize:17.0]];
+        [btn2 setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
+        [btn2 addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+        UIButton *btn3 = [UIButton buttonWithType:UIButtonTypeCustom];
+        [btn3 setFrame:CGRectMake(160, 6, 80, 31)];
+        [btn3 setTag:TAG_BTN_3];
+        [btn3 setBackgroundImage:CImageMgr::GetImageEx("cateItemBack.png") forState:UIControlStateSelected];
+        [btn3 setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+        [btn3.titleLabel setFont:[UIFont systemFontOfSize:17.0]];
+        [btn3 setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
+        [btn3 addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+        UIButton *btn4 = [UIButton buttonWithType:UIButtonTypeCustom];
+        [btn4 setFrame:CGRectMake(240, 6, 80, 31)];
+        [btn4 setTag:TAG_BTN_4];
+        [btn4 setTitleColor:defaultBlackColor() forState:UIControlStateNormal];
+        [btn4 setBackgroundImage:CImageMgr::GetImageEx("cateItemBack.png") forState:UIControlStateSelected];
+        [btn4.titleLabel setFont:[UIFont systemFontOfSize:17.0]];
+        [btn4 setTitleColor:[UIColor whiteColor] forState:UIControlStateSelected];
+        [btn4 addTarget:self action:@selector(onBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+        
+        [cell.contentView addSubview:btn1];
+        [cell.contentView addSubview:btn2];
+        [cell.contentView addSubview:btn3];
+        [cell.contentView addSubview:btn4];
+    }
+    
+    UIButton *btn1 = (UIButton *)[cell.contentView viewWithTag:TAG_BTN_1];
+    UIButton *btn2 = (UIButton *)[cell.contentView viewWithTag:TAG_BTN_2];
+    UIButton *btn3 = (UIButton *)[cell.contentView viewWithTag:TAG_BTN_3];
+    UIButton *btn4 = (UIButton *)[cell.contentView viewWithTag:TAG_BTN_4];
+    UIButton* array[4] = {btn1,btn2,btn3,btn4};
+    
+    int beginIndex = indexPath.row*4;
+    for (int i  = 0; i < 4;  ++i) {
+        if (beginIndex + i < _cateDic.count) {
+            [array[i] setTitle:_valueArray[beginIndex + i] forState:UIControlStateNormal];
+            [array[i] setTag:[_keyArray[beginIndex + i] integerValue]];
+            [_btnArray addObject:array[i]];
+            if (_keyArray[beginIndex + i] == self.theKey) {
+                [array[i] setSelected:YES];
+                _selectedIndex = beginIndex + i;
+            }
+        }
+        else{
+            [array[i] setEnabled:NO];
+        }
+    }
+    
+    return cell;
+}
+-(CGFloat)tableView:(UITableView *)tableView heightForRowAtIndexPath:(NSIndexPath *)indexPath
+{
+    if (indexPath.row == _numOfRows - 1) {
+        return 24;
+    }
+    return 43;
+}
+@end

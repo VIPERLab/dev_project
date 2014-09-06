@@ -1,0 +1,141 @@
+//
+//  KSFansFollowViewController.m
+//  KwSing
+//
+//  Created by 单 永杰 on 14-4-14.
+//  Copyright (c) 2014年 酷我音乐. All rights reserved.
+//
+
+#import "KSFansFollowViewController.h"
+#include "KSWebView.h"
+#include "globalm.h"
+#include "ImageMgr.h"
+#include "KSAppDelegate.h"
+#include "User.h"
+#include "BaseWebViewController.h"
+
+#define MY_FANS_URL @"http://changba.kuwo.cn/kge/webmobile/ios/user_list.html?type=getfans&uid=%@&t=%d"
+#define MY_FOLLOW_URL @"http://changba.kuwo.cn/kge/webmobile/ios/user_list.html?type=getfav&uid=%@&t=%d"
+
+@interface KSFansFollowViewController ()<KSWebViewDelegate>{
+    NSString* str_view_title;
+    KSWebView* webView;
+}
+
+@end
+
+@implementation KSFansFollowViewController
+
+- (id)initWithFrame:(CGRect)frame
+{
+    self = [super initWithFrame:frame];
+    if (self) {
+        // Initialization code
+    }
+    return self;
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    
+    [super viewDidLoad];
+	[self setTitle:str_view_title];
+    [[self view] setBackgroundColor:[UIColor whiteColor]];
+    
+    
+    UIImageView * imageView=[[UIImageView alloc] init];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER_BOUNDS];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    [imageView release];
+    
+    CGRect rcLabel=CGRectMake(0, 15, 320,18);
+    UILabel* lable = [[[UILabel alloc]initWithFrame:rcLabel] autorelease];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = [self title];
+    lable.Font = [UIFont systemFontOfSize:18];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    
+    UIButton* returnButton= [UIButton buttonWithType:UIButtonTypeCustom];
+    [returnButton setTag:1];
+    [returnButton setTitle:@"返回" forState: UIControlStateNormal];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+    [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    [returnButton.titleLabel setFont:[UIFont systemFontOfSize:14]];
+    [returnButton.titleLabel setShadowOffset:CGSizeMake(0, 1)];
+    [returnButton.titleLabel setShadowColor:[UIColor blackColor]];
+    returnButton.frame = CGRectMake(10, 9, 47,28);
+    [returnButton addTarget:self action:@selector(ReturnBtnClick:) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:returnButton];
+    
+    
+    UIImageView * topshadow=[[UIImageView alloc] init];
+    CGRect rcshadow=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y+=rcshadow.size.height;
+    rcshadow.size.height=5;
+    [topshadow setFrame:rcshadow];
+    [topshadow setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadow];
+    [topshadow release];
+    
+    CGRect rc=[self view].bounds;
+    CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    CGRect back=BottomRect(rc, rc.size.height-rcna.size.height, 0);
+    
+    webView = [[[KSWebView alloc] initWithFrame:back allowBounce:TRUE useLoading:YES opaque:NO] autorelease];
+    [webView setDelegate:self];
+    [webView setBackgroundColor:UIColorFromRGBValue(0xededed)];
+    [[self view] addSubview:webView];
+    if ([str_view_title isEqualToString:@"我的关注"]) {
+        NSString* str_url = [NSString stringWithFormat:MY_FOLLOW_URL,User::GetUserInstance()->getUserId(),rand()];
+        [webView loadUrl:[NSString stringWithFormat:MY_FOLLOW_URL,User::GetUserInstance()->getUserId(),rand()]];
+    }else if([str_view_title isEqualToString:@"我的粉丝"]){
+        [webView loadUrl:[NSString stringWithFormat:MY_FANS_URL,User::GetUserInstance()->getUserId(),rand()]];
+    }
+}
+
+-(id)initWithType:(NSString*)str_page_type{
+    self=[super init];
+    if (self) {
+        if (nil == str_view_title) {
+            str_view_title = [str_page_type retain];
+        }else {
+            if (str_view_title != str_page_type) {
+                [str_view_title release];
+                str_view_title = [str_page_type retain];
+            }
+        }
+    }
+
+    return self;
+}
+-(void)reloadPage{
+    [webView reload];
+}
+
+-(void)ReturnBtnClick:(id)sender
+{
+    [webView setDelegate:nil];
+    [self.navigationController popViewControllerAnimated:YES];
+}
+- (void)webViewRunActionWithParam:(KSWebView*)view action:(NSString*)act parameter:(NSDictionary*)paras
+{
+
+}
+
+/*
+// Only override drawRect: if you perform custom drawing.
+// An empty implementation adversely affects performance during animation.
+- (void)drawRect:(CGRect)rect
+{
+    // Drawing code
+}
+*/
+
+@end

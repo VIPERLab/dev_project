@@ -1,0 +1,552 @@
+//
+//  SegmentControl.m
+//  KWPlayer
+//
+//  Created by mistyzyq on 11-10-15.
+//  Copyright 2011 Kuwo Beijing Co., Ltd. All rights reserved.
+//  从音乐盒搬过来
+
+#import "SegmentControl.h"
+#include "globalm.h"
+#include <algorithm>
+
+@implementation UIButton(Categories)
+
++ (UIButton*) buttonWithTitle:(NSString*)title
+                  imageNormal:(UIImage*)imageNormal
+             imageHighlighted:(UIImage*)imageHighlighted
+                       target:(id)target
+                       action:(SEL)action
+{
+    UIButton* button = [UIButton buttonWithType:UIButtonTypeCustom];
+    
+    [button setTitle:title forState:UIControlStateNormal];
+    
+    if (imageNormal != nil) {
+        [button setBackgroundImage:imageNormal forState:UIControlStateNormal];    
+    }
+    if (imageHighlighted != nil) {
+        [button setBackgroundImage:imageHighlighted forState:UIControlStateHighlighted];
+    }
+    
+	if (imageNormal) {
+		button.bounds = CGRectMake(0, 0, imageNormal.size.width, imageNormal.size.height);
+	} else {
+		CGSize size = CGSizeMake(80, 40);
+		size = [button sizeThatFits:size];
+		button.bounds = CGRectMake(0, 0, size.width, size.height);
+	}
+    
+    [button addTarget:target action:action forControlEvents:UIControlEventTouchUpInside];
+    
+    return button;
+}
+
+@end
+
+@interface SegmentControl ()
+
+@property (nonatomic, retain) NSMutableArray* items;
+
+//- (UIButton*) segmentButtonAtIndex:(NSUInteger)segment;
+
+- (void) insertSegmentButton:(UIButton*)button atIndex:(NSUInteger)segment animated:(BOOL)animated;
+
+//- (void) onSegmentTouched:(id)sender;
+
+@end
+
+
+
+@implementation SegmentControl
+
+@synthesize delegate;
+
+@synthesize items = _items;
+
+// Set this property to -1 (default) to turn off the current selection
+@synthesize selectedSegmentIndex = _selectedSegmentIndex;
+
+//@synthesize numberOfSegments = _numberOfSegments;
+
+@synthesize segmentSpace = _segmentSpace;
+@synthesize segmentSize = _segmentSize;
+
+@synthesize edgeInsets = _edgeInsets;
+
+@synthesize segmentAlignment = _segmentAlignment;
+@synthesize maxNumberOfItemsPerLine = _maxNumberOfItemsPerLine;
+
+@synthesize textColor = _textColor;
+@synthesize textColorSelected = _textColorSelected;
+
+@synthesize textShadowColor = _textShadowColor;
+@synthesize textShadowColorSelected = _textShadowColorSelected;
+
+//@synthesize backgroundImage = _backgroundImage;
+
+@synthesize segmentBackgroundImageFirst = _segmentBackgroundImageFirst;
+@synthesize segmentBackgroundImageSelectedFirst = _segmentBackgroundImageSelectedFirst;
+@synthesize segmentBackgroundImage = _segmentBackgroundImage;
+@synthesize segmentBackgroundImageSelected = _segmentBackgroundImageSelected;
+@synthesize segmentBackgroundImageLast = _segmentBackgroundImageLast;
+@synthesize segmentBackgroundImageSelectedLast = _segmentBackgroundImageSelectedLast;
+
+
+- (void) dealloc {    
+	[_items release];
+    [_textColor release];
+    [_textColorSelected release];
+    [_textShadowColor release];
+    [_textShadowColorSelected release];
+	[_backgroundImageView release];
+    [_segmentBackgroundImageFirst release];
+    [_segmentBackgroundImageSelectedFirst release];
+    [_segmentBackgroundImage release];
+    [_segmentBackgroundImageSelected release];
+    [_segmentBackgroundImageLast release];
+    [_segmentBackgroundImageSelectedLast release];
+    [super dealloc];
+}
+
+- (NSUInteger) numberOfSegments {
+	return self.items.count;
+}
+
+- (void) setSelectedSegmentIndex:(NSInteger)segment {
+	if (segment >= self.numberOfSegments)
+		return;
+	
+	if (_selectedSegmentIndex != segment) {
+		if (UIButton* button = [self segmentButtonAtIndex:_selectedSegmentIndex]) {
+			button.enabled = TRUE;
+		}
+		if (UIButton* button = [self segmentButtonAtIndex:segment]) {
+			button.enabled = FALSE;
+		}
+		_selectedSegmentIndex = segment;
+		
+		[delegate segmentControl:self selectedItemChanged:_selectedSegmentIndex];
+	}
+}
+
+- (void) setTextColor:(UIColor *)color {
+	if (color != _textColor) {
+		[_textColor release];
+		_textColor = [color retain];
+	}
+	if (!_textColor)
+		_textColor = [[UIColor darkGrayColor] retain];
+}
+
+- (void) setTextColorSelected:(UIColor *)color {
+	if (color != _textColorSelected) {
+		[_textColorSelected release];
+		_textColorSelected = [color retain];
+	}
+	if (!_textColorSelected)
+		_textColorSelected = [[UIColor darkGrayColor] retain];
+}
+
+- (void) setTextShadowColor:(UIColor *)color {
+	if (color != _textShadowColor) {
+		[_textShadowColor release];
+		_textShadowColor = [color retain];
+	}
+	if (!_textShadowColor)
+		_textShadowColor = [[UIColor blackColor] retain];
+}
+
+- (void) setTextShadowColorSelected:(UIColor *)color {
+	if (color != _textShadowColorSelected) {
+		[_textShadowColorSelected release];
+		_textShadowColorSelected = [color retain];
+	}
+	if (!_textShadowColorSelected)
+		_textShadowColorSelected = [[UIColor blackColor] retain];
+}
+
+- (id) initWithFrame:(CGRect)frame {
+	if (self = [super initWithFrame:frame]) {
+		_segmentSpace = CGSizeMake(1, 1);
+		_segmentSize = CGSizeMake(40, 30);
+		
+		_segmentAlignment = SEGMENT_ALIGNMENT_DEFAULT;
+		_maxNumberOfItemsPerLine = 0;
+		
+//#warning memory leaks
+		_items = [[NSMutableArray alloc] init];
+		_selectedSegmentIndex = NOITEM;
+		self.textColor = [UIColor whiteColor];
+		self.textColorSelected = [UIColor whiteColor];
+		
+		self.textShadowColor = [UIColor blackColor];
+		self.textShadowColorSelected = [UIColor blackColor];
+	
+//		self.segmentBackgroundImageFirst = [UIImage skinOrDefaultImageNamed:@"image/segment_left.png" leftCapWidth:0 topCapHeight:10];
+//		self.segmentBackgroundImageSelectedFirst = [UIImage skinOrDefaultImageNamed:@"image/segment_left2.png" leftCapWidth:0 topCapHeight:10];
+//		self.segmentBackgroundImage = [UIImage skinOrDefaultImageNamed:@"image/segment_btn.png" leftCapWidth:10 topCapHeight:10];
+//		self.segmentBackgroundImageSelected = [UIImage skinOrDefaultImageNamed:@"image/segment_btn_hlt.png" leftCapWidth:10 topCapHeight:10];
+//		self.segmentBackgroundImageLast = [UIImage skinOrDefaultImageNamed:@"image/segment_right.png" leftCapWidth:0 topCapHeight:10];
+//		self.segmentBackgroundImageSelectedLast = [UIImage skinOrDefaultImageNamed:@"image/segment_right2.png" leftCapWidth:0 topCapHeight:10];
+	}
+	return self;
+}
+
+- (UIImage*) backgroundImage {
+	return _backgroundImageView.image;
+}
+
+- (void) setBackgroundImage:(UIImage *)image {
+	if (image && !_backgroundImageView) {
+		_backgroundImageView = [[UIImageView alloc] initWithFrame:self.bounds];
+		[self insertSubview:_backgroundImageView atIndex:0];
+		_backgroundImageView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+	}
+	_backgroundImageView.image = image;
+}
+
+- (void) updateSegmentImages {
+	for (NSInteger index = 0; index < self.items.count; ++index) {
+		UIButton* button = [self.items objectAtIndex:index];
+		UIImage* img1 = self.segmentBackgroundImage;
+		UIImage* img2 = self.segmentBackgroundImageSelected;
+		if (index == 0) {
+			if (self.segmentBackgroundImageFirst) {
+				img1 = self.segmentBackgroundImageFirst;
+			}
+			if (self.segmentBackgroundImageSelectedFirst) {
+				img2 = self.segmentBackgroundImageSelectedFirst;
+			}
+		} else if (index == self.items.count - 1) {
+			if (self.segmentBackgroundImageLast) {
+				img1 = self.segmentBackgroundImageLast;
+			}
+			if (self.segmentBackgroundImageSelectedLast) {
+				img2 = self.segmentBackgroundImageSelectedLast;
+			}
+		}
+        [button setBackgroundImage:img1 forState:UIControlStateNormal];
+        [button setBackgroundImage:img2 forState:UIControlStateHighlighted];
+        [button setBackgroundImage:img2 forState:UIControlStateDisabled];		
+	}
+}
+
+- (void) setSegmentBackgroundImage:(UIImage *)img selectedImage:(UIImage*)imgSel {
+	self.segmentBackgroundImage = img;
+	self.segmentBackgroundImageSelected = imgSel;
+
+	if (self.items.count > 0) {
+		[self updateSegmentImages];
+	}
+}
+
+- (void) setSegmentBackgroundImageFirst:(UIImage *)img selectedImage:(UIImage*)imgSel {
+	self.segmentBackgroundImageFirst = img;
+	self.segmentBackgroundImageSelectedFirst = imgSel;
+	
+	if (self.items.count > 0) {
+		[self updateSegmentImages];
+	}
+}
+
+- (void) setSegmentBackgroundImageLast:(UIImage *)img selectedImage:(UIImage*)imgSel {
+	self.segmentBackgroundImageLast = img;
+	self.segmentBackgroundImageSelectedLast = imgSel;
+	
+	if (self.items.count > 0) {
+		[self updateSegmentImages];
+	}
+}
+
+- (void) setSegmentSpace:(CGSize)space {
+	if (_segmentSpace.width != space.width || _segmentSpace.height != space.height) {
+		_segmentSpace = space;
+		[self setNeedsLayout];
+	}
+}
+
+- (void) setSegmentSize:(CGSize)size {
+	if (_segmentSize.width != size.width || _segmentSize.height != size.height) {
+		_segmentSize = size;
+		[self setNeedsLayout];
+	}
+}
+
+- (void) setEdgeInsets:(UIEdgeInsets)ei {
+    if (!UIEdgeInsetsEqualToEdgeInsets(_edgeInsets, ei)) {
+        _edgeInsets = ei;
+        [self setNeedsLayout];
+    }
+}
+
+- (void) setSegmentAlignment:(NSUInteger)alignment {
+	if (_segmentAlignment != alignment) {
+		if (alignment == 0) {
+			alignment = SEGMENT_ALIGNMENT_DEFAULT;
+		}
+		_segmentAlignment = alignment;
+		[self setNeedsLayout];
+	}
+}
+
+- (void) setMaxNumberOfItemsPerLine:(NSUInteger)count {
+	if (_maxNumberOfItemsPerLine != count) {
+		_maxNumberOfItemsPerLine = count;
+		[self setNeedsLayout];
+	}
+}
+
+// An array of NSString objects (for segment titles) or UIImage objects (for segment images).
+- (id) initWithItems:(NSArray*)items {
+	if (self = [super init]) {
+		NSUInteger index = 0;
+		for (id item in items) {
+			if ([item isKindOfClass:[NSString class]])
+				[self insertSegmentWithTitle:item atIndex:index animated:FALSE];
+			else if ([item isKindOfClass:[NSArray class]]) {
+				[self insertSegmentWithImage:item atIndex:index animated:FALSE];
+			} else {
+				ASSERT(!"Unrecongnized item!");
+			}
+			++index;
+		}
+	}
+	return self;
+}
+
+- (UIButton*) segmentButtonAtIndex:(NSUInteger)segment {
+	if (segment >= self.numberOfSegments) {
+		//ASSERT(!"Segment index out of range!");
+		return nil;
+	}
+	return [self.items objectAtIndex:segment];
+}
+
+- (NSUInteger) segmentIndexForObject:(id)object {
+    return [self.items indexOfObject:object];
+}
+
+- (void)setTitle:(NSString *)title forSegmentAtIndex:(NSUInteger)segment {
+	UIButton* button = [self segmentButtonAtIndex:segment];
+	[button setTitle:title forState:UIControlStateNormal];
+	[button setImage:nil forState:UIControlStateNormal];
+}
+
+- (NSString*) titleForSegmentAtIndex:(NSUInteger)segment {
+	UIButton* button = [self segmentButtonAtIndex:segment];
+	return [button titleForState:UIControlStateNormal];
+}
+
+- (void)setImage:(UIImage *)image forSegmentAtIndex:(NSUInteger)segment {
+	UIButton* button = [self segmentButtonAtIndex:segment];
+	[button setImage:image forState:UIControlStateNormal];
+	[button setTitle:nil forState:UIControlStateNormal];
+}
+
+- (UIImage*) imageForSegmentAtIndex:(NSUInteger)segment {
+	UIButton* button = [self segmentButtonAtIndex:segment];
+	return [button imageForState:UIControlStateNormal];
+}
+
+- (NSUInteger) numberOfItemsPerLineThatFitsWidth:(CGFloat)width {
+	NSUInteger lineItems = _maxNumberOfItemsPerLine ? _maxNumberOfItemsPerLine : /*self.items.count*/ (width + _segmentSpace.width) / (_segmentSize.width + _segmentSpace.width);
+	return lineItems;
+}
+
+- (CGRect) contentRectForBounds:(CGRect)bounds {
+	int lineItems = MAX(1, [self numberOfItemsPerLineThatFitsWidth:CGRectGetWidth(bounds)]);
+	int lines = MAX(1, (self.items.count + lineItems - 1) / lineItems);
+	return LeftTopRect(bounds, 
+					   (_segmentSize.width + _segmentSpace.width) * lineItems - _segmentSpace.width, 
+					   (_segmentSize.height + _segmentSpace.height) * lines - _segmentSpace.height);
+}
+
+- (void) layoutSubviews {
+	CGRect rect = self.bounds;
+	if (CGRectIsEmpty(rect))
+		return;
+
+	// use autoresizing mask instead.
+	//if (_backgroundImageView)
+	//	_backgroundImageView.frame = rect;
+    
+    DeflateRect(&rect, _edgeInsets.left, _edgeInsets.top, _edgeInsets.right, _edgeInsets.bottom);
+    
+    if (CGRectIsEmpty(CGRectStandardize(rect)))
+		return;
+	
+	if (self.items.count == 0)
+		return;
+	
+	int lineItems = MIN(self.items.count, [self numberOfItemsPerLineThatFitsWidth:CGRectGetWidth(rect)]);
+	int lineCount = (self.items.count + lineItems - 1) / lineItems;
+
+	CGSize space = _segmentSpace;
+	CGSize size = _segmentSize;
+	if (_segmentAlignment & SEGMENT_ALIGNMENT_DISTRIBUTED) {
+		space.width = (CGRectGetWidth(rect) - (size.width * lineItems)) / lineItems;
+		space.height = (CGRectGetHeight(rect) - (size.height * lineCount)) / lineCount;
+	} else if (_segmentAlignment & SEGMENT_ALIGNMENT_AVERAGE) {
+		size.width = (CGRectGetWidth(rect) - (space.width * lineItems)) / lineItems;
+		size.height = (CGRectGetHeight(rect) - (space.height * lineCount)) / lineCount;
+	}
+
+	//CGFloat contentWidth = size.width * lineItems + space.width * (lineItems - 1);
+	CGFloat contentHeight = size.height * lineCount + space.height * (lineCount - 1);
+	CGRect rcContent;
+	if (_segmentAlignment & SEGMENT_ALIGNMENT_TOP) {
+		rcContent = TopRect(rect, contentHeight, 0);
+	} else if (_segmentAlignment & SEGMENT_ALIGNMENT_BOTTOM) {
+		rcContent = BottomRect(rect, contentHeight, 0);
+	} else {
+		rcContent = CenterRect(rect, CGRectGetWidth(rect), contentHeight);
+	}
+
+	for (int idx = 0; idx < self.items.count; /*++idx*/)
+	{
+		int lineItemsCount = MIN(lineItems, self.items.count - idx);
+		CGFloat lineWidth = size.width * lineItemsCount + space.width * (lineItemsCount - 1);
+		//CGFloat lineWidth = size.height;
+		CGRect rcLine;
+		if (_segmentAlignment & SEGMENT_ALIGNMENT_LEFT) {
+			rcLine = LeftTopRect(rcContent, lineWidth, size.height);
+		} else if (_segmentAlignment & SEGMENT_ALIGNMENT_RIGHT) {
+			rcLine = RightTopRect(rcContent, lineWidth, size.height);
+		} else /*if (_segmentAlignment == SEGMENT_ALIGNMENT_CENTER)*/ {
+			rcLine = TopCenterRect(rcContent, lineWidth, size.height, 0);
+		}
+		CGFloat offset = (size.height + space.height) * (idx / lineItems);
+		OffsetRect(&rcLine, 0, offset);
+		
+		CGRect rcButton = LeftRect(rcLine, size.width, 0);
+		for (int i = 0; i < lineItems; ++i) {
+			if (idx >= self.items.count)
+				break;
+			UIButton* button = [self.items objectAtIndex:idx];
+			CGRect rc = CGRectOffset(rcButton, (size.width + space.width) * i, 0);
+			button.frame = rc;
+			++idx;
+		}
+	}
+}
+
+//- (void) drawRect:(CGRect)rect {
+//	[[UIColor redColor] set];
+//	CGContextFillRect(UIGraphicsGetCurrentContext(), rect);
+//}
+
+- (void) insertSegmentButton:(UIButton*)button atIndex:(NSUInteger)segment animated:(BOOL)animated {
+	ASSERT(segment <= self.items.count);
+	
+    button.titleLabel.font = [UIFont systemFontOfSize:16];
+    button.titleLabel.shadowOffset = CGSizeMake(0, 1);
+
+	[button setTitleColor:self.textColor forState:UIControlStateNormal];
+	[button setTitleColor:self.textColorSelected forState:UIControlStateHighlighted];
+	[button setTitleColor:self.textColorSelected forState:UIControlStateDisabled];
+
+	[button setTitleShadowColor:self.textShadowColor forState:UIControlStateNormal];
+	[button setTitleShadowColor:self.textShadowColorSelected forState:UIControlStateHighlighted];
+	[button setTitleShadowColor:self.textShadowColorSelected forState:UIControlStateDisabled];
+    
+    button.backgroundColor = [UIColor clearColor];
+//    button.titleLabel.backgroundColor = [UIColor yellowColor];
+
+	UIButton *first = nil, *middle = nil, *last = nil;
+	if (segment == 0) {
+		first = button;
+		if (self.items.count == 1)  {
+			middle = [self.items objectAtIndex:0];
+		}
+	} else if (segment == self.items.count) {
+		last = button;
+		if (self.items.count > 2) { // do not change the first button
+			middle = [self.items objectAtIndex:self.items.count - 1];
+		}
+	} else {
+		middle = button;
+	}
+	if (first) {
+		UIImage* img1 = self.segmentBackgroundImageFirst ? self.segmentBackgroundImageFirst : self.segmentBackgroundImage;
+		UIImage* img2 = self.segmentBackgroundImageSelectedFirst ? self.segmentBackgroundImageSelectedFirst : self.segmentBackgroundImageSelected;
+		[first setBackgroundImage:img1 forState:UIControlStateNormal];
+		[first setBackgroundImage:img2 forState:UIControlStateHighlighted];
+		[first setBackgroundImage:img2 forState:UIControlStateDisabled];
+	}
+	if (last) {
+		UIImage* img1 = self.segmentBackgroundImageLast ? self.segmentBackgroundImageLast : self.segmentBackgroundImage;
+		UIImage* img2 = self.segmentBackgroundImageSelectedLast ? self.segmentBackgroundImageSelectedLast : self.segmentBackgroundImageSelected;
+		[last setBackgroundImage:img1 forState:UIControlStateNormal];
+		[last setBackgroundImage:img2 forState:UIControlStateHighlighted];
+		[last setBackgroundImage:img2 forState:UIControlStateDisabled];
+	}
+	if (middle) {
+		[button setBackgroundImage:self.segmentBackgroundImage forState:UIControlStateNormal];
+		[button setBackgroundImage:self.segmentBackgroundImageSelected forState:UIControlStateHighlighted];
+		[button setBackgroundImage:self.segmentBackgroundImageSelected forState:UIControlStateDisabled];		
+	}
+	
+	[self.items insertObject:button atIndex:segment];
+
+	if (animated) {
+		[UIView beginAnimations:nil context:nil];
+		[UIView setAnimationDuration:0.2];
+	}
+	_segmentSize.width = std::max(_segmentSize.width, CGRectGetWidth(button.frame));
+	_segmentSize.height = std::max(_segmentSize.height, CGRectGetHeight(button.frame));
+	[self insertSubview:button atIndex:_backgroundImageView ? segment + 1 : segment];
+	[self layoutIfNeeded];
+	if (animated) {
+		[UIView commitAnimations];
+	}
+}
+
+- (void)insertSegmentWithImage:(UIImage *)image atIndex:(NSUInteger)segment animated:(BOOL)animated {
+	UIButton* button = [UIButton buttonWithTitle:nil imageNormal:image imageHighlighted:nil target:self action:@selector(onSegmentTouched:)];
+    [button addTarget:self action:@selector(onSegmentDowned:) forControlEvents:UIControlEventTouchDown];
+	[self insertSegmentButton:button atIndex:segment animated:animated];
+}
+
+- (void)insertSegmentWithTitle:(NSString *)title atIndex:(NSUInteger)segment animated:(BOOL)animated {
+	UIButton* button = [UIButton buttonWithTitle:title imageNormal:nil imageHighlighted:nil target:self action:@selector(onSegmentTouched:)];
+    [button addTarget:self action:@selector(onSegmentDowned:) forControlEvents:UIControlEventTouchDown];
+	[self insertSegmentButton:button atIndex:segment animated:animated];
+}
+
+- (void) removeAllSegments {
+	for (UIButton* button in self.items) {
+		[button removeFromSuperview];
+	}
+	[self.items removeAllObjects];
+}
+
+- (void) removeSegmentAtIndex:(NSUInteger)segment animated:(BOOL)animated {
+	UIButton* button = [self segmentButtonAtIndex:segment];
+	[button removeFromSuperview];
+	[self.items removeObjectAtIndex:segment];
+}
+
+- (void)setEnabled:(BOOL)enabled forSegmentAtIndex:(NSUInteger)segment {
+	UIButton* button = [self segmentButtonAtIndex:segment];
+	button.enabled = enabled;
+}
+
+- (BOOL) isEnabledForSegmentAtIndex:(NSUInteger)segment {
+	UIButton* button = [self segmentButtonAtIndex:segment];
+	return button.enabled;
+}
+
+
+- (void) onSegmentTouched:(id)sender {
+	//NSLog(@"segment button touched!");
+	NSUInteger index = [self.items indexOfObject:sender];
+	self.selectedSegmentIndex = index;
+}
+
+- (void) onSegmentDowned:(id)sender {
+//    NSLog(@"segment button downed!");
+}
+
+
+@end

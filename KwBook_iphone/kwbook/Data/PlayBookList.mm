@@ -1,0 +1,167 @@
+//
+//  PlayBookList.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-2.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "PlayBookList.h"
+#include "KwTools.h"
+#include "KwConfig.h"
+#include "KwConfigElements.h"
+
+#define FILENAME_PLAY_LIST        @"playlist.plist"
+
+CPlayBookList* CPlayBookList::getInstance(){
+    static CPlayBookList s_play_list;
+    
+    return &s_play_list;
+}
+
+BOOL CPlayBookList::addChapters(const std::vector<CChapterInfo*> vec_chapters){
+    int n_count = vec_chapters.size();
+    for (int n_index = 0; n_index < n_count; ++n_index) {
+        CChapterInfo* temp_info = new CChapterInfo;
+        *((CChapterInfo*)temp_info) = *vec_chapters[n_index];
+        
+        m_vecChapterList.push_back(temp_info);
+    }
+    
+    return YES;
+}
+
+BOOL CPlayBookList::addChapter(CChapterInfo* chapter_info){
+    CChapterInfo* temp_info = new CChapterInfo;
+    *((CChapterInfo*)temp_info) = *chapter_info;
+    
+    m_vecChapterList.push_back(temp_info);
+    
+    return YES;
+}
+
+CChapterInfo* CPlayBookList::getCurChapter()const{
+    if (m_unCurIndex >= m_vecChapterList.size()) {
+        return NULL;
+    }
+    
+    return m_vecChapterList[m_unCurIndex];
+}
+
+CChapterInfo* CPlayBookList::getPreChapter()const{
+    if (0 == m_unCurIndex) {
+        return NULL;
+    }
+    
+    return m_vecChapterList[m_unCurIndex - 1];
+}
+CChapterInfo* CPlayBookList::getNextChapter()const{
+    if (m_vecChapterList.size() - 1 == m_unCurIndex) {
+        return NULL;
+    }
+    
+    return m_vecChapterList[m_unCurIndex + 1];
+}
+bool CPlayBookList::iSLocalChapter(const CChapterInfo* chapter_info)const{
+    std::string str_dest_path = [KwTools::Dir::GetPath(KwTools::Dir::PATH_LOCALMUSIC) UTF8String];
+    str_dest_path += [[NSString stringWithFormat:@"/%d.m4a", chapter_info->m_unRid] UTF8String];
+    
+    return KwTools::Dir::IsExistFile(str_dest_path);
+}
+
+unsigned CPlayBookList::getChapterCount()const{
+    return m_vecChapterList.size();
+}
+
+unsigned CPlayBookList::getCurPlayIndex()const{
+
+    return m_unCurIndex;
+}
+
+bool CPlayBookList::setCurPlayIndex(const unsigned un_index){
+    if (un_index >= m_vecChapterList.size()) {
+        return false;
+    }
+    
+    m_unCurIndex = un_index;
+    
+    return true;
+}
+
+unsigned CPlayBookList::getCurPos()const{
+    return m_unCurPos;
+}
+
+bool CPlayBookList::setCurPos(const unsigned un_pos_mil_sec){
+    m_unCurPos = un_pos_mil_sec;
+    
+    return true;
+}
+
+void CPlayBookList::resetPlayList(){
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecChapterList.begin(); iter!= m_vecChapterList.end(); iter++){
+        CChapterInfo* chapter_info = (CChapterInfo*)(*iter);
+        delete chapter_info;
+        chapter_info = NULL;
+    }
+    
+    m_vecChapterList.clear();
+}
+
+BOOL CPlayBookList::SavePlaylist(){
+    NSMutableArray *arrTask = [NSMutableArray arrayWithCapacity:m_vecChapterList.size()];
+    for (std::vector<CChapterInfo *>::iterator iter = m_vecChapterList.begin(); iter!= m_vecChapterList.end(); iter++) {
+        CChapterInfo* temp = ((CChapterInfo*)(*iter));
+        NSMutableDictionary *dict = [[NSMutableDictionary alloc]init];
+        temp->SaveToDict(dict);
+        [arrTask addObject:dict];
+    }
+    
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    NSString *str = [filepath stringByAppendingPathComponent:FILENAME_PLAY_LIST];
+    if(KwTools::Dir::IsExistFile([str UTF8String]) && !KwTools::Dir::DeleteFile(str))
+    {
+        return false;
+    }
+    
+    KwConfig::GetConfigureInstance()->SetConfigIntValue(PLAY_LIST_INFO_GROUP, CURRENT_CHAPTER_INDEX, m_unCurIndex);
+    KwConfig::GetConfigureInstance()->SetConfigIntValue(PLAY_LIST_INFO_GROUP, CURRENT_POSITION, m_unCurPos);
+    
+    BOOL bret = [arrTask writeToFile:str atomically:YES];
+    
+    return bret;
+}
+
+BOOL CPlayBookList::LoadPlaylist(){
+    m_vecChapterList.clear();
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    filepath = [filepath stringByAppendingPathComponent:FILENAME_PLAY_LIST];
+    NSMutableArray *arrLocalTask;
+    if(KwTools::Dir::IsExistFile(filepath))
+    {
+        arrLocalTask = [NSMutableArray arrayWithContentsOfFile:filepath];
+        for (NSDictionary *dict in arrLocalTask)
+        {
+            CChapterInfo * chapterInfo = new CChapterInfo;
+            ((CChapterInfo*)chapterInfo)->LoadFromDict(dict);
+            
+            m_vecChapterList.push_back(chapterInfo);
+        }
+    }
+    
+    int n_cur_index(0);
+    if (!KwConfig::GetConfigureInstance()->GetConfigIntValue(PLAY_LIST_INFO_GROUP, CURRENT_CHAPTER_INDEX, n_cur_index)) {
+        m_unCurIndex = 0;
+    }else {
+        m_unCurIndex = n_cur_index;
+    }
+    
+    int n_cur_pos(0);
+    if (!KwConfig::GetConfigureInstance()->GetConfigIntValue(PLAY_LIST_INFO_GROUP, CURRENT_POSITION, n_cur_pos)) {
+        m_unCurPos = 0;
+    }else {
+        m_unCurPos = n_cur_pos;
+    }
+    
+    return TRUE;
+}

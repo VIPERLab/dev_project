@@ -1,0 +1,370 @@
+//
+//  MyPageViewController.m
+//  KwSing
+//
+//  Created by 改 熊 on 12-8-6.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+#include "MyPageViewController.h"
+#include "KSWebView.h"
+#include "globalm.h"
+#include "KSMusicLibDelegate.h"
+#include "MyPageEditViewController.h"
+#include "ImageMgr.h"
+#include "KSAppDelegate.h"
+#include "FooterTabBar.h"
+#include "User.h"
+#include "KwTools.h"
+#include "MessageManager.h"
+#include "HttpRequest.h"
+#include "LoginViewController.h"
+#include "IUserStatusObserver.h"
+#include "iToast.h"
+#include "MobClick.h"
+#include "MyMessageViewController.h"
+#include "MyMessageManager.h"
+#include "IMyMessageStateObserver.h"
+#include "MainViewController.h"
+
+#define MY_PAGE_URL @"http://changba.kuwo.cn/kge/webmobile/ios/myhome.html"
+#define TAG_MSG_NUM 229
+
+@interface MyPageViewController ()<KSWebViewDelegate,UIActionSheetDelegate,UIImagePickerControllerDelegate,UINavigationControllerDelegate,IUserStatusObserver,IMyMessageStateObserver>
+{
+    KSWebView * webView;
+    UIAlertView *_waitingDialog;
+    UIButton *btnMsg;
+    UIView* pNeedLoginMsgView;
+}
+@property (nonatomic,retain) UIAlertView *waitingDialog;
+
+- (void)webViewRunActionWithParam:(KSWebView*)view action:(NSString*)act parameter:(NSDictionary*)paras;
+-(BOOL)writeImage:(UIImage *)image ToFilePath:(NSString *)aPath;
+
+- (void)showNeedLoginView;
+-(void)IMyMessageStateObserver_MessageNumChanged;
+@end
+
+@implementation MyPageViewController
+
+-(id)initWithFrame:(CGRect)frame{
+    self = [super initWithFrame:frame];
+    if (self) {
+        _hasReturn=false;
+    }
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS,IUserStatusObserver);
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_MY_MESSAGE, IMyMessageStateObserver);
+    
+    return self;
+}
+-(id)init
+{
+    self = [super init];
+    if (self) {
+        _hasReturn=false;
+    }
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS,IUserStatusObserver);
+    GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_MY_MESSAGE, IMyMessageStateObserver);
+    
+    return self;
+}
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+	[self setTitle:@"我的主页"];
+    [[self view] setBackgroundColor:[UIColor whiteColor]];
+    
+    UIImageView * imageView=[[UIImageView alloc] init];
+    [imageView setFrame:ROOT_NAVAGATION_CONTROLLER_BOUNDS];
+    [imageView setImage:CImageMgr::GetImageEx("topBk.png")];
+    [[self view] addSubview:imageView];
+    [imageView release];
+    
+    CGRect rcLabel=CGRectMake(0, 15, 320,18);
+    UILabel* lable = [[[UILabel alloc]initWithFrame:rcLabel] autorelease];
+    lable.textAlignment = UITextAlignmentCenter;
+    lable.text = [self title];
+    lable.Font = [UIFont systemFontOfSize:18];
+    [lable setShadowColor:UIColorFromRGBAValue(0x000000,50)];
+    [lable setShadowOffset:CGSizeMake(1, 1)];
+    lable.backgroundColor = [UIColor clearColor];
+    lable.textColor = [UIColor whiteColor];
+    [[self view] addSubview:lable];
+    
+    if (_hasReturn) {
+        UIButton* returnButton= [UIButton buttonWithType:UIButtonTypeCustom];
+        [returnButton setTag:1];
+        [returnButton setTitle:@"返回" forState: UIControlStateNormal];
+        [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtn_6.png") forState:UIControlStateNormal];
+        [returnButton setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+        [returnButton.titleLabel setFont:[UIFont systemFontOfSize:14]];
+        [returnButton.titleLabel setShadowOffset:CGSizeMake(0, 1)];
+        [returnButton.titleLabel setShadowColor:[UIColor blackColor]];
+        returnButton.frame = CGRectMake(10, 9, 47,28);
+        [returnButton addTarget:self action:@selector(ReturnBtnClick) forControlEvents:UIControlEventTouchUpInside];
+        [[self view] addSubview:returnButton];
+    }
+    
+    btnMsg = [UIButton buttonWithType:UIButtonTypeCustom];
+    UIImage *imgLocal = CImageMgr::GetImageEx("topReturnBtn_6.png");
+    [btnMsg setBackgroundImage:imgLocal forState:UIControlStateNormal];
+    [btnMsg setBackgroundImage:CImageMgr::GetImageEx("topReturnBtnDown_6.png") forState:UIControlStateHighlighted];
+    btnMsg.frame = CGRectMake(263, 9, 50,imgLocal.size.height);
+    [btnMsg setTitle:@"消息" forState:UIControlStateNormal];
+    btnMsg.titleLabel.font = [UIFont systemFontOfSize:15];
+    btnMsg.titleLabel.textColor = [UIColor whiteColor];
+    [[btnMsg titleLabel] setShadowOffset:CGSizeMake(0, 1)];
+    [[btnMsg titleLabel] setShadowColor:[UIColor blackColor]];
+    [btnMsg addTarget:self action:@selector(onShowMyMessagePage) forControlEvents:UIControlEventTouchUpInside];
+    [[self view] addSubview:btnMsg];
+    UIButton* messageNum=[[[UIButton alloc] init] autorelease];
+    [messageNum setFrame:CGRectMake(btnMsg.bounds.size.width-10, 0, 10, 10)];
+    [messageNum setTitleColor:[UIColor whiteColor] forState:UIControlStateNormal];
+    [messageNum setBackgroundImage:CImageMgr::GetImageEx("messageNum_29.png") forState:UIControlStateNormal];
+    [messageNum.titleLabel setTextColor:[UIColor whiteColor]];
+    [messageNum setTitleEdgeInsets:UIEdgeInsetsMake(-4,2,0,0)];
+    [messageNum setUserInteractionEnabled:NO];
+    [messageNum setHidden:false];
+    [messageNum setTag:TAG_MSG_NUM];
+    [btnMsg addSubview:messageNum];
+    
+    if (CMyMessageManager::GetInstance()->NumOfNewMessages()>0) 
+        [messageNum setHidden:false];
+    else
+        [messageNum setHidden:true];
+    
+    UIImageView * topshadow=[[UIImageView alloc] init];
+    CGRect rcshadow=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    rcshadow.origin.y+=rcshadow.size.height;
+    rcshadow.size.height=5;
+    [topshadow setFrame:rcshadow];
+    [topshadow setImage:CImageMgr::GetImageEx("topShadow.png")];
+    [[self view] addSubview:topshadow];
+    [topshadow release];
+
+    CGRect rc=[self view].bounds;
+    CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+    CGRect back=BottomRect(rc, rc.size.height-rcna.size.height, 0);
+
+     webView = [[[KSWebView alloc] initWithFrame:back allowBounce:TRUE useLoading:YES opaque:NO] autorelease];
+    [webView setDelegate:self];
+    [webView setBackgroundColor:UIColorFromRGBValue(0xededed)];
+    [[self view] addSubview:webView];
+    
+    if (User::GetUserInstance()->isOnline()) {
+        [webView loadUrl:[NSString stringWithFormat:@"%@?%d",MY_PAGE_URL,rand()]];
+    } else {
+        [self showNeedLoginView];
+    }
+    
+    _waitingDialog=[[UIAlertView alloc] initWithTitle:@"正在上传,请稍后..." message:nil delegate:self cancelButtonTitle:nil otherButtonTitles:nil, nil];
+    
+    UIActivityIndicatorView *activity=[[[UIActivityIndicatorView alloc] initWithActivityIndicatorStyle:UIActivityIndicatorViewStyleWhite] autorelease];
+    [activity setCenter:CGPointMake(150, 50)];
+    [activity startAnimating];
+    [_waitingDialog addSubview:activity];
+
+    [MobClick beginLogPageView:[NSString stringWithUTF8String:object_getClassName(self)]];
+}
+-(void)dealloc
+{
+    [webView setDelegate:nil];
+    [_waitingDialog release];
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_USERSTATUS,IUserStatusObserver);
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_MY_MESSAGE, IMyMessageStateObserver);
+    [MobClick endLogPageView:[NSString stringWithUTF8String:object_getClassName(self)]];
+    [super dealloc];
+}
+-(void)ReturnBtnClick
+{
+    [ROOT_NAVAGATION_CONTROLLER popViewControllerAnimated:YES];
+}
+- (void)onShowMyMessagePage
+{
+    MyMessageViewController* p=[[[MyMessageViewController alloc] init] autorelease];
+    if (CMyMessageManager::GetInstance()->NumOfNewMessages() > 0) {
+        [p reloadPage];
+    }
+    [(UIButton *)[[self view] viewWithTag:TAG_MSG_NUM]setHidden:true];
+    CMyMessageManager::GetInstance()->ResetMessage();
+    [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:p animated:YES];
+}
+
+- (void)webViewRunActionWithParam:(KSWebView*)view action:(NSString*)act parameter:(NSDictionary*)paras
+{
+    if([act isEqualToString:@"EditMyInfo"])
+    {
+        MyPageEditViewController * myPageEditController=[[MyPageEditViewController alloc] init];
+        [ROOT_NAVAGATION_CONTROLLER pushViewController:myPageEditController animated:YES];
+        [myPageEditController release];
+    }
+    else if ([act isEqualToString:@"EditMyHead"]) {
+        UIActionSheet *chooseHead=[[[UIActionSheet alloc] initWithTitle:nil 
+                                                              delegate:self 
+                                                     cancelButtonTitle:@"取消" 
+                                                destructiveButtonTitle:nil 
+                                                     otherButtonTitles:@"从相册中选取图片",@"立即拍照", nil] autorelease];
+        [chooseHead showInView:[UIApplication sharedApplication].keyWindow];
+    }
+}
+- (void)actionSheet:(UIActionSheet *)actionSheet clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    switch (buttonIndex) {
+        case 0:
+        {
+            //from lib
+            UIImagePickerController* imagePicker=[[[UIImagePickerController alloc] init] autorelease];
+            [imagePicker setSourceType:UIImagePickerControllerSourceTypePhotoLibrary];
+            [imagePicker setDelegate:self];
+            imagePicker.allowsEditing=YES;
+            [[KSAppDelegate rootNavigationController] presentModalViewController:imagePicker animated:YES];
+            break;
+        }
+        case 1:
+        {
+            //take photo now
+            UIImagePickerController* imagePicker=[[[UIImagePickerController alloc] init] autorelease];
+            if ([UIImagePickerController isSourceTypeAvailable:UIImagePickerControllerSourceTypeCamera]) {
+                [imagePicker setSourceType:UIImagePickerControllerSourceTypeCamera];
+                [imagePicker setDelegate:self];
+                imagePicker.allowsEditing=YES;
+                [[KSAppDelegate rootNavigationController] presentModalViewController:imagePicker animated:YES];
+            }
+            break;
+        }
+        default:
+            break;
+    }
+}
+-(void)imagePickerController:(UIImagePickerController *)picker didFinishPickingMediaWithInfo:(NSDictionary *)info
+{
+    [[KSAppDelegate rootNavigationController] dismissModalViewControllerAnimated:YES];
+    UIImage* headPic=[info objectForKey:UIImagePickerControllerEditedImage];
+    [headPic retain];
+    
+    //write
+    NSString *imagePath=[NSString stringWithFormat:@"%@/%@head.jpg",KwTools::Dir::GetPath(KwTools::Dir::PATH_USER),User::GetUserInstance()->getUserId()];
+    //NSLog(@"path:%@",imagePath);
+    if (KwTools::Dir::IsExistFile(imagePath)) {
+        KwTools::Dir::DeleteFile(imagePath);
+    }
+
+    if ([self writeImage:headPic ToFilePath:imagePath]) {
+        [_waitingDialog show];
+        KS_BLOCK_DECLARE
+        {
+            NSString* url=[NSString stringWithFormat:@"http://changba.kuwo.cn/kge/mobile/UploadHead?id=%@&sid=%@&cat=userhead&comp=111&suf=jpg",User::GetUserInstance()->getUserId(),User::GetUserInstance()->getSid()];
+            CHttpRequest *preq=new CHttpRequest([url UTF8String] ,[imagePath UTF8String]);
+            BOOL res=preq->AsyncSendRequest();
+            NSTimeInterval t=[NSDate timeIntervalSinceReferenceDate];
+            while (!preq->IsFinished()) {
+                [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+                if ([NSDate timeIntervalSinceReferenceDate]-t>(CHttpRequest::GetNetWorkStatus()==NETSTATUS_WIFI?60:120)) {
+                    //NSLog(@"UploadFileTimeOut!");
+                    res=false;
+                    break;
+                }
+            }
+            if (res) {
+                void * buf(NULL);
+                unsigned l(0);
+                preq->ReadAll(buf, l);
+                std::string str((char*)buf,l);
+                std::map<std::string, std::string> tokens;
+                KwTools::StringUtility::TokenizeKeyValue(str, tokens,",",":");
+                std::string picUrl=tokens[" \"pic\""];
+                if (picUrl.length() >2) {
+                    picUrl=picUrl.substr(1,picUrl.length()-3);
+                }
+                User::GetUserInstance()->setHeadPic([NSString stringWithUTF8String:picUrl.c_str()]);
+                KS_BLOCK_DECLARE
+                {
+                    [_waitingDialog dismissWithClickedButtonIndex:0 animated:NO];
+                    [webView executeJavaScriptFunc:@"onHeadPic" parameter:[NSString stringWithUTF8String:picUrl.c_str()]];
+                    [[[[iToast makeText:NSLocalizedString(@"上传成功", @"")]setGravity:iToastGravityCenter] setDuration:2000] show];
+                }KS_BLOCK_SYNRUN()
+            }
+            delete preq;
+        }KS_BLOCK_RUN_THREAD();
+
+    }
+    [headPic release];
+    [self dismissModalViewControllerAnimated:YES];
+}
+-(BOOL)writeImage:(UIImage *)image ToFilePath:(NSString *)aPath
+{
+    if ((image==nil) || (aPath==nil) ||[aPath isEqualToString:@""]) {
+        return FALSE;
+    }
+    NSData *imageData=UIImagePNGRepresentation(image);
+    if ((imageData == nil) || ([imageData length] <= 0)) {
+        return FALSE;
+    }
+    [imageData writeToFile:aPath atomically:YES];
+    return TRUE;
+}
+
+- (void)showNeedLoginView
+{
+    if (!pNeedLoginMsgView) {
+        [btnMsg setHidden:true];
+        CGRect rc=[self view].bounds;
+        CGRect rcna=ROOT_NAVAGATION_CONTROLLER_BOUNDS;
+        CGRect back=BottomRect(rc, rc.size.height-rcna.size.height, 0);
+        pNeedLoginMsgView=[[UIView alloc] initWithFrame:back];
+        [pNeedLoginMsgView setBackgroundColor:[UIColor whiteColor]];
+        UIImage *needLoginImage=CImageMgr::GetImageEx("needLogin.png");
+        UIImageView *needLoginView=[[UIImageView alloc] initWithFrame:CGRectMake(35, 116, needLoginImage.size.width,needLoginImage.size.height)];
+        [needLoginView setImage:needLoginImage];
+        [pNeedLoginMsgView addSubview:needLoginView];
+        [needLoginView release];
+        [self.view addSubview:pNeedLoginMsgView];
+
+        
+        UITapGestureRecognizer *tapGestureRecognize=[[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(singleTapErrorViewGestureRecognizer:)] autorelease];
+        tapGestureRecognize.numberOfTapsRequired=1;
+        [pNeedLoginMsgView addGestureRecognizer:tapGestureRecognize];
+    }
+    pNeedLoginMsgView.hidden=NO;
+}
+
+- (void)singleTapErrorViewGestureRecognizer:(UIGestureRecognizer *)gestureRecognizer
+{
+    KSLoginViewController* loginController=[[[KSLoginViewController alloc] init] autorelease];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:loginController animated:YES];
+}
+
+-(void)IUserStatusObserver_LoginFinish:(LOGIN_TYPE) type :(LOGIN_TIME)first
+{
+    if (pNeedLoginMsgView) {
+        [pNeedLoginMsgView removeFromSuperview];
+        [pNeedLoginMsgView release];
+        pNeedLoginMsgView=NULL;
+    }
+    
+    if (!User::GetUserInstance()->isOnline()) {
+        [self showNeedLoginView];
+    }else {
+        [btnMsg setHidden:false];
+        [webView loadUrl:[NSString stringWithFormat:@"%@?%d",MY_PAGE_URL,rand()]];
+    }
+}
+-(void)IUserStatusObserver_Logout
+{
+    [self showNeedLoginView];
+}
+-(void)IUserStatusObserver_StateChange
+{
+    [webView reload];
+}
+-(void)IMyMessageStateObserver_MessageNumChanged;
+{
+    if (CMyMessageManager::GetInstance()->NumOfNewMessages()>0) {
+        [(UIButton *)[[self view]  viewWithTag:TAG_MSG_NUM]setHidden:false];
+    }
+    else{
+        [(UIButton *)[[self view] viewWithTag:TAG_MSG_NUM]setHidden:true];
+    }
+}
+@end

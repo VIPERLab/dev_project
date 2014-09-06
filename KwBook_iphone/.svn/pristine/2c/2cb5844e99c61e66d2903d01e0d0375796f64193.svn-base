@@ -1,0 +1,64 @@
+//
+//  KBAudioStateNotify.m
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-26.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#import "KBAudioStateNotify.h"
+#import "MessageManager.h"
+#import "AudioPlayerManager.h"
+#include "RecentBookList.h"
+#include "CollectBookList.h"
+
+static KBAudioStateNotify* sharedInstance = nil;
+
+@implementation KBAudioStateNotify
+
++(KBAudioStateNotify*)sharedInstance{
+    @synchronized(self){
+        if (nil == sharedInstance) {
+            sharedInstance = [[KBAudioStateNotify alloc] init];
+        }
+    }
+    
+    return sharedInstance;
+}
+
+-(id)init{
+    self = [super init];
+    if (self) {
+        [NSTimer scheduledTimerWithTimeInterval:15 target:self selector:@selector(notifyState) userInfo:nil repeats:YES];
+    }
+    
+    return  self;
+}
+
+-(void)notifyState{
+    if (E_AUDIO_PLAY_PLAYING == CAudioPlayerManager::getInstance()->getCurPlayState()) {
+        float f_cur_time = CAudioPlayerManager::getInstance()->currentTime();
+        CPlayBookList::getInstance()->setCurPos(f_cur_time * 1000);
+        
+        CChapterInfo* chapter_info = CPlayBookList::getInstance()->getCurChapter();
+        
+        if (chapter_info) {
+            CRecentBookInfo* recent_book_info = CRecentBookList::GetInstance()->GetCurBook([[NSString stringWithUTF8String:chapter_info->m_strBookId.c_str()] intValue]);
+            if (recent_book_info) {
+                recent_book_info->m_unIndex = CPlayBookList::getInstance()->getCurPlayIndex();
+                recent_book_info->m_unPosMilSec = f_cur_time * 1000;
+            }
+            
+            CCollectBookInfo* collect_book = CCollectBookList::GetInstance()->GetCurBook([[NSString stringWithUTF8String:chapter_info->m_strBookId.c_str()] intValue]);
+            if (collect_book) {
+                collect_book->m_unIndex = CPlayBookList::getInstance()->getCurPlayIndex();
+                collect_book->m_unPosMilSec = f_cur_time * 1000;
+            }
+        }
+        
+        SYN_NOTIFY(OBSERVER_ID_PLAY_STATE, IObserverAudioPlayState::AudioPlaylistStatusChanged);
+    }
+}
+
+
+@end

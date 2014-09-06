@@ -1,0 +1,580 @@
+//
+//  KSAppDelegate.m
+//  KwSing
+//
+//  Created by 海平 翟 on 12-7-3.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#include <CTCall.h>
+#include <CTCallCenter.h>
+#include "KSAppDelegate.h"
+#include "AppInit.h"
+#include "ImageMgr.h"
+#include "MessageManager.h"
+#include "Reachability.h"
+#include "IObserverApp.h"
+#include "MainViewController.h"
+#include "HttpRequest.h"
+#include "MobClick.h"
+#include "KuwoConstants.h"
+#include "User.h"
+#include "WXApi.h"
+#include "des1.h"
+#include "KwTools.h"
+#include "KwConfig.h"
+#include "KwConfigElements.h"
+#include "KSProgressView.h"
+#include "globalm.h"
+#include "SongInfo.h"
+#include "LocalMusicRequest.h"
+#include "IMusicLibObserver.h"
+#include  <QuartzCore/QuartzCore.h>
+#include "KSongViewController.h"
+#include "ActivityViewController.h"
+#include "MediaModelFactory.h"
+
+#import <MediaPlayer/MPMusicPlayerController.h>
+
+#define KWSING_PUSH_SERVER_URL "http://pushserver.kuwo.cn/push.s?f=kwsing&q="
+
+UINavigationController *rootNavController;
+
+typedef enum{
+    TYPE_GAME,
+    TYPE_KGELIST,
+    TYPE_UPGRADE
+} PushType;
+
+
+@interface KSAppDelegate()<WXApiDelegate,UIAlertViewDelegate,IMusicLibObserver>
+{
+    UIViewController* mainViewController;
+    CTCallCenter* pCallCenter;
+    Reachability* pReachability;
+    
+    PushType _pushType;
+    
+    UIView *viewLoadMusic;
+    KSProgressView *progressLoadMusic;
+    UIImageView *viewLoadDone;
+    UIImageView *viewLoadFail;
+    UILabel *labelSongAndArtist;
+    UIButton *btnRetKuwo;
+    UIButton *btnSingOrChange;
+    BOOL isSingTheSong;         //指示btnSingOrChange当前的状态
+}
+
+
+- (void) OnNetWorkStatusChanged:(NSNotification *)notification;
+
+-(void)InitLoadMusicView;
+-(void)shartDownloadMusic;
+-(void)closeWaitingView;
+-(void)PopRecordView;
+-(void)downLoadDoneOrFail:(bool)isDone;
+
+-(void)onSingSong:(id)sender;
+-(void)onReturnKuwo:(id)sender;
+
+
+@end
+
+@implementation KSAppDelegate
+
+@synthesize window = _window;
+
+- (void)dealloc
+{
+    [pReachability release];
+    [pCallCenter release];
+    [_window release];
+    [mainViewController release];
+    [super dealloc];
+}
+
++ (UINavigationController*)rootNavigationController
+{
+    return rootNavController;
+}
+
+- (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
+{
+    self.window = [[[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]] autorelease];
+    [MobClick startWithAppkey:UM_APPKEY reportPolicy:REALTIME channelId:KWSING_CHANNEL]; //umeng
+    [MobClick updateOnlineConfig];
+    [MobClick setAppVersion:@KWSING_VERSION_STRING];
+    [MobClick setCrashReportEnabled:YES];
+    
+    CAppInit::GetInstance()->OnLaunchFinished();
+    //刚开始启动，状态栏不可见，即使获取applicationFrame也是全屏的
+    CGRect rcRootView=CGRectMake(0, 20, 320, [[UIScreen mainScreen] bounds].size.height-20);
+    mainViewController=[[KSMainViewController getInstance] initWithFrame:rcRootView];
+    
+    rootNavController = [[UINavigationController alloc] initWithRootViewController:mainViewController];
+    rootNavController.navigationBarHidden = YES;
+    if (NSOrderedSame == [[[UIDevice currentDevice] systemVersion] compare:@"7.0"]) {
+        [[UIApplication sharedApplication] setStatusBarStyle:UIStatusBarStyleLightContent];
+    }
+    
+    self.window.rootViewController=rootNavController;
+    [self.window makeKeyAndVisible];
+    
+    rootNavController.view.frame=rcRootView;
+    
+     __block UIView* pRootView=mainViewController.view;
+    
+    UIImage* pStartImg=CImageMgr::GetImageEx("Default.png");
+	__block UIImageView* splashImageView = [[[UIImageView alloc] initWithImage:pStartImg] autorelease];
+	[self.window addSubview:splashImageView];
+    
+    application.networkActivityIndicatorVisible = NO;
+    [WXApi registerApp:@"wx689656d2b406628e"];
+    
+    //启动和引导画面
+    KS_BLOCK_DECLARE
+    {
+        if (!CAppInit::GetInstance()->IsFirstStart()) {//首次启动显示新手引导
+            application.statusBarStyle = UIStatusBarStyleBlackTranslucent;
+            [application setStatusBarHidden:FALSE withAnimation:UIStatusBarAnimationFade];
+        }
+        
+        [UIView animateWithDuration:0.3 animations:^{
+            splashImageView.alpha=0.0;
+        } completion:^(BOOL bFinished){
+            [splashImageView removeFromSuperview];
+            CImageMgr::RemoveImage("Default.png");
+            CAppInit::GetInstance()->OnSplashFinished(pRootView);
+        }];
+        
+        KS_BLOCK_DECLARE{
+            [application registerForRemoteNotificationTypes:(UIRemoteNotificationTypeAlert | UIRemoteNotificationTypeBadge | UIRemoteNotificationTypeSound)];
+        }
+        KS_BLOCK_ASYNRUN(3000);
+    }
+    KS_BLOCK_ASYNRUN(100);
+    
+    //侦听网络情况
+    pReachability=[[Reachability reachabilityForInternetConnection] retain];
+    [pReachability startNotifier];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector: @selector(OnNetWorkStatusChanged:) name: kReachabilityChangedNotification object: nil];
+    
+    //侦听 音量键 按动情况
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onVolumeControlChanged:) name:MPMusicPlayerControllerVolumeDidChangeNotification object:nil];
+
+    //响应来电
+    pCallCenter=[[CTCallCenter alloc] init];
+    pCallCenter.callEventHandler=^(CTCall* call){
+        if ([call.callState isEqualToString:@"CTCallStateIncoming"]) {
+            ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::CallInComing,0);
+        } else if([call.callState isEqualToString:@"CTCallStateDisconnected"]){
+            ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::CallDisconnecte,0);
+        }
+    };
+    _pushType = TYPE_GAME;
+    
+    if (launchOptions) {
+        NSDictionary *pushNotificationDic=[launchOptions objectForKey:UIApplicationLaunchOptionsRemoteNotificationKey];
+        if (pushNotificationDic) {
+            NSString* type=[[pushNotificationDic objectForKey:@"aps"] objectForKey:@"type"];
+            _pushType=(PushType)[type intValue];
+            UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:[[pushNotificationDic objectForKey:@"aps"] objectForKey:@"title"] message:[[pushNotificationDic objectForKey:@"aps"] objectForKey:@"alert"] delegate:self cancelButtonTitle:@"取消" otherButtonTitles:@"查看", nil] autorelease];
+            [alert show];
+        }
+    }
+    return YES;
+}
+
+- (void)applicationWillResignActive:(UIApplication *)application
+{
+    CAppInit::GetInstance()->OnResignActive();
+}
+
+- (void)applicationDidEnterBackground:(UIApplication *)application
+{
+    CAppInit::GetInstance()->OnEnterBackground();
+}
+
+- (void)applicationWillEnterForeground:(UIApplication *)application
+{
+    CAppInit::GetInstance()->OnEnterForeground();
+}
+
+- (void)applicationDidBecomeActive:(UIApplication *)application
+{
+    CAppInit::GetInstance()->OnBecomeActive();
+}
+
+- (void) OnNetWorkStatusChanged:(NSNotification *)notification
+{
+    ASYN_NOTIFY(OBSERVER_ID_APP,IObserverApp::NetWorkStatusChanged,0,CHttpRequest::GetNetWorkStatus());
+}
+
+- (void) onVolumeControlChanged:(NSNotification*)notification{
+    ASYN_NOTIFY(OBSERVER_ID_APP, IObserverApp::VolumeControlChanged, 0);
+}
+
+- (void)applicationDidReceiveMemoryWarning:(UIApplication *)application
+{
+    //NSLog(@"Memory Warning");
+    ASYN_NOTIFY(OBSERVER_ID_APP, IObserverApp::MemoryWarning, 0);
+}
+-(BOOL)application:(UIApplication *)application handleOpenURL:(NSURL *)url
+{
+    return [WXApi handleOpenURL:url delegate:self];
+}
+//com.kuwo.kwmusic.kwmusicForKwsing
+-(BOOL)application:(UIApplication *)application openURL:(NSURL *)url sourceApplication:(NSString *)sourceApplication annotation:(id)annotation
+{
+    if ([sourceApplication isEqualToString:@"com.tencent.xin"]) {
+        return [WXApi handleOpenURL:url delegate:self];
+    }
+    else if ([sourceApplication isEqualToString:@"com.kuwo.KuwoTingting"]){
+        NSString *kuwoString=[url query];
+        kuwoString=KwTools::Encoding::UrlDecode(kuwoString);
+        std::map<std::string, std::string> mapTokens;
+        KwTools::StringUtility::TokenizeKeyValueEx([kuwoString UTF8String], mapTokens);
+        [self setSongRid:[NSString stringWithUTF8String:mapTokens["rid"].c_str()]];
+        [self setSongName:KwTools::Encoding::Utf82Gbk(mapTokens["songname"].c_str())];
+        [self setArtistName:KwTools::Encoding::Utf82Gbk(mapTokens["artist"].c_str())];
+        
+        NSString *source = KwTools::Encoding::Utf82Gbk(mapTokens["source"].c_str());
+        
+        if ([source isEqualToString:@"HRB"]) {
+            [self setFromKuwoMusic:true];
+            
+            KS_BLOCK_DECLARE{
+                while (true) {
+                    bool b_splash_finish = false;
+                    KwConfig::GetConfigureInstance()->GetConfigBoolValue(SPLASH_NEW_GROUP, SPLASH_FINISH, b_splash_finish, false);
+                    if (b_splash_finish) {
+                        break;
+                    }else{
+                        sleep(1);
+                    }
+                }
+                
+                KS_BLOCK_DECLARE{
+                    [self popActivityPage];
+                }
+                KS_BLOCK_ASYNRUN(0);
+            }
+            KS_BLOCK_RUN_THREAD();
+        }
+        else{
+            KS_BLOCK_DECLARE{
+                while (true) {
+                    bool b_splash_finish = false;
+                    KwConfig::GetConfigureInstance()->GetConfigBoolValue(SPLASH_NEW_GROUP, SPLASH_FINISH, b_splash_finish, false);
+                    if (b_splash_finish) {
+                        break;
+                    }else{
+                        sleep(1);
+                    }
+                }
+                
+                KS_BLOCK_DECLARE{
+                    [self InitLoadMusicView];
+                    [self shartDownloadMusic];
+                }
+                KS_BLOCK_ASYNRUN(0);
+            }
+            KS_BLOCK_RUN_THREAD();
+        }
+        return true;
+    }
+    return false;
+}
+
+- (void)application:(UIApplication *)application didRegisterForRemoteNotificationsWithDeviceToken:(NSData *)deviceToken{
+//    NSLog(@"Device token is : %@", deviceToken);
+    
+    NSString* str_device_token = [NSString stringWithFormat:@"%@", deviceToken];
+    str_device_token = [str_device_token stringByReplacingOccurrencesOfString:@" " withString:@""];
+    std::string str_uuid = "";
+    KwConfig::GetConfigureInstance()->GetConfigStringValue(DEVICE_INFO, DEVICE_UUID, str_uuid);
+    
+    NSString* str_temp = [NSString stringWithFormat:@"corp=%s&prod=%s&instsrc=%s&user=%s&devm=%s&uuid=%s&type=%s&devicetoken=%@&devicetype=%s&OSVersion=%s&username=%s&escape=%s&badge=1", KWSING_COMPANY_NAME, KWSING_CLIENT_VERSION_STRING, GetClientInstallSource(), [User::GetUserInstance()->getUserId() UTF8String], GetDeviceMacAddress(), str_uuid.c_str(), "collect_token", [str_device_token substringWithRange:(NSMakeRange(1, [str_device_token length] - 2))], GetDeviceType(), GetDeviceOSVersion(), [User::GetUserInstance()->getUserName() UTF8String], "0"];
+    
+    std::string str_out = "";
+    if (!encode_msg(str_out, KWSING_ENCRYPT_KEY, [str_temp UTF8String])) {
+        return;
+    }
+    
+    str_out = KWSING_PUSH_SERVER_URL + str_out;
+    
+    KS_BLOCK_DECLARE{
+        std::string str_http_out = "";
+        CHttpRequest::QuickSyncGet(str_out, str_http_out);
+    }
+    KS_BLOCK_RUN_THREAD();
+}
+
+- (void)application:(UIApplication *)application didFailToRegisterForRemoteNotificationsWithError:(NSError *)error{
+//    NSLog(@"fail register push service");
+}
+
+- (void)application:(UIApplication *)application didReceiveRemoteNotification:(NSDictionary *)userInfo{
+//    NSLog(@"Receive remote notification : %@", userInfo);
+    if (userInfo) {
+        NSString* type=[[userInfo objectForKey:@"aps"] objectForKey:@"type"];
+        _pushType=(PushType)[type intValue];
+        if (_pushType == TYPE_UPGRADE) {
+            UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:[[userInfo objectForKey:@"aps"] objectForKey:@"title"] message:[[userInfo objectForKey:@"aps"] objectForKey:@"alert"] delegate:self cancelButtonTitle:@"暂不升级" otherButtonTitles:@"立刻升级", nil] autorelease];
+            [alert show];
+        }
+        else{
+            UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:[[userInfo objectForKey:@"aps"] objectForKey:@"title"] message:[[userInfo objectForKey:@"aps"] objectForKey:@"alert"] delegate:nil cancelButtonTitle:@"我知道了" otherButtonTitles:nil, nil] autorelease];
+            [alert show];
+        }
+    }
+}
+//-(void) onResp:(BaseResp*)resp
+//{
+//    if([resp isKindOfClass:[SendMessageToWXResp class]])
+//    {
+//        NSString *strTitle = [NSString stringWithFormat:@"发送结果"];
+//        NSString *strMsg = [NSString stringWithFormat:@"发送媒体消息结果:%d", resp.errCode];
+//        
+//        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:strTitle message:strMsg delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+//        [alert show];
+//        [alert release];
+//    }
+//    else if([resp isKindOfClass:[SendAuthResp class]])
+//    {
+//        NSString *strTitle = [NSString stringWithFormat:@"Auth结果"];
+//        NSString *strMsg = [NSString stringWithFormat:@"Auth结果:%d", resp.errCode];
+//        
+//        UIAlertView *alert = [[UIAlertView alloc] initWithTitle:strTitle message:strMsg delegate:self cancelButtonTitle:@"OK" otherButtonTitles:nil, nil];
+//        [alert show];
+//        [alert release];
+//    }
+//}
+#pragma mark 
+#pragma mark handle with the kuwo message
+#define URL_HRB_PAGE @"http://changba.kuwo.cn/kge/mobile/ActivityServer?"
+//#define URL_HRB_PAGE @"http://60.28.205.41/kge/mobile/ActivityServer?"
+
+-(void)popToRootViewController
+{
+    NSArray *arrayControllers = [ROOT_NAVAGATION_CONTROLLER popToRootViewControllerAnimated:NO];
+    for (UIViewController *viewController in arrayControllers) {
+        if ([viewController respondsToSelector:@selector(stopPlay)]) {
+            [viewController performSelector:@selector(stopPlay)];
+        }
+    }
+}
+
+-(void)popActivityPage
+{
+    [[[UIApplication sharedApplication] keyWindow] endEditing:YES];
+    //[ROOT_NAVAGATION_CONTROLLER popToRootViewControllerAnimated:NO];
+    [self popToRootViewController];
+    [(KSMainViewController*)mainViewController selectSubView:0];
+    
+    ActivityViewController *activityViewController  = [[[ActivityViewController alloc] initWithFrame:self.window.frame] autorelease];
+    [activityViewController setTitle:@"哈尔滨啤酒中国好声音"];
+    
+    string uid;
+    KwConfig::GetConfigureInstance()->GetConfigStringValue(USER_GROUP, USER_USERID, uid);
+    NSString *strUid = [NSString stringWithUTF8String:uid.c_str()];
+    [activityViewController setUrl:[NSString stringWithFormat:
+                                    @"%@act=login&uid=%@&src=HRB&v=%s",
+                                    URL_HRB_PAGE,
+                                    strUid,
+                                    KWSING_CLIENT_VERSION_STRING]];
+    
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:activityViewController animated:NO];
+}
+
+-(void)InitLoadMusicView
+{
+    [[[UIApplication sharedApplication] keyWindow] endEditing:YES];
+    //[ROOT_NAVAGATION_CONTROLLER popToRootViewControllerAnimated:NO];
+    [self popToRootViewController];
+    [(KSMainViewController*)mainViewController selectSubView:0];
+    if(viewLoadMusic == nil)
+    {
+        GLOBAL_ATTACH_MESSAGE_OC(OBSERVER_ID_MUSICLIB, IMusicLibObserver);
+        viewLoadMusic = [[[UIView alloc]initWithFrame:self.window.bounds]autorelease];
+        viewLoadMusic.backgroundColor = UIColorFromRGBAValue(0x000000,80);
+        [[self window]addSubview:viewLoadMusic];
+        
+        CGRect rc = CenterRect(self.window.bounds, 250, 150);
+        rc.origin.y -= 20;
+        
+        UIImageView * bkview = [[[UIImageView alloc]initWithFrame:rc]autorelease];
+        [bkview setImage:CImageMgr::GetImageEx("SingEffectFrame.png")];
+        [viewLoadMusic addSubview:bkview];
+        
+        labelSongAndArtist  = [[[UILabel alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(21, 22, 208, 30) fromView:bkview]] autorelease];
+        [labelSongAndArtist setTextAlignment:UITextAlignmentCenter];
+        [labelSongAndArtist setBackgroundColor:[UIColor clearColor]];
+        [labelSongAndArtist setTextColor:[UIColor blackColor]];
+        [labelSongAndArtist setFont:[UIFont systemFontOfSize:22]];
+        [labelSongAndArtist setLineBreakMode:NSLineBreakByTruncatingMiddle];
+        [viewLoadMusic addSubview:labelSongAndArtist];
+        
+        progressLoadMusic = [[[KSProgressView alloc]initWithFrame:[viewLoadMusic convertRect:CGRectMake(27, 62, 197, 17) fromView:bkview]]autorelease];
+        progressLoadMusic.bkImage = CImageMgr::GetImageEx("proBack.png");
+        progressLoadMusic.trackImage = CImageMgr::GetImageEx("proTrack.png");
+        [progressLoadMusic setOuterColor: [UIColor whiteColor]] ;
+        [progressLoadMusic setInnerColor: [UIColor whiteColor]];
+        [viewLoadMusic addSubview:progressLoadMusic];
+        
+        viewLoadDone = [[[UIImageView alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(84, 62, 76, 18) fromView:bkview]] autorelease];
+        [viewLoadDone setImage:CImageMgr::GetImageEx("donwLoadDone.png")];
+        [viewLoadMusic addSubview:viewLoadDone];
+        [viewLoadDone setHidden:true];
+        
+        viewLoadFail = [[[UIImageView alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(84, 62, 76, 18) fromView:bkview]] autorelease];
+        [viewLoadFail setImage:CImageMgr::GetImageEx("downLoadFail.png")];
+        [viewLoadMusic addSubview:viewLoadFail];
+        [viewLoadFail setHidden:true];
+        
+        btnRetKuwo = [[[UIButton alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(21, 98, 94, 31) fromView:bkview]] autorelease];
+        [btnRetKuwo setImage:CImageMgr::GetImageEx("retKuwo.png") forState:UIControlStateNormal];
+        [btnRetKuwo setImage:CImageMgr::GetImageEx("retKuwoDown.png") forState:UIControlStateHighlighted];
+        [btnRetKuwo addTarget:self action:@selector(onReturnKuwo:) forControlEvents:UIControlEventTouchUpInside];
+        [viewLoadMusic addSubview:btnRetKuwo];
+        
+        isSingTheSong=false;
+        btnSingOrChange = [[[UIButton alloc] initWithFrame:[viewLoadMusic convertRect:CGRectMake(135, 98, 94, 31) fromView:bkview]] autorelease];
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("changeSong.png") forState:UIControlStateNormal];
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("changSongDown.png") forState:UIControlStateHighlighted];
+        [btnSingOrChange addTarget:self action:@selector(onSingSong:) forControlEvents:UIControlEventTouchUpInside];
+        [viewLoadMusic addSubview:btnSingOrChange];
+        
+    }
+    labelSongAndArtist.text = [NSString stringWithFormat:@"%@ - %@",self.songName,self.artistName];
+    [progressLoadMusic setProgress:0];
+}
+-(void)shartDownloadMusic
+{
+    std::string strRid=[self.songRid UTF8String];
+    if (strRid == "") {
+        [self closeWaitingView];
+        UIAlertView *alert=[[[UIAlertView alloc] initWithTitle:@"提示" message:@"数据传送错误" delegate:nil cancelButtonTitle:@"OK" otherButtonTitles:nil, nil] autorelease];
+        [alert show];
+        return;
+    }
+    CSongInfoBase *songInfo = CLocalMusicRequest::GetInstance()->GetLocalMusic(strRid);
+    if (songInfo && ((CLocalTask*)songInfo)->taskStatus == TaskStatus_Finish) {
+        [self downLoadDoneOrFail:true];
+        return;
+    }
+    if (songInfo) {
+        CLocalMusicRequest::GetInstance()->DownTaskImmediately(songInfo);
+        return;
+    }
+    songInfo=new CSongInfoBase();
+    songInfo->strRid=strRid;
+    
+    //NSStringEncoding enc=CFStringConvertEncodingToNSStringEncoding(kCFStringEncodingGB_18030_2000);
+    songInfo->strSongName=[self.songName cStringUsingEncoding:NSUTF8StringEncoding];
+    songInfo->strArtist=[self.artistName cStringUsingEncoding:NSUTF8StringEncoding];
+    CLocalMusicRequest::GetInstance()->DownTaskImmediately(songInfo);
+}
+-(void)closeWaitingView
+{
+    GLOBAL_DETACH_MESSAGE_OC(OBSERVER_ID_MUSICLIB, IMusicLibObserver);
+    [viewLoadMusic removeFromSuperview];
+    viewLoadMusic=nil;
+}
+-(void)onSingSong:(id)sender
+{
+    if (isSingTheSong) {
+        [self closeWaitingView];
+        [self PopRecordView];
+    }
+    else{
+        [self closeWaitingView];
+    }
+}
+-(void)PopRecordView
+{
+    std::string strRecordId =[[self songRid]  UTF8String];
+    KSKSongViewController * ksongView = [[[KSKSongViewController alloc]init]autorelease];
+    [ksongView SetRecordId:strRecordId Record: true Video:false];
+    [ROOT_NAVAGATION_CONTROLLER pushViewController:ksongView animated:YES];
+}
+//下载完成需要完成的工作
+-(void)downLoadDoneOrFail:(bool)isDone
+{
+    [progressLoadMusic setHidden:true];
+    if (isDone) {
+        [viewLoadDone setHidden:false];
+        isSingTheSong=true;
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("singNow.png") forState:UIControlStateNormal];
+        [btnSingOrChange setImage:CImageMgr::GetImageEx("singNowDown.png") forState:UIControlStateHighlighted];
+    }
+    else{
+        [viewLoadFail setHidden:false];
+    }
+}
+-(void)onReturnKuwo:(id)sender
+{
+    [self closeWaitingView];
+    NSURL *url=[NSURL URLWithString:@"com.kuwo.kwmusic.kwmusicForKwsing://kwsing/res=done"];
+    if ([[UIApplication sharedApplication] canOpenURL:url]) {
+        [[UIApplication sharedApplication] openURL:url];
+    }
+}
+- (void)alertView:(UIAlertView *)alertView clickedButtonAtIndex:(NSInteger)buttonIndex
+{
+    [[UIApplication sharedApplication] setApplicationIconBadgeNumber:0];
+    if(buttonIndex == 1){
+        switch (_pushType) {
+            case TYPE_GAME:
+            {
+                //[ROOT_NAVAGATION_CONTROLLER popToRootViewControllerAnimated:NO];
+                [(KSMainViewController*)mainViewController selectSubView:0];
+                
+                break;
+            }
+            case TYPE_KGELIST:
+            {
+                //[ROOT_NAVAGATION_CONTROLLER popToRootViewControllerAnimated:NO];
+                [(KSMainViewController*)mainViewController selectSubView:2];
+                break;
+            }
+            case TYPE_UPGRADE:
+            {
+                NSURL* url=[NSURL URLWithString:@"https://itunes.apple.com/cn/app/ku-wok-ge/id594167995?mt=8"];
+                [[UIApplication sharedApplication]openURL:url];
+                break;
+            }
+            default:
+                break;
+        }
+    }
+}
+#pragma mark
+#pragma mark music delegate
+-(void)IObMusicLib_TaskProgress:(NSString*)strRid:(float)fPercent
+{
+    if (viewLoadMusic && !viewLoadMusic.hidden) {
+        [progressLoadMusic setProgress:fPercent];
+    }
+}
+
+-(void)IObMusicLib_DownTaskFinish:(NSString*)strRid
+{
+    if (viewLoadMusic && !viewLoadMusic.hidden) {
+        [self downLoadDoneOrFail:true];
+    }
+}
+
+-(void)IObMusicLib_TaskFail:(NSString*)strRid
+{
+    if (viewLoadMusic && !viewLoadMusic.hidden) {
+        [self downLoadDoneOrFail:false];
+    }
+}
+-(void)IObMusicLib_RecordMusic:(NSString*)strRid
+{
+    if (viewLoadMusic && !viewLoadMusic.hidden) {
+        [self downLoadDoneOrFail:true];
+    }
+}
+@end

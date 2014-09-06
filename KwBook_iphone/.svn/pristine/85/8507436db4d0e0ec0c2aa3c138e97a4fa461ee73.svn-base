@@ -1,0 +1,59 @@
+//
+//  HotSearchWords.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-5.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "HotSearchWords.h"
+#include "KwTools.h"
+#include "MessageManager.h"
+
+#define FILENAME_HOT_SEARCH_WORDS        @"hotSearchWords.plist"
+
+static KwTools::CLock S_SEARCH_WORDS_LOCK;
+
+CHotSearchWords::CHotSearchWords(){
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    NSString *str = [filepath stringByAppendingPathComponent:FILENAME_HOT_SEARCH_WORDS];
+    
+    if (KwTools::Dir::IsExistFile(str)) {
+        m_arrySearchWords = [[NSMutableArray alloc] initWithContentsOfFile:str];
+    }
+    
+    //线程中去获取hot words，获取完毕保存；
+    KS_BLOCK_DECLARE{
+        NSURL* requestURL = [NSURL URLWithString:@"http://www.kuwo.cn"];
+        //HTTP请求获取搜索热词
+        if (!m_arrySearchWords) {
+            m_arrySearchWords = [[NSMutableArray alloc] init];
+        }
+        [m_arrySearchWords removeAllObjects];
+        m_arrySearchWords = [m_arrySearchWords initWithObjects:@"单田芳",@"易中天",@"三国演义", nil];
+        //保存至文件
+        if(KwTools::Dir::IsExistFile([str UTF8String]))
+        {
+            KwTools::Dir::DeleteFile(str);
+        }
+        [m_arrySearchWords writeToFile:str atomically:YES];
+        
+        KwTools::CAutoLock auto_lock(&S_SEARCH_WORDS_LOCK);
+        //更新热词
+        
+    }
+    KS_BLOCK_RUN_THREAD();
+}
+
+CHotSearchWords* CHotSearchWords::GetInstance(){
+    static CHotSearchWords s_hot_search_words;
+    
+    return &s_hot_search_words;
+}
+
+NSArray* CHotSearchWords::GetHotSearchWords(){
+    KwTools::CAutoLock auto_lock(&S_SEARCH_WORDS_LOCK);
+    
+    return m_arrySearchWords;
+}
+

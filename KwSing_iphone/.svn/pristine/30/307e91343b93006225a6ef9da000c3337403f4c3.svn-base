@@ -1,0 +1,32 @@
+//
+//  FooterTabBar.h
+//  KwSing
+//
+//  Created by Zhai HaiPIng on 12-7-30.
+//  Copyright (c) 2012年 酷我音乐. All rights reserved.
+//
+
+#ifndef KwSing_FooterTabBar_h
+#define KwSing_FooterTabBar_h
+
+
+#define FOOTER_TABBAR_HEIGHT 49
+#define FOOTER_TABBAR_SHADOW_HEIGHT 23
+#define FOOTER_TABBAR_BTN_HEIGHT 49
+#define FOOTER_TABBAR_CENTERBTN_WIDTH 68
+#define FOOTER_TABBAR_CENTERBTN_HEIGHT 68
+
+@protocol KSFooterTabBarDelegate
+- (void)didFooterTabBarSelected:(unsigned)idx;
+@end
+
+@interface KSFooterTabBar:UIView
+
+- (id)initWithSuperView:(UIView*)pSuperView;
+- (void)selectIdx:(unsigned)idx;
+- (int)getSelectedIdx;
+- (void)setDeletate:(id<KSFooterTabBarDelegate>)delegate;
+
+@end
+
+#endif

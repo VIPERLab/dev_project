@@ -1,0 +1,99 @@
+//
+//  SearchHistory.cpp
+//  kwbook
+//
+//  Created by 单 永杰 on 13-12-6.
+//  Copyright (c) 2013年 单 永杰. All rights reserved.
+//
+
+#include "SearchHistory.h"
+#include "KwTools.h"
+
+#define FILENAME_SEARCH_HISTORY        @"searchhistory.plist"
+
+static KwTools::CLock S_SEARCH_HISTORY_LOCK;
+
+CSearchHistroy::CSearchHistroy(){
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    NSString *str = [filepath stringByAppendingPathComponent:FILENAME_SEARCH_HISTORY];
+    
+    KwTools::CAutoLock auto_lock(&S_SEARCH_HISTORY_LOCK);
+    
+    if (KwTools::Dir::IsExistFile(str)) {
+        m_arrySearchHistroy = [[NSMutableArray alloc] initWithContentsOfFile:str];
+    }else {
+        m_arrySearchHistroy = nil;
+    }
+}
+
+CSearchHistroy* CSearchHistroy::GetInstance(){
+    static CSearchHistroy s_search_history;
+    
+    return &s_search_history;
+}
+
+NSArray* CSearchHistroy::GetSearchHistory()const{
+    KwTools::CAutoLock auto_lock(&S_SEARCH_HISTORY_LOCK);
+    
+    return m_arrySearchHistroy;
+}
+
+void CSearchHistroy::AddSearchKey(NSString* str_search_key){
+    KwTools::CAutoLock auto_lock(&S_SEARCH_HISTORY_LOCK);
+    
+    if (m_arrySearchHistroy) {
+        [m_arrySearchHistroy removeObject:str_search_key];
+        [m_arrySearchHistroy addObject:str_search_key];
+        
+        NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+        NSString *str = [filepath stringByAppendingPathComponent:FILENAME_SEARCH_HISTORY];
+        
+        if (KwTools::Dir::IsExistFile(str)){
+            KwTools::Dir::DeleteFile(str);
+        }
+        
+        [m_arrySearchHistroy writeToFile:str atomically:YES];
+    }else {
+        m_arrySearchHistroy = [[NSMutableArray alloc] initWithObjects:str_search_key, nil];
+        NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+        NSString *str = [filepath stringByAppendingPathComponent:FILENAME_SEARCH_HISTORY];
+        
+        if (KwTools::Dir::IsExistFile(str)){
+            KwTools::Dir::DeleteFile(str);
+        }
+        
+        [m_arrySearchHistroy writeToFile:str atomically:YES];
+    }
+}
+
+void CSearchHistroy::DeleteSearchKey(NSString* str_search_key){
+    KwTools::CAutoLock auto_lock(&S_SEARCH_HISTORY_LOCK);
+    
+    if (m_arrySearchHistroy && [m_arrySearchHistroy containsObject:str_search_key]) {
+        [m_arrySearchHistroy removeObject:str_search_key];
+        
+        NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+        NSString *str = [filepath stringByAppendingPathComponent:FILENAME_SEARCH_HISTORY];
+        
+        if (KwTools::Dir::IsExistFile(str)){
+            KwTools::Dir::DeleteFile(str);
+        }
+        
+        [m_arrySearchHistroy writeToFile:str atomically:YES];
+    }
+}
+
+void CSearchHistroy::ClearHistory(){
+    KwTools::CAutoLock auto_lock(&S_SEARCH_HISTORY_LOCK);
+    
+    if (m_arrySearchHistroy) {
+        [m_arrySearchHistroy removeAllObjects];
+    }
+    
+    NSString *filepath = KwTools::Dir::GetPath(KwTools::Dir::PATH_DUCUMENT);
+    NSString *str = [filepath stringByAppendingPathComponent:FILENAME_SEARCH_HISTORY];
+    if (KwTools::Dir::IsExistFile(str)){
+        KwTools::Dir::DeleteFile(str);
+    }
+}
+
