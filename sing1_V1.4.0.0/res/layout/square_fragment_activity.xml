@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <RelativeLayout
+        android:id="@+id/rl_square_top"
+        android:layout_width="fill_parent"
+        android:layout_height="46dp"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/top_rellayout_bg"
+        android:orientation="horizontal" >
+
+        <RadioGroup
+            android:id="@+id/rg_square_fragment"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/song_top_btns_bg"
+            android:padding="3dp"
+            android:orientation="horizontal" >
+
+            <RadioButton
+                android:id="@+id/rb_square_hot"
+                android:layout_width="0dip"
+                android:layout_height="29dp"
+                android:layout_weight="1"
+                android:background="@drawable/song_top_new_songs_selector"
+                android:button="@null"
+                android:gravity="center"
+               	android:text="@string/square_hot_songs"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+
+            <RadioButton
+                android:id="@+id/rb_square_super"
+                android:layout_width="0dip"
+                android:layout_height="29dp"
+                android:layout_weight="1"
+                android:background="@drawable/song_top_rank_songs_selector"
+                android:button="@null"
+                android:gravity="center"
+               	android:text="@string/square_famous"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+
+            <RadioButton
+                android:id="@+id/rb_square_new"
+                android:layout_width="0dip"
+                android:layout_height="29dp"
+                android:layout_weight="1"
+                android:background="@drawable/song_top_singer_songs_selector"
+                android:button="@null"
+                android:gravity="center"
+                android:text="@string/square_lattest_songs"
+                android:textColor="#ffffff"
+                android:textSize="15dp"/>
+        </RadioGroup>
+    </RelativeLayout>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/vp_square_fragment"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/rl_square_top" 
+        android:background="#ededed" />
+
+</RelativeLayout>

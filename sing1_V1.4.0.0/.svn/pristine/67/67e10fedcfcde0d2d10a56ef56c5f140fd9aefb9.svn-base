@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <RelativeLayout
+        android:id="@+id/rl_square_activity_top"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <!-- title -->
+
+        <TextView
+            android:id="@+id/tv_square_activity_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:layout_toLeftOf="@+id/bt_square_activity_invisible"
+            android:layout_toRightOf="@+id/bt_square_activity_back"
+            android:gravity="center"
+            android:text="广场活动标题"
+            android:singleLine="true"
+            android:textColor="#ffffff"
+            android:textSize="18dp" />
+        
+        <!-- back -->
+
+        <Button
+            android:id="@+id/bt_square_activity_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+        
+         <Button
+            android:id="@+id/bt_square_activity_invisible"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginLeft="5dip"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:visibility="invisible" />
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/fl_square_activity"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/rl_square_activity_top"
+        android:layout_above="@+id/rl_square_activity_options"
+        android:background="#ededed" >
+
+        <cn.kuwo.sing.ui.compatibility.KuwoWebView
+            android:id="@+id/kwv_square_activity"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed" />
+
+        <RelativeLayout
+            android:id="@+id/rl_square_activity"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/pb_background"
+            android:visibility="invisible" >
+
+            <ProgressBar
+                android:id="@+id/pb_square_activity"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="40dip"
+                android:layout_height="40dip"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:indeterminate="false"
+                android:indeterminateDrawable="@anim/progress_bar_anim" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/pb_square_activity"
+                android:layout_centerHorizontal="true"
+                android:gravity="center_horizontal"
+                android:text="@string/kuwolistview_header_hint_loading"
+                android:textColor="@android:color/white" />
+        </RelativeLayout>
+    </FrameLayout>
+    
+     <RelativeLayout
+        android:id="@+id/rl_square_activity_options"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/sing_bottom_bg" >
+
+        <Button 
+            android:id="@+id/bt_square_activity_goBack"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="3dp"
+            android:background="@drawable/bt_pre_page_selector"
+            android:textColor="@android:color/black"
+            />
+        <Button 
+            android:id="@+id/bt_square_activity_goForward"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_toRightOf="@id/bt_square_activity_goBack"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bt_next_page_selector"
+            android:textColor="@android:color/black"
+            />
+        <Button 
+            android:id="@+id/bt_square_activity_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="5dp"
+            android:layout_centerVertical="true"
+            android:background="@drawable/bt_refresh_selector"
+            android:textColor="@android:color/black"
+            />
+    </RelativeLayout>
+
+</RelativeLayout>

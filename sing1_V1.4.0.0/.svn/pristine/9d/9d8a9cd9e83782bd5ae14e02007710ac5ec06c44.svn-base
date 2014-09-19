@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/third_title_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <!-- title -->
+
+        <TextView
+            android:id="@+id/third_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text=""
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/third_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/square_web_view_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@+id/third_title_rl"
+        android:background="#ededed" >
+
+        <cn.kuwo.sing.ui.compatibility.KuwoWebView
+            android:id="@+id/thirdlogin_web_view"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_third_login_progress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:background="@drawable/pb_background"
+        android:visibility="visible" >
+
+        <ProgressBar
+            android:id="@+id/pb_third_login_loading"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="40dip"
+            android:layout_height="40dip"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="10dp"
+            android:layout_marginTop="10dp"
+            android:indeterminate="false"
+            android:indeterminateDrawable="@anim/progress_bar_anim" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/pb_third_login_loading"
+            android:layout_centerHorizontal="true"
+            android:gravity="center_horizontal"
+            android:text="@string/kuwolistview_header_hint_loading"
+            android:textColor="@android:color/white" />
+    </RelativeLayout>
+
+</RelativeLayout>

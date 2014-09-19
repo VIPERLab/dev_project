@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical" >
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:orientation="vertical" >
+
+            <Button
+                android:id="@+id/btnStartRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="StartRecord" />
+
+            <Button
+                android:id="@+id/btnPauseRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PauseRecord" />
+
+            <Button
+                android:id="@+id/btnStopRecord"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="StopRecord" />
+
+            <Button
+                android:id="@+id/btnStartPlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="StartPlay" />
+
+            <Button
+                android:id="@+id/btnPausePlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="PausePlay" />
+
+            <Button
+                android:id="@+id/btnStopPlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="StopPlay" />
+
+            <Button
+                android:id="@+id/btnRecordWithPlay"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="RecordWithPlay" />
+
+            <Button
+                android:id="@+id/btnDecode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Decode" />
+
+            <Button
+                android:id="@+id/btnEncode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Encode" />
+
+            <Button
+                android:id="@+id/btnRev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Rev" />
+
+            <Button
+                android:id="@+id/btnMix"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Mix" />
+        </LinearLayout>
+
+    </ScrollView>
+</LinearLayout>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ededed" >
+
+    <TextView
+        android:id="@+id/setting_title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/top_rellayout_bg"
+        android:clickable="false"
+        android:gravity="center"
+        android:text="@string/setting_title"
+        android:textColor="#ffffff"
+        android:textSize="21dp" />
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/setting_title" >
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed" >
+
+            <RelativeLayout
+                android:id="@+id/setting_status_rl"
+                android:layout_width="fill_parent"
+                android:layout_height="203dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/input_bg"
+                android:gravity="center_vertical"
+                android:padding="0dp" >
+
+                <TextView
+                    android:id="@+id/setting_login_status"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_toLeftOf="@+id/setting_login_status_tip"
+                    android:clickable="true"
+                    android:singleLine="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/setting_status"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+
+                <TextView
+                    android:id="@+id/setting_login_status_tip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="50dp"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="30dp"
+                    android:layout_toLeftOf="@+id/iv_login_status_go"
+                    android:clickable="false"
+                    android:gravity="center"
+                    android:text="@string/setting_not_login"
+                    android:textColor="#0f72d8" />
+
+                <ImageView
+                    android:id="@+id/iv_login_status_go"
+                    android:layout_width="wrap_content"
+                    android:layout_height="fill_parent"
+                    android:layout_above="@+id/iv_setting_share"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="10dp"
+                    android:src="@drawable/item_go" />
+
+                <!-- 分割线 -->
+
+                <ImageView
+                    android:id="@+id/iv_setting_share"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1px"
+                    android:layout_below="@+id/setting_login_status"
+                    android:background="@drawable/input_every_bg_repeat" />
+
+                <TextView
+                    android:id="@+id/tv_setting_share"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/setting_login_status"
+                    android:clickable="true"
+                    android:drawableRight="@drawable/item_go"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="分享设置"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+
+                <ImageView
+                    android:id="@+id/iv_weibo_shares"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@+id/setting_login_status"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginRight="165dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/sina_weibo" />
+
+                <ImageView
+                    android:id="@+id/iv_qq_shares"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@+id/setting_login_status"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginRight="120dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/qq_zone" />
+                
+                <ImageView
+                    android:id="@+id/iv_renren_shares"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentRight="true"
+                    android:layout_below="@+id/setting_login_status"
+                    android:layout_marginBottom="20dp"
+                    android:layout_marginRight="75dp"
+                    android:layout_marginTop="10dp"
+                    android:src="@drawable/renren_bind" />
+
+                <ImageView
+                    android:id="@+id/setting_every_line1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1px"
+                    android:layout_below="@+id/tv_setting_share"
+                    android:background="@drawable/input_every_bg_repeat" />
+
+                <TextView
+                    android:id="@+id/setting_about"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/setting_every_line1"
+                    android:clickable="true"
+                    android:drawableRight="@drawable/item_go"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/setting_about"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+
+                <ImageView
+                    android:id="@+id/setting_every_line2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1px"
+                    android:layout_below="@id/setting_about"
+                    android:background="@drawable/input_every_bg_repeat" />
+
+                <TextView
+                    android:id="@+id/setting_feedback"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@id/setting_every_line2"
+                    android:clickable="true"
+                    android:drawableRight="@drawable/item_go"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/setting_feedback"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+            </RelativeLayout>
+        </RelativeLayout>
+    </ScrollView>
+
+</RelativeLayout>

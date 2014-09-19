@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ededed" >
+
+    <RelativeLayout
+        android:id="@+id/rl_top_song"
+        android:layout_width="fill_parent"
+        android:layout_height="46dp"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/top_rellayout_bg" >
+        
+       	<TextView
+            android:id="@+id/tv_song_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="点歌台"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+    </RelativeLayout>
+
+       	
+	<ScrollView
+          android:layout_width="fill_parent"
+          android:layout_height="wrap_content"
+          android:scrollbars="none" 
+          android:layout_below="@+id/rl_top_song" >
+              
+	          <RelativeLayout
+	           android:id="@+id/rl_song"
+	           android:layout_width="fill_parent"
+	           android:layout_height="wrap_content" >
+	           
+	           <RelativeLayout
+	               android:id="@+id/rl_song_search_input"
+	               android:layout_width="fill_parent"
+	               android:layout_height="45dip"
+	               android:layout_alignParentTop="true"
+	               android:background="@drawable/et_search" >
+	
+	               <TextView
+	                   android:id="@+id/et_song_search"
+	                   android:layout_width="fill_parent"
+	                   android:layout_height="fill_parent"
+	                   android:gravity="center_vertical"
+	                   android:paddingLeft="32dp"
+	                   android:paddingRight="28dp"
+	                   android:text="歌曲名/歌手名/简拼"
+	                   android:textColor="@android:color/darker_gray"
+	                   android:textSize="15sp" />
+	
+	               <Button
+	                   android:id="@+id/bt_song_search"
+	                   android:layout_width="wrap_content"
+	                   android:layout_height="wrap_content"
+	                   android:layout_alignParentRight="true"
+	                   android:layout_centerVertical="true"
+	                   android:layout_marginRight="16dp"
+	                   android:background="@drawable/bt_search" />
+	           </RelativeLayout>
+	
+	           <LinearLayout
+	               android:id="@+id/ll_song_navi"
+	               android:layout_width="fill_parent"
+	               android:layout_height="75dip"
+	               android:layout_below="@+id/rl_song_search_input"
+	               android:background="#ededed"
+	               android:orientation="horizontal" >
+	
+	               <Button
+	                   android:id="@+id/bt_free_sing"
+	                   android:layout_width="0dip"
+	                   android:layout_height="fill_parent"
+	                   android:layout_marginBottom="7dip"
+	                   android:layout_marginLeft="10dip"
+	                   android:layout_marginRight="5dip"
+	                   android:layout_marginTop="7dip"
+	                   android:layout_weight="1"
+	                   android:background="@drawable/button_free_sing_selector" />
+	
+	               <Button
+	                   android:id="@+id/bt_order_list"
+	                   android:layout_width="0dip"
+	                   android:layout_height="fill_parent"
+	                   android:layout_marginBottom="7dip"
+	                   android:layout_marginLeft="5dip"
+	                   android:layout_marginRight="10dip"
+	                   android:layout_marginTop="7dip"
+	                   android:layout_weight="1"
+	                   android:background="@drawable/button_singer_list_selector" />
+	           </LinearLayout>
+	           
+	           <LinearLayout
+	               android:id="@+id/ll_song_navi2"
+	               android:layout_width="fill_parent"
+	               android:layout_height="75dip"
+	               android:layout_below="@+id/ll_song_navi"
+	               android:background="#ededed"
+	               android:orientation="horizontal" >
+	
+	               <Button
+	                   android:id="@+id/bt_singer_list"
+	                   android:layout_width="0dip"
+	                   android:layout_height="fill_parent"
+	                   android:layout_marginBottom="7dip"
+	                   android:layout_marginLeft="10dip"
+	                   android:layout_marginRight="5dip"
+	                   android:layout_marginTop="7dip"
+	                   android:layout_weight="1"
+	                   android:background="@drawable/button_free_sing_selector" />
+	
+	               <Button
+	                   android:id="@+id/bt_record_list"
+	                   android:layout_width="0dip"
+	                   android:layout_height="fill_parent"
+	                   android:layout_marginBottom="7dip"
+	                   android:layout_marginLeft="5dip"
+	                   android:layout_marginRight="10dip"
+	                   android:layout_marginTop="7dip"
+	                   android:layout_weight="1"
+	                   android:background="@drawable/button_singer_list_selector" />
+	           </LinearLayout>
+	
+	           <ImageView
+	               android:id="@+id/iv_divider_line"
+	               android:layout_width="fill_parent"
+	               android:layout_height="1dip"
+	               android:layout_below="@+id/ll_song_navi2"
+	               android:background="@drawable/list_view_divider" />
+	
+	           <FrameLayout
+	               android:layout_width="fill_parent"
+	               android:layout_height="fill_parent"
+	               android:layout_below="@+id/iv_divider_line" >
+	
+	               <RelativeLayout
+	                   android:id="@+id/rl_song_no_network"
+	                   android:layout_width="fill_parent"
+	                   android:layout_height="fill_parent"
+	                   android:background="#ededed"
+	                   android:visibility="invisible" >
+	
+	                   <ImageView
+	                       android:id="@+id/iv_song_no_network"
+	                       android:layout_width="wrap_content"
+	                       android:layout_height="wrap_content"
+	                       android:layout_centerHorizontal="true"
+	                       android:layout_centerVertical="true"
+	                       android:src="@drawable/fail_network" />
+	               </RelativeLayout>
+	
+	               <cn.kuwo.sing.widget.HotBarGridView
+	                   android:id="@+id/gv_song"
+	                   android:layout_width="fill_parent"
+	                   android:layout_height="fill_parent"
+	                   android:cacheColorHint="#00000000"
+	                   android:numColumns="3"
+	                   android:divider="@drawable/list_view_divider"
+	                   android:dividerHeight="1dip" />
+	           </FrameLayout>
+	           
+	           
+	           <RelativeLayout
+		           android:id="@+id/rl_song_progress"
+		           android:layout_width="wrap_content"
+		           android:layout_height="wrap_content"
+		           android:layout_below="@+id/iv_divider_line"
+		           android:layout_centerHorizontal="true"
+		           android:background="@drawable/pb_background"
+		           android:visibility="invisible" >
+	
+		           <ProgressBar
+		               android:id="@+id/pb_song_loading"
+		               android:layout_width="40dip"
+		               android:layout_height="40dip"
+		               android:layout_centerHorizontal="true"
+		               android:layout_marginBottom="10dp"
+		               android:layout_marginTop="10dp"
+		               android:indeterminate="false"
+		               android:indeterminateDrawable="@anim/progress_bar_anim" />
+		
+		           <TextView
+		               android:layout_width="wrap_content"
+		               android:layout_height="wrap_content"
+		               android:layout_below="@+id/pb_song_loading"
+		               android:layout_centerHorizontal="true"
+		               android:gravity="center_horizontal"
+		               android:text="@string/kuwolistview_header_hint_loading"
+		               android:textColor="@android:color/white" />
+	       		</RelativeLayout>
+	       		
+	       </RelativeLayout>
+      </ScrollView>
+        
+</RelativeLayout>

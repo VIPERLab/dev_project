@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ededed" >
+
+    <RelativeLayout
+        android:id="@+id/local_edit_title_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <TextView
+            android:id="@+id/local_edit_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="@string/local_edit_data_title"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+        <!-- back -->
+
+        <Button
+            android:id="@+id/local_edit_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+
+        <!-- yes -->
+
+        <Button
+            android:id="@+id/local_edit_yes_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_sure_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <ScrollView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/local_edit_title_rl"  >
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed" >
+
+            <RelativeLayout
+                android:id="@+id/local_edit_status_rl"
+                android:layout_width="fill_parent"
+                android:layout_height="203dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
+                android:background="@drawable/input_bg"
+                android:gravity="center_vertical"
+                android:padding="0dp" >
+
+                <TextView
+                    android:id="@+id/local_edit_username"
+                    android:layout_width="110dip"
+                    android:layout_height="50dp"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/local_user_name"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+
+                <EditText
+                    android:id="@+id/et_local_username"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_toRightOf="@id/local_edit_username"
+                    android:background="@null"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:layout_marginRight="20dip"
+                    android:singleLine="true" />
+
+                <!-- 分割线 -->
+
+                <ImageView
+                    android:id="@+id/iv_local_edit"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1px"
+                    android:layout_below="@+id/local_edit_username"
+                    android:background="@drawable/input_every_bg_repeat" />
+
+                <TextView
+                    android:id="@+id/tv_local_edit_home"
+                    android:layout_width="110dip"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/local_edit_username"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/local_user_home"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+
+                <EditText
+                    android:id="@+id/et_local_home"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/local_edit_username"
+                    android:layout_toRightOf="@id/tv_local_edit_home"
+                    android:background="@null"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:layout_marginRight="20dip"
+                    android:singleLine="true" />
+
+                <ImageView
+                    android:id="@+id/local_edit_every_line1"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1px"
+                    android:layout_below="@+id/tv_local_edit_home"
+                    android:background="@drawable/input_every_bg_repeat" />
+
+                <TextView
+                    android:id="@+id/local_edit_live_place"
+                    android:layout_width="110dip"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/local_edit_every_line1"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/local_live_place"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+
+                <EditText
+                    android:id="@+id/et_local_live_place"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@+id/local_edit_every_line1"
+                    android:layout_toRightOf="@id/local_edit_live_place"
+                    android:background="@null"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:layout_marginRight="20dip"
+                    android:singleLine="true" />
+
+                <ImageView
+                    android:id="@+id/local_edit_every_line2"
+                    android:layout_width="fill_parent"
+                    android:layout_height="1px"
+                    android:layout_below="@id/local_edit_live_place"
+                    android:background="@drawable/input_every_bg_repeat" />
+
+                <TextView
+                    android:id="@+id/local_edit_birthday"
+                    android:layout_width="110dip"
+                    android:layout_height="50dp"
+                    android:layout_below="@id/local_edit_every_line2"
+                    android:clickable="true"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
+                    android:text="@string/local_user_birthday"
+                    android:textColor="#2b2b2b"
+                    android:textSize="19dp" />
+
+                <TextView
+                    android:id="@+id/tv_local_birthday"
+                    android:layout_width="fill_parent"
+                    android:layout_height="50dp"
+                    android:layout_below="@id/local_edit_every_line2"
+                    android:layout_toRightOf="@id/local_edit_birthday"
+                    android:gravity="center_vertical"
+                    android:paddingLeft="10dp"
+                    android:layout_marginRight="20dip"
+                    android:textColor="#2b2b2b"
+                    android:textSize="17dp" 
+                    android:singleLine="true" />
+                
+            </RelativeLayout>
+            
+            <TextView 
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/local_edit_status_rl"
+                android:layout_marginLeft="10dp"
+                android:layout_marginTop="5dp"
+                android:text="例如：1988-10-09"
+                android:textColor="@android:color/darker_gray"
+                />
+        </RelativeLayout>
+    </ScrollView>
+
+</RelativeLayout>

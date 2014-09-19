@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- app_name -->
+    <string name="app_name">酷我K歌</string>
+    
+    <string name="errcode_success">发送成功</string>
+	<string name="errcode_cancel">发送取消</string>
+	<string name="errcode_deny">发送被拒绝</string>
+	<string name="errcode_unknown">发送返回</string>
+
+    <!-- app btn -->
+    <string name="app_back_btn">返回</string>
+    <string name="app_send_btn">发送</string>
+    <string name="app_sure_btn">确定</string>
+    <string name="app_cancel_btn">取消</string>
+    <string name="yes">是</string>
+    <string name="no">否</string>
+    <string name="tab_square">广场</string>
+    <string name="tab_local">我的</string>
+
+    <!-- sdcard activity -->
+    <string name="do_not_have_sdcard">您的设备中没有存储卡</string>
+
+    <!-- song activity -->
+    <string name="song_top_songs">点歌台</string>
+    <string name="song_top_songs_order">已点歌曲</string>
+    <string name="song_top_songs_record">已录歌曲</string>
+    <string name="song_top_new_songs">新歌速递</string>
+    <string name="song_top_rank_songs">排名点歌</string>
+    <string name="song_top_singer_songs">歌手点歌</string>
+    <string name="ordered_songs_sing">演唱</string>
+    <string name="ordered_songs_delete">删除</string>
+
+    <!-- setting activity -->
+    <string name="setting_title">设置</string>
+    <string name="setting_status">注册登录</string>
+    <string name="setting_not_login">未登录</string>
+    <string name="setting_mark">求打分 , 求评价</string>
+    <string name="setting_about">关于酷我K歌</string>
+    <string name="setting_feedback">意见反馈</string>
+    <string name="setting_version">版本号 %s</string>
+    <string name="setting_clear">一键清除缓存</string>
+
+    <!-- local activity -->
+    <string name="local_top_attention">关注动态</string>
+    <string name="local_top_my_songs">我的主页</string>
+    <string name="local_top_msg">消息</string>
+    <string name="local_my_delete">删除</string>
+    <string name="local_my_share">分享</string>
+    <string name="local_my_post">上传</string>
+    <string name="local_edit_data_title">编辑资料</string>
+    <string name="local_user_name">用户昵称:</string>
+    <string name="local_user_home">家乡:</string>
+    <string name="local_live_place">现居地:</string>
+    <string name="local_user_birthday">生日:</string>
+    
+    <string name="kuwolistview_header_hint_normal">下拉刷新</string>
+    <string name="kuwolistview_header_hint_ready">松开刷新数据</string>
+    <string name="kuwolistview_header_hint_loading">正在加载中</string>
+    <string name="kuwolistview_header_last_time">上次更新时间：</string>
+    <string name="kuwolistview_footer_hint_normal">查看更多</string>
+    <string name="kuwolistview_footer_hint_ready">松开载入更多</string>
+
+    <!-- ordered activity -->
+    
+    <string name="ordered_songs_title">已点歌曲</string>
+    <string name="ordered_songs_go_modify">编辑</string>
+    <string name="ordered_songs_cancel_tip">您确定要取消此下载吗?</string>
+
+    <!-- leave_msg activity -->
+    <string name="local_main_leave_msg">写留言</string>
+
+    <!-- square activity -->
+    <string name="square_hot_songs">热门作品</string>
+    <string name="square_famous">K歌达人</string>
+
+    <!-- singers  activity -->
+    <string name="continent_famel_singers_title">大陆女歌手</string>
+    <string name="square_lattest_songs">最新作品</string>
+
+    <!-- search  activity -->
+    <string name="search_title">搜索</string>
+    <string name="search_clear">清空搜索历史</string>
+
+    <!-- activity -->
+    <string name="finish_info_title">完善资料</string>
+    <string name="finish_info_nickname">用户昵称: </string>
+    <string name="finish_info_sex">性别: </string>
+    <string name="finish_info_girl">女</string>
+    <string name="finish_info_boy">男</string>
+
+    <!-- login activity -->
+    <string name="login_title">登录</string>
+    <string name="logout_title">注销</string>
+    <string name="logout_dialog_title">提示</string>
+    <string name="logout_dialog_content">您确定要注销吗？</string>
+    <string name="bind_dialog_content">您确定要解除绑定吗？</string>
+    <string name="bind_sina_dialog_content">您的Sina账号还未绑定，是否立即绑定</string>
+    <string name="bind_qq_dialog_content">您的QQ账号还未绑定，是否立即绑定</string>
+    <string name="bind_renren_dialog_content">您的人人账号还未绑定，是否立即绑定</string>
+    <string name="share_setting_dialog_content">您还没有登录，请先登录！</string>
+    <string name="dialog_ok">确定</string>
+    <string name="dialog_cancel">取消</string>
+    <string name="login_dialog_tip">"您还没有登录，请先登录！"</string>
+    <string name="login_go_register">注册</string>
+    <string name="login_account">酷我账号: </string>
+    <string name="login_psw">酷我密码: </string>
+    <string name="login_account_hint">请输入酷我账号</string>
+    <string name="login_psw_hint">请输入密码</string>
+    <string name="login_rem_psw">记住密码</string>
+    <string name="login_btn">登录</string>
+    <string name="login_use_sina">用新浪微博登录</string>
+    <string name="login_use_qq">用QQ账号登录</string>
+    <string name="login_use_renren">用人人账号登录</string>
+
+    <!-- register activity -->
+    <string name="register_title">快速注册</string>
+    <string name="register_account">注册账号: </string>
+    <string name="register_account_hint">字母/数字/汉字2-20位</string>
+    <string name="register_psw_hint">长度6-16位</string>
+    <string name="register_psw">设定密码: </string>
+    <string name="register_display_psw">显示密码</string>
+    <string name="register_btn">注册</string>
+    <string name="register_use_sina">用新浪微博注册</string>
+    <string name="register_use_qq">用QQ账号注册</string>
+    <string name="register_use_renren">用人人账号注册</string>
+
+    <!-- modify activity -->
+    <string name="modify_title">修改资料</string>
+    <string name="modify_nickname">用户昵称: </string>
+    <string name="modify_sex">性别: </string>
+    <!-- <string name="modify_sex">性别( 设置后不可更改 ): </string> -->
+    <string name="modify_girl">女</string>
+    <string name="modify_boy">男</string>
+    <string name="modify_home">家乡: </string>
+    <string name="modify_location">现居地: </string>
+    <string name="modify_birthday">生日: </string>
+
+    <!-- feedback activity -->
+    <string name="feedback_title">意见反馈</string>
+    <string name="feedback_opinion_hint">请留下您的宝贵意见</string>
+    <string name="feedback_contact_tip">请留下您的联系方式</string>
+    <string name="feedback_contact_hint">QQ号/手机号/邮箱</string>
+
+    <!-- shared activity -->
+    <string name="shared_changed">更换账号</string>
+    <string name="shared_tip">还可以输入97个字</string>
+
+    <!-- sing activity -->
+    <string name="sing_record_status">正在录制</string>
+    <string name="sing_record_pause_status">暂停录制</string>
+    <string name="sing_review_status">正在播放</string>
+    <string name="sing_review_pause_status">暂停播放</string>
+    <string name="sing_single_score_text">单句得分: </string>
+    <string name="sing_total_score_text">综合得分: </string>
+    <string name="sing_single_score">分</string>
+    <string name="sing_single_score_wonderful">( 太棒了! )</string>
+    <string name="sing_single_score_great">( 看好你哦! )</string>
+    <string name="sing_single_score_cheer">( 加油加油! )</string>
+    <string name="sing_single_score_strive">( 要努力啊! )</string>
+    <string name="sing_single_score_poor">( 雷死了! )</string>
+    <string name="sing_original_tip">原唱试听</string>
+    <string name="sing_exit_tip">离开将不能保存录音，确定要离开吗？</string>
+
+    <!-- post_processed activity -->
+
+    <string name="post_processed_sharedto">分享到: </string>
+    <string name="post_processed_score_title">演唱得分: </string>
+    <string name="post_processed_score">分</string>
+    <string name="post_processed_beat_title">击败了全国</string>
+    <string name="post_processed_beat">%的K友</string>
+    <string name="post_processed_save_tip">为你的作品起个名字吧</string>
+    <string name="post_processed_dialog_tip">选取图片</string>
+    <string name="post_processed_dialog_fight">音乐路上需要你不断努力</string>
+
+    <!-- shared activity -->
+    <string name="shared_use_sina_title">新浪微博</string>
+    <string name="shared_use_sina_account">账号: </string>
+    <string name="shared_use_sina_psw">密码: </string>
+    <string name="shared_use_sina_ok">确  定</string>
+
+    <!-- third activity -->
+    <string name="third_contact_tip">账号:</string>
+    <string name="third_psw_tip">密码:</string>
+    <string name="third_title_qzone">QQ空间</string>
+    <string name="third_title_sina">新浪微博</string>
+    <string name="third_title_renren">人人网</string>
+    <string name="third_title_qq">腾讯微博</string>
+    <string name="third_title_weixin">微信</string>
+
+    <!-- about activity -->
+    <string name="about_content">北京酷我科技有限公司 版权所有\nCopyright ©2005-2013 Kuwo All Rights Reserved\n\n申明：\n此版本适用于Android系列设备，如在其他品牌或型号的设备上使用本软件，对于出现的任何问题，酷我公司不承担责任。本软件的下载、安装完全免费，使用过程中产生的数据流量费用，由运营商收取。\n\n服务地区限制说明：\n非常抱歉，由于版权限制，当您在中国大陆以外地区使用酷我K歌时，将无法使用在线K歌服务，非常感谢您的理解。\n\n客服QQ： 1957669424\n"                   "客服QQ群：14964800\n客服邮箱：kge@kuwo.cn\n客服热线：（010）82600255\n新浪微博：<a herf="http://e.weibo.com/kuwokge">@酷我K歌官方微博</a>\n官方网址：<a href="http://k.kuwo.cn">http://k.kuwo.cn</a>\n商务合作：markerbd@kuwo.cn</string>
+    <string name="about_title">关于酷我K歌</string>
+    <string name="about_app_name">酷我K歌</string>
+    <string name="about_app_version">当前版本: 1.4.0.0</string>
+    <string name="about_app_tip">(For Android2.1 及以上固件)</string>
+    <string name="player_duration">00:00</string>
+
+    <!-- play activity -->
+    <string name="play_name_loading">正在缓冲...</string>
+    <string name="live_title">直播间</string>
+    <string name="load_data_fail">获取数据失败！</string>
+    <string name="refresh_down_text">下拉可刷新</string>
+	<string name="refresh_release_text">松开可刷新</string>
+	<string name="toast_text">ScrollView下拉刷新完毕</string>
+	
+	<string name="pull_to_refresh_pull_label">下拉刷新</string>
+    <string name="pull_to_refresh_release_label">松开后刷新</string>
+    <string name="pull_to_refresh_refreshing_label">刷新...</string>
+    
+    <string name="pull_to_refresh_footer_release_label">松开后加载</string>
+    <string name="pull_to_refresh_footer_pull_label">上拉加载更多</string>
+    <string name="pull_to_refresh_footer_refreshing_label">加载中...</string>
+
+</resources>

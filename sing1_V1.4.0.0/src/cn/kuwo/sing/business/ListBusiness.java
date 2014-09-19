@@ -1,0 +1,273 @@
+package cn.kuwo.sing.business;
+
+import java.io.IOException;
+import java.util.List;
+
+import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+
+import com.loopj.android.http.AsyncHttpClient;
+import com.loopj.android.http.RequestParams;
+
+import cn.kuwo.framework.cache.CacheManager;
+import cn.kuwo.framework.context.AppContext;
+import cn.kuwo.framework.log.KuwoLog;
+import cn.kuwo.sing.bean.MTV;
+import cn.kuwo.sing.util.DefaultAsyncHttpResponseHandler;
+import cn.kuwo.sing.util.PageDataHandler;
+
+public class ListBusiness {
+	private static final String LOG_TAG = "ListBusiness";
+
+	private static final String CLIENT_VERSION_PREFIX = "kwsing_android_";
+	
+	private static final String SQUARE_HOT_SONG = "SQUARE_HOT_SONG";
+	private static final String SQUARE_SUPER_STAR = "SQUARE_SUPER_STAR";
+	private static final String SQUARE_LATTEST_SONG = "SQUARE_LATTEST_SONG";
+
+	private static final String URL_SQUARE = "http://changba.kuwo.cn/kge/mobile/Plaza";
+	private static final String URL_SQUARE_TOP = "http://changba.kuwo.cn/kge/mobile/PlazaTest";
+	
+	private static final long CACHE_TIME_DAY = 1000 * 60 * 60 * 24L;
+	private static final long CACHE_TIME_HOUR = 1000 * 60 * 60L;
+	private static final long CACHE_TIME_MINUTE = 1000 * 60L;
+	
+	boolean bUseCache = false;
+	
+	/**
+	 * 获取缓存关键字
+	 * @param innerName 各功能内部名
+	 * @param page 页数
+	 * @param type 类型（可省略）
+	 * @return
+	 */
+	private String genMemInnerName(String innerName,String type, int page){
+		if(innerName == null || innerName.length() <=0){
+			return "";
+		}
+		if(type == null || type.equals("")){
+			return innerName + "_" + page;
+		} else {
+			return innerName + "_" + type + "_" + page;
+		}
+	}
+	/**
+	 * 获取缓存关键字
+	 * @param innerName 各功能内部名
+	 * @param page 类型（可省略）
+	 * @return
+	 */
+	private String genMemInnerName(String innerName,int page){
+		return genMemInnerName(innerName, null, page);
+	}
+	
+	public int getSquareHotTopSong(final PageDataHandler<MTV> handler){
+		//构建参数
+		RequestParams params = new RequestParams();
+		params.put("t", "top");
+		params.put("version", CLIENT_VERSION_PREFIX+getAppVersionName(AppContext.context));
+		
+		String json = "";
+		final String memCacheKey = genMemInnerName(SQUARE_HOT_SONG, "Square_Top", 1);
+		if(CacheManager.checkCache(memCacheKey, CACHE_TIME_HOUR) && bUseCache){ //先从内存中获得.
+			//读缓存
+			handler.onStart();
+			try {
+				json = CacheManager.loadString(memCacheKey, CACHE_TIME_HOUR);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			handler.onFinish();
+			if(json != null && json.length() > 0){
+				if(json != null)
+					handler.onSuccess(json);
+				else 
+					handler.onFailure();
+			}
+		} else {
+			//网络请求
+			AsyncHttpClient client = new AsyncHttpClient();
+			//client.get(URL_SQUARE, params, new DefaultAsyncHttpResponseHandler(handler)
+			client.get(URL_SQUARE_TOP, params, new DefaultAsyncHttpResponseHandler(handler){
+				@Override
+				public void onSuccess(String content) {
+					if(content != null){
+						CacheManager.cacheString(memCacheKey, content);
+						handler.onSuccess(content);
+					} else {
+						handler.onFailure();
+					}
+				}
+			});
+		}
+		return 0;
+	}
+	
+	//获取广场的热门作品
+	public int getSquareHotSong(final int page, final int size, final PageDataHandler<MTV> handler){
+		//构建参数
+		RequestParams params = new RequestParams();
+		params.put("t", "hot");
+		params.put("pn", String.valueOf(page));
+		params.put("rn", String.valueOf(size));
+		params.put("version", CLIENT_VERSION_PREFIX+getAppVersionName(AppContext.context));
+		
+		String json = "";
+		final String memCacheKey = genMemInnerName(SQUARE_HOT_SONG, String.valueOf(page), 1);
+		if(CacheManager.checkCache(memCacheKey, CACHE_TIME_HOUR) && bUseCache){ //先从内存中获得.
+			//读缓存
+			handler.onStart();
+			try {
+				json = CacheManager.loadString(memCacheKey, CACHE_TIME_HOUR);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			handler.onFinish();
+			if(json != null && json.length() > 0){
+				ListParser listParser = new ListParser();
+				List<MTV> data = listParser.parseSquareHotSong(page, size, json);
+				if(data != null)
+					handler.onSuccess(data);
+				else 
+					handler.onFailure();
+			}
+		} else {
+			//网络请求
+			AsyncHttpClient client = new AsyncHttpClient();
+			//client.get(URL_SQUARE, params, new DefaultAsyncHttpResponseHandler(handler)
+			client.get(URL_SQUARE_TOP, params, new DefaultAsyncHttpResponseHandler(handler){
+				@Override
+				public void onSuccess(String content) {
+					KuwoLog.d(LOG_TAG, content);
+					ListParser listParser = new ListParser();
+					List<MTV> data = listParser.parseSquareHotSong(page, size, content);
+					if(data != null){
+						CacheManager.cacheString(memCacheKey, content);
+						handler.onSuccess(data);
+					} else {
+						handler.onFailure();
+					}
+				}
+			});
+		}
+		return 0;
+	}
+	
+	
+	//获取广场的K歌达人
+	public int getSquareSuperStar(final int page, final int size, final PageDataHandler<MTV> handler){
+		RequestParams params = new RequestParams();
+		params.put("t", "superstar");
+		params.put("pn", String.valueOf(page));
+		params.put("rn", String.valueOf(size));
+		
+		String json = "";
+		final String memCacheKey = genMemInnerName(SQUARE_SUPER_STAR, String.valueOf(page), 1);
+		if(CacheManager.checkCache(memCacheKey, CACHE_TIME_HOUR) && bUseCache){ 
+			//读缓存
+			handler.onStart();
+			try {
+				json = CacheManager.loadString(memCacheKey, CACHE_TIME_HOUR);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			handler.onFinish();
+			if(json != null && json.length() > 0){
+				ListParser listParser = new ListParser();
+				List<MTV> data = listParser.parseSquareSuperStar(page, size, json);
+				if(data != null)
+					handler.onSuccess(data);
+				else 
+					handler.onFailure();
+			}
+		} else {
+			//网络请求
+			AsyncHttpClient client = new AsyncHttpClient();
+			client.get(URL_SQUARE, params, new DefaultAsyncHttpResponseHandler(handler){
+				@Override
+				public void onSuccess(String content) {
+					KuwoLog.d(LOG_TAG, content);
+					ListParser listParser = new ListParser();
+					List<MTV> data = listParser.parseSquareSuperStar(page, size, content);
+					if(data != null){
+						handler.onSuccess(data);
+						CacheManager.cacheString(memCacheKey, content);
+					} else {
+						handler.onFailure();
+					}
+				}
+			});
+		}
+		return 0;
+	}
+		
+		
+		//获取广场的最新作品
+	public int getSquareLattestSong(int page, int size, final PageDataHandler<MTV> handler){
+		RequestParams params = new RequestParams();
+		params.put("t", "new");
+		params.put("pn", String.valueOf(page));
+		params.put("rn", String.valueOf(size));
+		params.put("version", CLIENT_VERSION_PREFIX+getAppVersionName(AppContext.context));
+		
+		String json = "";
+		final String memCacheKey = genMemInnerName(SQUARE_LATTEST_SONG, String.valueOf(page), 1);
+		if(CacheManager.checkCache(memCacheKey, CACHE_TIME_MINUTE) && bUseCache){ 
+			//读缓存
+			handler.onStart();
+			try {
+				json = CacheManager.loadString(memCacheKey, CACHE_TIME_MINUTE);
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			handler.onFinish();
+			if(json != null && json.length() > 0){
+				ListParser listParser = new ListParser();
+				List<MTV> data = listParser.parseSquareLattestSong(json);
+				if(data != null)
+					handler.onSuccess(data);
+				else 
+					handler.onFailure();
+			}
+		} else {
+			//网络请求
+			AsyncHttpClient client = new AsyncHttpClient();
+			client.get(URL_SQUARE, params, new DefaultAsyncHttpResponseHandler(handler){
+				@Override
+				public void onSuccess(String content) {
+					KuwoLog.d(LOG_TAG, content);
+					ListParser listParser = new ListParser();
+					List<MTV> data = listParser.parseSquareLattestSong(content);
+					if(data != null){
+						CacheManager.cacheString(memCacheKey, content);
+						handler.onSuccess(data);
+					} else {
+						handler.onFailure();
+					}
+				}
+			});
+		}
+		return 0;
+	}
+	
+	/** 
+	 * 返回当前程序版本名 
+	 */  
+	public String getAppVersionName(Context context) {  
+	    String versionName = "";  
+	    try {  
+	        // ---get the package info---  
+	        PackageManager pm = context.getPackageManager();  
+	        PackageInfo pi = pm.getPackageInfo(context.getPackageName(), 0);  
+	        versionName = pi.versionName;  
+	        if (versionName == null || versionName.length() <= 0) {  
+	            return "";  
+	        }  
+	    } catch (Exception e) {  
+	        KuwoLog.printStackTrace(e);  
+	    }  
+	    return versionName;  
+	}  
+	
+}

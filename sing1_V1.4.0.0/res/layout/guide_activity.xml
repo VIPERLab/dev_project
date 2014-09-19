@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/cn.kuwo.sing"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+    
+    <cn.kuwo.sing.widget.ViewFlow
+        android:id="@+id/vf_guide"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent" />
+
+    <!-- <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" 
+        android:layout_gravity="center_horizontal">
+
+        <cn.kuwo.sing.widget.CircleFlowIndicator
+            android:id="@+id/cfi_guide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="10dip"
+            app:activeColor="#1AE6E6"
+            app:inactiveColor="#FFFFFF"
+            app:inactiveType="fill"
+            app:radius="5dip" />
+    </LinearLayout> -->
+
+</FrameLayout>

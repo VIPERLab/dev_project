@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/continent_famel_singers_title_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true" >
+
+            <!-- title -->
+
+            <TextView
+                android:id="@+id/continent_famel_singers_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:clickable="false"
+                android:gravity="center"
+                android:text="@string/continent_famel_singers_title"
+                android:textColor="#ffffff"
+                android:textSize="21dp" />
+
+            <TextView
+                android:id="@+id/continent_famel_singers_total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/continent_famel_singers_title"
+                android:layout_toRightOf="@id/continent_famel_singers_title"
+                android:clickable="false"
+                android:gravity="center"
+                android:text="12345首"
+                android:textColor="#ffffff"
+                android:textSize="14dp" />
+        </RelativeLayout>
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/continent_famel_singers_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+
+        <!--  -->
+
+        <ImageView
+            android:id="@+id/continent_famel_singers_leave_msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:src="@drawable/song_top_selected_btn_selector" />
+    </RelativeLayout>
+
+    <!-- 主页内容 -->
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/continent_famel_singers_title_rl"
+        android:background="#ededed" >
+
+        <cn.kuwo.sing.ui.compatibility.KuwoWebView
+            android:id="@+id/continent_famel_singers_web_view"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@null" />
+    </RelativeLayout>
+
+</RelativeLayout>

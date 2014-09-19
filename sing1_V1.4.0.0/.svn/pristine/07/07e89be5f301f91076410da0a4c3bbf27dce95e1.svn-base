@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+     >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/shared_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/shared_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+
+        <!-- modify_ok -->
+
+        <Button
+            android:id="@+id/shared_changed"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:text="@string/shared_changed"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <!-- modify input -->
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/shared_rl"
+        android:background="#ededed" >
+
+        <EditText
+            android:id="@+id/shared_description"
+            android:layout_width="fill_parent"
+            android:layout_height="119dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/feedback_input_bg"
+            android:gravity="top"
+            android:singleLine="false"
+            android:textColorHint="#aaaaaa"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/shared_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/shared_description"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/shared_tip"
+            android:textColor="#ffffff"
+            android:textSize="15dp" />
+    </RelativeLayout>
+
+</RelativeLayout>

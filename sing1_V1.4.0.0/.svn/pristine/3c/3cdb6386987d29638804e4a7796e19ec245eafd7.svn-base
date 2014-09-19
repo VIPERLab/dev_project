@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="80dp" >
+
+    <ImageView
+        android:id="@+id/iv_hot_singer_list_item"
+        android:layout_width="75dip"
+        android:layout_height="75dip"
+        android:layout_alignParentLeft="true"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="5dip"
+        android:gravity="center_vertical" />
+
+    <TextView
+        android:id="@+id/tv_hot_singer_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_margin="8dip"
+        android:layout_toRightOf="@+id/iv_hot_singer_list_item"
+        android:gravity="center_vertical"
+        android:paddingBottom="8dip"
+        android:paddingTop="8dip"
+        android:singleLine="true"
+        android:text="王力宏"
+        android:textSize="16sp"
+        android:textColor="@android:color/black" />
+    
+    <TextView
+        android:id="@+id/tv_hot_singer_songs_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/iv_hot_singer_list_item"
+        android:layout_below="@+id/tv_hot_singer_name"
+        android:layout_marginLeft="8dip"
+        android:text="109首"
+        android:textSize="14sp"
+        android:textColor="@android:color/darker_gray" />
+
+    <ImageView
+        android:id="@+id/iv_hot_singer_list_item_go"
+        android:layout_width="15dip"
+        android:layout_height="15dip"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="8dip"
+        android:src="@drawable/item_go" />
+
+</RelativeLayout>

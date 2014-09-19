@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/post_processed_dialog_bg"
+    android:gravity="center_horizontal"
+    android:orientation="vertical" >
+
+    <!-- title -->
+
+    <TextView
+        android:id="@+id/post_processed_dialog_tip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:layout_weight="1"
+        android:gravity="center"
+        android:text="@string/post_processed_dialog_tip"
+        android:textColor="#ffffff"
+        android:textSize="16dp" />
+
+    <!-- 本地上传 -->
+
+    <Button
+        android:id="@+id/post_processed_local_btn"
+        android:layout_width="279dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="11dp"
+        android:layout_weight="1"
+        android:background="@drawable/post_processed_capture_btn"
+        android:text="上传相册图片"
+        android:textColor="#000000"
+        android:textSize="18dp" />
+
+    <!-- 拍照 -->
+
+    <Button
+        android:id="@+id/post_processed_capture_btn"
+        android:layout_width="279dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_weight="1"
+        android:background="@drawable/post_processed_capture_btn"
+        android:text="立即拍照"
+        android:textColor="#000000"
+        android:textSize="18dp" />
+
+    <!-- 取消 -->
+
+    <Button
+        android:id="@+id/post_processed_cancle_btn"
+        android:layout_width="279dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="21dp"
+        android:layout_marginTop="21dp"
+        android:layout_weight="1"
+        android:background="@drawable/post_processed_cancle_btn"
+        android:text="取消"
+        android:textColor="#ffffff"
+        android:textSize="18dp" />
+
+</LinearLayout>

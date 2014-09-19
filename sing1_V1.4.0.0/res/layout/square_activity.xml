@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+<!--     <RelativeLayout
+        android:id="@+id/square_top_rellayout"
+        android:layout_width="fill_parent"
+        android:layout_height="46dp"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/top_rellayout_bg"
+        android:orientation="horizontal" >
+
+        <LinearLayout
+            android:id="@+id/square_top_btns_bg"
+            android:layout_width="wrap_content"
+            android:layout_height="35dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/song_top_btns_bg"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:padding="3dp" >
+
+            <TextView
+                android:id="@+id/square_hot_songs"
+                android:layout_width="wrap_content"
+                android:layout_height="29dp"
+                android:layout_weight="1"
+                android:background="@drawable/song_top_new_songs_selector"
+                android:clickable="true"
+                android:gravity="center"
+                android:text="@string/square_hot_songs"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+
+            <TextView
+                android:id="@+id/square_famous"
+                android:layout_width="wrap_content"
+                android:layout_height="29dp"
+                android:layout_weight="1"
+                android:background="@drawable/song_top_singer_songs_selector"
+                android:clickable="true"
+                android:gravity="center"
+                android:text="@string/square_famous"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+
+            <TextView
+                android:id="@+id/square_lattest_songs"
+                android:layout_width="wrap_content"
+                android:layout_height="29dp"
+                android:layout_weight="1"
+                android:background="@drawable/song_top_rank_songs_selector"
+                android:clickable="true"
+                android:gravity="center"
+                android:text="@string/square_lattest_songs"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+        </LinearLayout>
+    </RelativeLayout> -->
+
+<!--     <RelativeLayout
+        android:id="@+id/rl_square_container"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_alignParentBottom="true">
+			
+        <FrameLayout 
+            android:id="@+id/fl_square_container"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed" >
+        </FrameLayout>
+    </RelativeLayout> -->
+
+    <!-- shadow -->
+    
+    <RelativeLayout
+        android:id="@+id/square_top_rellayout"
+        android:layout_width="fill_parent"
+        android:layout_height="46dp"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/top_rellayout_bg"
+        android:orientation="horizontal" >
+        
+        <TextView
+            android:id="@+id/tv_square_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="广场"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+        
+    </RelativeLayout>
+    
+    <cn.kuwo.sing.widget.PagerSlidingTabStrip
+        android:id="@+id/pagerSlidingTabStrip"
+        android:layout_width="fill_parent"
+        android:layout_height="@dimen/pagerSlidingTabStrip_height"
+        android:background="@drawable/background_tabs"
+        pstsDividerColor="#dbd8ce"
+        pstsIndicatorHeight="2dp"
+        pstsDividerPadding="0dp"
+        pstsTabPaddingLeftRight="2dp"
+        pstsTabBackground="#f7f7f6"
+        android:layout_below="@+id/square_top_rellayout"
+         />
+    
+    <android.support.v4.view.ViewPager
+        android:id="@+id/viewPager"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/pagerSlidingTabStrip" />
+
+</RelativeLayout>

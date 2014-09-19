@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<changelog>
+    <release version="2.3.0.0 (2014-4-14)" versioncode="2300">
+		<change>支持手机点歌，您可以从更多中下载TV助手</change>
+		<change>支持硬解码和软解码的切换</change>
+    </release>
+</changelog>

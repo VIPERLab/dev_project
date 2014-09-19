@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/flUserHome"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <com.handmark.pulltorefresh.library.PullToRefreshListView
+        android:id="@+id/lvUserHome"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="#ededed"
+        android:cacheColorHint="#00000000"
+        android:divider="@drawable/list_view_divider"
+        android:dividerHeight="1dip"
+        android:scrollbars="none" />
+
+    <LinearLayout
+        android:id="@+id/llUserHomeDeletePrompt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="80dp"
+        android:background="@android:color/black"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="8dp" >
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:paddingLeft="7dp"
+            android:text="长按作品可以删除哦"
+            android:textColor="@android:color/white"
+            android:textSize="18sp" />
+
+        <Button
+            android:id="@+id/btMyHomeDeletePrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="5dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:padding="5dp"
+            android:text="知道了"
+            android:textColor="@android:color/white"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+</FrameLayout>

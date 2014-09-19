@@ -1,0 +1,1364 @@
+/**
+ * Copyright (c) 2005, Kuwo, Inc. All rights reserved. 
+ */
+package cn.kuwo.sing.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.SocketException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.os.Handler;
+import android.os.Message;
+import android.text.TextUtils;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.Button;
+import android.widget.GridView;
+import android.widget.ImageView;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+import cn.kuwo.framework.context.AppContext;
+import cn.kuwo.framework.dir.DirectoryManager;
+import cn.kuwo.framework.log.KuwoLog;
+import cn.kuwo.sing.R;
+import cn.kuwo.sing.bean.Kge;
+import cn.kuwo.sing.bean.Music;
+import cn.kuwo.sing.business.MTVBusiness;
+import cn.kuwo.sing.business.MusicBusiness;
+import cn.kuwo.sing.context.Config;
+import cn.kuwo.sing.context.Constants;
+import cn.kuwo.sing.context.DirContext;
+import cn.kuwo.sing.db.KgeDao;
+import cn.kuwo.sing.db.MusicDao;
+import cn.kuwo.sing.logic.DownloadLogic;
+import cn.kuwo.sing.logic.FileLogic;
+import cn.kuwo.sing.logic.MusicListLogic;
+import cn.kuwo.sing.ui.activities.BaseActivity;
+import cn.kuwo.sing.ui.activities.LoginActivity;
+import cn.kuwo.sing.ui.activities.OrderListActivity;
+import cn.kuwo.sing.ui.activities.PlayActivity;
+import cn.kuwo.sing.ui.activities.RecordListActivity;
+import cn.kuwo.sing.ui.activities.SearchActivity;
+import cn.kuwo.sing.ui.activities.ShareActivity;
+import cn.kuwo.sing.ui.activities.SingActivity;
+import cn.kuwo.sing.ui.activities.SingerListActivity;
+import cn.kuwo.sing.ui.activities.SongSubListActivity;
+import cn.kuwo.sing.ui.compatibility.ProgressButtonView;
+import cn.kuwo.sing.util.DialogUtils;
+import cn.kuwo.sing.util.lyric.Lyric;
+
+import com.nostra13.universalimageloader.core.DisplayImageOptions;
+import com.nostra13.universalimageloader.core.ImageLoader;
+import com.nostra13.universalimageloader.core.assist.ImageLoadingListener;
+import com.nostra13.universalimageloader.core.assist.ImageScaleType;
+import com.nostra13.universalimageloader.core.assist.PauseOnScrollListener;
+import com.nostra13.universalimageloader.core.assist.SimpleImageLoadingListener;
+import com.nostra13.universalimageloader.core.display.FadeInBitmapDisplayer;
+import com.nostra13.universalimageloader.core.display.SimpleBitmapDisplayer;
+import com.umeng.analytics.MobclickAgent;
+
+/**
+ * @Package cn.kuwo.sing.controller 点歌台
+ * 
+ * @Date 2012-11-1, 下午12:23:22, 2012
+ * 
+ * @Author wangming
+ * 
+ */
+public class SongController extends BaseController {
+	private final String TAG = "SongController";
+	private BaseActivity mActivity;
+//	private TextView songTV;
+//	private TextView orderSongTV;
+//	private TextView recordSongTV;
+	private RelativeLayout rl_song_container;
+	private TextView et_song_search;
+	private Button bt_song_search;
+	private Button bt_free_sing;
+	private Button bt_singer_list;
+	private Button bt_order_list;
+	private Button bt_record_list;
+	private RelativeLayout rl_song;
+	private RelativeLayout rl_song_order;
+	private RelativeLayout rl_song_record;
+	//private ListView lv_song;
+	private GridView gv_song;
+	private ListView lv_song_order;
+	private ListView lv_song_record;
+	private RelativeLayout rl_song_progress;
+	private DownloadLogic downloadLogic;
+	private List<Music> totalOrderList = new ArrayList<Music>();
+	private List<Kge> totalRecordList = new ArrayList<Kge>();
+	private OrderListAdapter orderAdapter;
+	private RecordListAdapter recordAdapter;
+	private TextView tv_song_order_empty;
+	private TextView tv_song_record_empty;
+	private RelativeLayout rl_song_no_network;
+	private int imageWidth;
+	private int imageHeight;
+	private DisplayImageOptions options;
+	private ImageLoader mImageLoader;
+	private ImageView iv_song_no_network;
+	private boolean isOrderListFirstClick = true;
+
+	public SongController(BaseActivity activity, ImageLoader imageLoader) {
+		KuwoLog.i(TAG, "SongController");
+		mActivity = activity;
+		mImageLoader = imageLoader;
+		options = new DisplayImageOptions.Builder()
+		.showStubImage(R.drawable.image_loading_small)
+		.showImageForEmptyUri(R.drawable.image_loading_small)
+		.showImageOnFail(R.drawable.image_loading_small)
+		.cacheInMemory()
+		.cacheOnDisc()
+        .imageScaleType(ImageScaleType.IN_SAMPLE_POWER_OF_2) // default
+        .bitmapConfig(Bitmap.Config.ARGB_8888) // default
+		.displayer(new SimpleBitmapDisplayer())
+		.build();
+
+		imageWidth = mActivity.getWindowManager().getDefaultDisplay().getWidth()/4;
+		imageHeight = mActivity.getWindowManager().getDefaultDisplay().getWidth()/4;
+		initView();
+		downloadLogic = new DownloadLogic(mActivity);
+	}
+
+	private void initView() {
+//		songTV = (TextView) mActivity.findViewById(R.id.song_top_songs);
+//		songTV.setOnClickListener(mOnClickListener);
+//
+//		orderSongTV = (TextView) mActivity.findViewById(R.id.song_top_songs_order);
+//		orderSongTV.setOnClickListener(mOnClickListener);
+//
+//		recordSongTV = (TextView) mActivity.findViewById(R.id.song_top_songs_record);
+//		recordSongTV.setOnClickListener(mOnClickListener);
+
+		rl_song_progress = (RelativeLayout) mActivity.findViewById(R.id.rl_song_progress);
+
+		// =========================点歌台==========================================================
+		rl_song = (RelativeLayout) mActivity.findViewById(R.id.rl_song);
+		et_song_search = (TextView) mActivity.findViewById(R.id.et_song_search);
+		et_song_search.setOnClickListener(mOnClickListener);
+		bt_free_sing = (Button) mActivity.findViewById(R.id.bt_free_sing);
+		bt_free_sing.setOnClickListener(mOnClickListener);
+		bt_singer_list = (Button) mActivity.findViewById(R.id.bt_singer_list);
+		bt_singer_list.setOnClickListener(mOnClickListener);
+		bt_order_list = (Button) mActivity.findViewById(R.id.bt_order_list);
+		bt_order_list.setOnClickListener(mOnClickListener);
+		bt_record_list = (Button) mActivity.findViewById(R.id.bt_record_list);
+		bt_record_list.setOnClickListener(mOnClickListener);
+		gv_song = (GridView) mActivity.findViewById(R.id.gv_song);
+		gv_song.setOnScrollListener(new PauseOnScrollListener(mImageLoader, false, true));
+		rl_song_no_network = (RelativeLayout) mActivity.findViewById(R.id.rl_song_no_network);
+		iv_song_no_network = (ImageView) mActivity.findViewById(R.id.iv_song_no_network);
+		rl_song_no_network.setVisibility(View.INVISIBLE);
+		rl_song_no_network.setOnClickListener(new OnClickListener() {
+			
+			@Override
+			public void onClick(View v) {
+				loadSongView();
+			}
+		});
+		
+		// =========================已点歌曲=======================================================
+		rl_song_order = (RelativeLayout) mActivity.findViewById(R.id.rl_song_order);
+		lv_song_order = (ListView) mActivity.findViewById(R.id.lv_song_order);
+		tv_song_order_empty = (TextView) mActivity.findViewById(R.id.tv_song_order_empty);
+		
+		// =========================已录歌曲=======================================================
+		rl_song_record = (RelativeLayout) mActivity.findViewById(R.id.rl_song_record);
+		lv_song_record = (ListView) mActivity.findViewById(R.id.lv_song_record);
+		tv_song_record_empty = (TextView) mActivity.findViewById(R.id.tv_song_record_empty);
+		orderAdapter  = new OrderListAdapter(totalOrderList);
+		recordAdapter = new RecordListAdapter(totalRecordList);
+
+//		songTV.performClick();
+		loadSongView();
+	}
+	
+	public void clearDisplayedImages() {
+		AnimateFirstDisplayListener.displayedImages.clear();
+	}
+	
+	private Handler hotMusicHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case 0:
+				final List<Music> result = (List<Music>) msg.obj;
+				KuwoLog.i(TAG, "load music 列表线程。完成。。");
+				rl_song_progress.setVisibility(View.INVISIBLE);
+				if (result != null) {
+					MobclickAgent.onEvent(mActivity, "KS_DOWN_SONGLIST","1");
+					HotMusicAdapter adapter = new HotMusicAdapter(result, gv_song);
+					gv_song.setAdapter(adapter);
+					gv_song.setOnItemClickListener(new OnItemClickListener() {
+
+						@Override
+						public void onItemClick(AdapterView<?> parent, View view,
+								int position, long id) {
+							Music music = result.get(position);
+							Intent loadSubIntent = new Intent(mActivity, SongSubListActivity.class);
+							loadSubIntent.putExtra("flag", "subSongList");
+							loadSubIntent.putExtra("subTitle", music.getName());
+							loadSubIntent.putExtra("listID", music.getId());
+							mActivity.startActivity(loadSubIntent);
+
+						}
+					});
+				} else {
+					MobclickAgent.onEvent(mActivity, "KS_DOWN_SONGLIST","0");
+					Toast.makeText(mActivity, "网络不通，请稍后再试", 0).show();
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+		
+	};
+
+	public void loadSongView() {
+//		songTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+		rl_song.setVisibility(View.VISIBLE);
+		gv_song.setVisibility(View.VISIBLE);
+		rl_song_no_network.setVisibility(View.INVISIBLE);
+		rl_song_order.setVisibility(View.INVISIBLE);
+		rl_song_record.setVisibility(View.INVISIBLE);
+		
+		final List<Music> hotList = getHotListFromCache();
+		if(hotList != null) {
+			HotMusicAdapter adapter = new HotMusicAdapter(hotList, gv_song);
+			gv_song.setAdapter(adapter);
+			gv_song.setOnItemClickListener(new OnItemClickListener() {
+
+				@Override
+				public void onItemClick(AdapterView<?> parent, View view,
+						int position, long id) {
+					Music music = hotList.get(position);
+					Intent loadSubIntent = new Intent(mActivity, SongSubListActivity.class);
+					loadSubIntent.putExtra("flag", "subSongList");
+					loadSubIntent.putExtra("subTitle", music.getName());
+					loadSubIntent.putExtra("listID", music.getId());
+					mActivity.startActivity(loadSubIntent);
+
+				}
+			});
+		}else {
+			if(!AppContext.getNetworkSensor().hasAvailableNetwork()) {
+				gv_song.setVisibility(View.INVISIBLE);
+				rl_song_no_network.setVisibility(View.VISIBLE);
+			}
+		}
+	}
+	
+	private List<Music> getHotListFromCache() {
+		List<Music> cacheList = null;
+		MusicListLogic logic = new MusicListLogic();
+		boolean result = logic.checkCacheHotList();
+		if(result) {
+			//缓存没有过期
+			try {
+				cacheList = logic.getCacheHotList();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}else {
+			//缓存过期，或者没有缓存
+			if(AppContext.getNetworkSensor().hasAvailableNetwork()) {
+				getHotListFromServer();
+			}else {
+				try {
+					return logic.getCacheHotList();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return cacheList;
+	}
+	
+	private void getHotListFromServer() {
+		
+		if(AppContext.getNetworkSensor() != null && AppContext.getNetworkSensor().hasAvailableNetwork()) {
+			rl_song_progress.setVisibility(View.VISIBLE);
+			
+			new Thread(new Runnable() {
+				
+				@Override
+				public void run() {
+					MusicListLogic musicListLogic = new MusicListLogic();
+					Message msg = hotMusicHandler.obtainMessage();
+					msg.what = 0;
+					List<Music> result = null;
+					try {
+						result = musicListLogic.getHotList();
+					} catch(SocketException e) {
+						//show no data
+						gv_song.setVisibility(View.INVISIBLE);
+						rl_song_no_network.setVisibility(View.VISIBLE);
+						iv_song_no_network.setImageResource(R.drawable.fail_fetchdata);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					msg.obj = result;
+					hotMusicHandler.sendMessage(msg);
+				}
+			}).start();
+		}else {
+			gv_song.setVisibility(View.INVISIBLE);
+			rl_song_no_network.setVisibility(View.VISIBLE);
+		}
+	}
+
+	class HotMusicAdapter extends BaseAdapter {
+		private List<Music> mHotMusicList;
+		private ListView mHotSongLV;
+		private GridView mHotSongGV;
+		private Music music;
+		private ImageLoadingListener animateFirstListener = new AnimateFirstDisplayListener();
+
+		public HotMusicAdapter(List<Music> hotMusicList, ListView lv) {
+			mHotMusicList = hotMusicList;
+			mHotSongLV = lv;
+		}
+
+		public HotMusicAdapter(List<Music> hotMusicList, GridView gv) {
+			mHotMusicList = hotMusicList;
+			mHotSongGV = gv;
+		}
+		
+		@Override
+		public int getCount() {
+			return mHotMusicList.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mHotMusicList.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+
+		@Override
+		public View getView(int position, View convertView, ViewGroup parent) {
+			View view = null;
+			HotMusicViewHolder viewHolder = null;
+			if (convertView == null) {
+				view = View.inflate(mActivity, R.layout.song_hot_list_item,
+						null);
+				viewHolder = new HotMusicViewHolder();
+				viewHolder.hotSongIV = (ImageView) view
+						.findViewById(R.id.iv_song_list_item);
+				viewHolder.hotSongNameTV = (TextView) view
+						.findViewById(R.id.tv_song_list_item);
+				view.setTag(viewHolder);
+			} else {
+				view = convertView;
+				viewHolder = (HotMusicViewHolder) view.getTag();
+			}
+			music = mHotMusicList.get(position);
+			viewHolder.hotSongNameTV.setText(music.getName());
+			String imageUrl = music.getImg();
+			mImageLoader.displayImage(imageUrl, viewHolder.hotSongIV, options, animateFirstListener);
+			return view;
+		}
+
+	}
+
+	static class HotMusicViewHolder {
+		ImageView hotSongIV;
+		TextView hotSongNameTV;
+	}
+	
+	private static class AnimateFirstDisplayListener extends SimpleImageLoadingListener {
+
+		static final List<String> displayedImages = Collections.synchronizedList(new LinkedList<String>());
+
+		@Override
+		public void onLoadingComplete(String imageUri, View view, Bitmap loadedImage) {
+			if (loadedImage != null) {
+				ImageView imageView = (ImageView) view;
+				boolean firstDisplay = !displayedImages.contains(imageUri);
+				if (firstDisplay) {
+					FadeInBitmapDisplayer.animate(imageView, 500);
+					displayedImages.add(imageUri);
+				} else {
+					imageView.setImageBitmap(loadedImage);
+				}
+			}
+		}
+	}
+	
+	public void loadOrderSongView() {
+//		orderSongTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+		rl_song_progress.setVisibility(View.INVISIBLE);
+		rl_song_order.setVisibility(View.VISIBLE);
+		rl_song.setVisibility(View.INVISIBLE);
+		rl_song_record.setVisibility(View.INVISIBLE);
+		DownloadController downloadController = new DownloadController(mActivity, downloadLogic, progressUpdateHandler, refreshPBVStateHandler);
+		downloadLogic.setOnDownloadListener(downloadController);
+		downloadLogic.setOnManagerListener(downloadController);
+		/*if(orderAdapter.getCount() > 0) {
+			if(!PreferencesManager.getBoolean(Constants.ORDER_RECORD_SONG_HAS_ACTIVATED)) {
+				PreferencesManager.put(Constants.ORDER_RECORD_SONG_HAS_ACTIVATED, true).commit();
+				//显示向导图
+				final RelativeLayout rl_song_order_guide = (RelativeLayout) mActivity.findViewById(R.id.rl_song_order_guide);
+				rl_song_order_guide.setVisibility(View.VISIBLE);
+				ImageView iv_song_order_guide = (ImageView) mActivity.findViewById(R.id.iv_song_order_guide);
+				iv_song_order_guide.setOnClickListener(new OnClickListener() {
+					
+					@Override
+					public void onClick(View v) {
+						rl_song_order_guide.setVisibility(View.INVISIBLE);
+					}
+				});
+			}
+		}*/
+		if(isOrderListFirstClick) {
+			startLoadOrderSongThread();
+		}
+	}
+	
+	public void startLoadOrderSongThread() {
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				MusicDao musicDao = new MusicDao(mActivity);
+				List<Music> orderList = musicDao.getMusicForAll();
+				Message msg = orderSongHandler.obtainMessage();
+				msg.what = 0;
+				msg.obj = orderList;
+				orderSongHandler.sendMessage(msg);
+			}
+		}).start();
+	}
+	
+	private Handler orderSongHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case 0:
+				isOrderListFirstClick = false;
+				List<Music> result = (List<Music>) msg.obj;
+				if(result == null)
+					return;
+				KuwoLog.i(TAG, "order list result.size==" + result.size());
+				totalOrderList.clear();
+				if (result.size() == 0) {
+					lv_song_order.setVisibility(View.INVISIBLE);
+					tv_song_order_empty.setVisibility(View.VISIBLE);
+				}else {
+					tv_song_order_empty.setVisibility(View.INVISIBLE);
+					lv_song_order.setVisibility(View.VISIBLE);
+					totalOrderList.addAll(result);
+					orderAdapter.setOrderList(totalOrderList);
+					lv_song_order.setAdapter(orderAdapter);
+					/*lv_song_order.setOnCreateContextMenuListener(new OnCreateContextMenuListener() {
+						
+						@Override
+						public void onCreateContextMenu(ContextMenu menu, View v,
+								ContextMenuInfo menuInfo) {
+							menu.setHeaderTitle("操作选项");
+							menu.add(0, 0, 0, "删除"); // itemId = 0;
+						}
+					});*/
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+		
+	};
+	
+
+	class OrderListAdapter extends BaseAdapter {
+		private List<Music> mOrderMusicList;
+		private float firstX = 0;
+		private float lastX = 0;
+		private Button currentDeleteBT;
+		private ProgressButtonView currentPBV;
+		private FileLogic lFile = new FileLogic();
+
+		public OrderListAdapter(List<Music> musicList) {
+			mOrderMusicList = musicList;
+		}
+		
+		public void setOrderList(List<Music> musicList) {
+			mOrderMusicList = musicList;
+		}
+		
+		@Override
+		public int getCount() {
+			return mOrderMusicList.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mOrderMusicList.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+		
+		private void showDeleteDialog(final Music music, final int position) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+			builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					String musicId = music.getId();
+					deleteOrderMusic(musicId);
+					mOrderMusicList.remove(position);
+					notifyDataSetChanged();
+					if(mOrderMusicList.size() == 0) {
+						lv_song_order.setVisibility(View.INVISIBLE);
+						tv_song_order_empty.setVisibility(View.VISIBLE);
+					}else {
+						tv_song_order_empty.setVisibility(View.INVISIBLE);
+						lv_song_order.setVisibility(View.VISIBLE);
+					}
+				}
+				
+				private void deleteOrderMusic(String musicId) {
+					downloadLogic.cancelDownloadMusic(mActivity, musicId);
+				}
+			});
+			builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			builder.setMessage("您确定要删除么？");
+			AlertDialog dialog = builder.create();
+			dialog.show();
+		}
+		
+		@Override
+		public View getView(final int position, View convertView,
+				ViewGroup parent) {
+			View view;
+			final ViewHolder viewHolder;
+			if (convertView == null) {
+				view = View.inflate(mActivity, R.layout.song_list_item, null);
+				viewHolder = new ViewHolder();
+				viewHolder.songNameTV = (TextView) view.findViewById(R.id.tv_song_list_item_name);
+				viewHolder.artistTV = (TextView) view.findViewById(R.id.tv_song_list_item_artist);
+				viewHolder.progressView = (ProgressButtonView) view.findViewById(R.id.pbv_song_list_view_progress);
+				viewHolder.deleteBT = (Button) view.findViewById(R.id.bt_order_list_delete);
+				view.setTag(viewHolder);
+			} else {
+				view = convertView;
+				viewHolder = (ViewHolder) view.getTag();
+			}
+			
+			final Music music = mOrderMusicList.get(position);
+
+			viewHolder.songNameTV.setText(music.getName());
+			viewHolder.artistTV.setText(music.getArtist());
+			viewHolder.progressView.setForeground(mActivity.getResources().getDrawable(R.drawable.download_progress));
+			viewHolder.progressView.setTag(music.getId() + "_progressView");
+			viewHolder.progressView.setVisibility(View.VISIBLE);
+			
+			long total = music.getTotal();
+			if(total == 0) {
+				KuwoLog.i("DownloadStatus", "0%等待下载");
+				viewHolder.progressView.setText("0%");
+				viewHolder.progressView.setPercent(0);
+				viewHolder.progressView.setBackgroundResource(R.drawable.order_song_pressed);
+				viewHolder.progressView.setTextColor(mActivity.getResources().getColor(R.color.bt_song_list_progress)); //橙色
+			}
+			int downloadStatus = downloadLogic.getMusicDownloadStatus(mActivity, music.getId());
+			if(downloadStatus == Constants.DOWNLOAD_STATUS_ISDOWNLOADING) {
+				KuwoLog.i("DownloadStatus", "正在下载中...");
+				int progress = downloadLogic.computeProgress(music.getId());
+				if(progress == -1) {
+					//暂停状态
+					MusicDao musicDao = new MusicDao(mActivity);
+					Music pauseMusic = musicDao.getMusic(music.getId());
+					if(pauseMusic != null) {
+						int pauseProgress = downloadLogic.computeDownloadedBytes(music.getId());
+						viewHolder.progressView.setText("暂停"+pauseProgress+"%");
+						viewHolder.progressView.setBackgroundResource(R.drawable.order_song_pressed);
+						viewHolder.progressView.setPercent(pauseProgress);	
+						viewHolder.progressView.setTextColor(mActivity.getResources().getColor(R.color.bt_song_list_progress));
+					}
+				}else {
+					//下载进行中状态
+					if(progress == 100) {
+						viewHolder.progressView.setText("演唱");
+						viewHolder.progressView.setTextColor(Color.WHITE); //白色
+						viewHolder.progressView.setBackgroundResource(R.drawable.order_song_normal);
+						viewHolder.progressView.setPercent(100);
+					}else {
+						viewHolder.progressView.setText(progress+"%");
+						viewHolder.progressView.setTextColor(mActivity.getResources().getColor(R.color.bt_song_list_progress)); //橙色
+						viewHolder.progressView.setBackgroundResource(R.drawable.order_song_pressed);
+						viewHolder.progressView.setPercent(progress);
+					}
+				}
+			}else if(downloadStatus == Constants.DOWNLOAD_STATUS_COMPLEMENT) {
+				KuwoLog.i("DownloadStatus", "已下载");
+				viewHolder.progressView.setText("演唱");
+				viewHolder.progressView.setBackgroundResource(R.drawable.order_song_normal);
+				viewHolder.progressView.setTextColor(Color.WHITE); //白色
+				viewHolder.progressView.setPercent(100);
+			}
+			
+			view.setOnLongClickListener(new OnLongClickListener() {
+				
+				@Override
+				public boolean onLongClick(View v) {
+					showDeleteDialog(music, position);
+					return true;
+				}
+			});
+			
+			/*view.setOnTouchListener(new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					final ViewHolder vHolder = (ViewHolder) v.getTag();
+					if(event.getAction() == MotionEvent.ACTION_DOWN) {
+						firstX = event.getX();
+						if(currentPBV != null) {
+							currentPBV.setVisibility(View.VISIBLE);
+						}
+						if(currentDeleteBT != null) {
+							currentDeleteBT.setVisibility(View.GONE);
+						}
+					}else if(event.getAction() == MotionEvent.ACTION_UP) {
+						lastX = event.getX();
+						if(vHolder.deleteBT != null) {
+							if(Math.abs(firstX-lastX) > 100) {
+								vHolder.progressView.setVisibility(View.GONE);
+								vHolder.deleteBT.setVisibility(View.VISIBLE);
+								currentDeleteBT = vHolder.deleteBT;
+								currentPBV = vHolder.progressView;
+							}
+						}
+					}
+					return true;
+				}
+			});*/
+			
+			viewHolder.deleteBT.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					currentDeleteBT.setVisibility(View.GONE);
+					String musicId = music.getId();
+					deleteOrderMusic(musicId);
+					mOrderMusicList.remove(position);
+					notifyDataSetChanged();
+					if(mOrderMusicList.size() == 0) {
+						lv_song_order.setVisibility(View.INVISIBLE);
+						tv_song_order_empty.setVisibility(View.VISIBLE);
+					}else {
+						tv_song_order_empty.setVisibility(View.INVISIBLE);
+						lv_song_order.setVisibility(View.VISIBLE);
+					}
+				}
+
+				private void deleteOrderMusic(String musicId) {
+					downloadLogic.cancelDownloadMusic(mActivity, musicId);
+				}
+			});
+
+			viewHolder.progressView.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					
+						int downloadedStatus = downloadLogic.getMusicDownloadStatus(mActivity, music.getId());
+						//未下载状态
+						if(downloadedStatus == Constants.DOWNLOAD_STATUS_ISDOWNLOADING) {
+							if(AppContext.getNetworkSensor().hasAvailableNetwork()) {
+								int progress = downloadLogic.computeProgress(music.getId());
+								KuwoLog.i(TAG, "onClick is downloading==progress="+progress);
+								if(progress == -1) {
+									//暂停状态
+									MusicDao musicDao = new MusicDao(mActivity);
+									Music pauseMusic = musicDao.getMusic(music.getId());
+									if(pauseMusic != null) {
+										long totalBytes = pauseMusic.getTotal();
+										if(totalBytes == 0) {
+											viewHolder.progressView.setText("0%");
+											viewHolder.progressView.setTextColor(mActivity.getResources().getColor(R.color.bt_song_list_progress)); //橙色
+											viewHolder.progressView.setBackgroundResource(R.drawable.order_song_pressed);
+											viewHolder.progressView.setPercent(0);
+										}else {
+											int currentProgress = downloadLogic.computeDownloadedBytes(music.getId());
+											viewHolder.progressView.setText(currentProgress+"%");
+											viewHolder.progressView.setTextColor(mActivity.getResources().getColor(R.color.bt_song_list_progress));
+											viewHolder.progressView.setBackgroundResource(R.drawable.order_song_pressed);
+											viewHolder.progressView.setPercent(currentProgress);	
+										}
+									}
+									if(AppContext.getNetworkSensor().isApnActive()){
+										//apn网络,继续下载
+										if(!Constants.isSongMobileStateActivited) {
+											Constants.isSongMobileStateActivited = true;
+											showApnTipDialog("您当前使用的是2G/3G网络，点歌将产生一定的流量", music);	
+										}else {
+											downloadLogic.addOriginalAndAccompTask(mActivity, music);
+											startDownloadLyricThread(music);
+										}
+									}else {
+										//wifi下载
+										downloadLogic.addOriginalAndAccompTask(mActivity, music);
+										startDownloadLyricThread(music);
+									}
+								}else {
+									//正在下载中状态
+									showCancelDownloadDialog(music.getId(), position);
+								}
+							}else {
+								Toast.makeText(mActivity, "网络不通，您可以演唱本地歌曲", 0).show();
+							}
+						//下载完状态
+						}else if(downloadedStatus == Constants.DOWNLOAD_STATUS_COMPLEMENT) {
+							MTVBusiness business = new MTVBusiness(mActivity);
+							business.singMtv(music, MTVBusiness.MODE_AUDIO, null);
+						}else {
+							KuwoLog.i(TAG, "");
+						}
+				}
+			});
+
+			return view;
+		}
+	}
+	
+	static class ViewHolder {
+		TextView songNameTV;
+		TextView artistTV;
+		ProgressButtonView progressView;
+		Button deleteBT;
+	}
+	
+	private void startDownloadLyricThread(final Music music) {
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				MusicBusiness mb = new MusicBusiness();
+				try {
+					Lyric lyric = mb.getLyric(music.getId(), Lyric.LYRIC_TYPE_KDTX);
+					KuwoLog.i(TAG, "lyric="+lyric);
+					Message msg = lyricHandler.obtainMessage();
+					msg.what = 0;
+					msg.obj = lyric;
+					lyricHandler.sendMessage(msg);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+		}).start();
+	}
+	
+	private Handler lyricHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case 0:
+				Lyric lyric = (Lyric) msg.obj;
+				if(lyric != null) {
+					KuwoLog.i(TAG, "lyric="+lyric+",下载成功！");
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+		
+	};
+	
+	private Handler progressUpdateHandler = new Handler() {
+		
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case Constants.MESSAGE_DOWNLOAD_PROGRESS: 
+				String musicId = msg.getData().getString("musicId");
+				int progress = msg.getData().getInt("progress");
+				ProgressButtonView pb = (ProgressButtonView) lv_song_order.findViewWithTag(musicId+"_progressView");
+				if(pb != null) {
+					if(progress == 100) {
+						pb.setPercent(100);
+						pb.setText("演唱");
+						pb.setTextColor(Color.WHITE);
+						pb.setBackgroundResource(R.drawable.order_song_normal);
+					}else {
+						if(progress == -1) {
+							break;
+						}
+						pb.setText(progress+"%");
+						pb.setTextColor(mActivity.getResources().getColor(R.color.bt_song_list_progress));
+						pb.setBackgroundResource(R.drawable.order_song_pressed);
+						pb.setPercent(progress);
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		
+	};
+	
+	private Handler refreshPBVStateHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case Constants.DOWNLOAD_FAILED: //(断网引起)暂停 onFail
+				String musicId_failed = (String) msg.obj;
+				if(musicId_failed != null) {
+					int progress = downloadLogic.computeDownloadedBytes(musicId_failed);
+					ProgressButtonView pbv_failed = (ProgressButtonView) lv_song_order.findViewWithTag(musicId_failed+"_progressView");
+					if(pbv_failed != null) {
+						pbv_failed.setText("暂停"+progress+"%");
+						pbv_failed.setTextColor(mActivity.getResources().getColor(R.color.bt_song_list_progress));
+						pbv_failed.setBackgroundResource(R.drawable.order_song_pressed);
+					}
+				}
+				break;
+			case Constants.DOWNLOAD_CANCEL: //(url获取失败或者主动取消)取消 onCancel
+				String musicId_cancel = (String) msg.obj;
+				if(musicId_cancel != null) {
+					Toast.makeText(mActivity, "地址获取失败", 0).show();
+					startLoadOrderSongThread();
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		
+	};
+	
+	private void showApnTipDialog(String tip, final Music music) {
+		DialogUtils.alert(mActivity, new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				switch (which) {
+				case -1:
+					//ok
+					downloadLogic.addOriginalAndAccompTask(mActivity, music);
+					startDownloadLyricThread(music);
+					dialog.dismiss();
+					break;
+				case -2:
+					//cancel
+					ProgressButtonView pbv = (ProgressButtonView) lv_song_order.findViewWithTag(music.getId()+"_progressView");
+					if(pbv != null) {
+						pbv.setText("点歌");
+						pbv.setPercent(0);
+						pbv.setTextColor(mActivity.getResources().getColor(R.color.bt_song__list_order));
+						pbv.setBackgroundResource(R.drawable.order_song_normal);
+					}
+					dialog.dismiss();
+					break;
+				default:
+					break;
+				}
+				
+			}
+		} , R.string.logout_dialog_title, R.string.dialog_ok, -1, R.string.dialog_cancel, tip);
+	}
+	
+	private void showCancelDownloadDialog(final String musicId, final int position) {
+		DialogUtils.alert(mActivity, new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				switch (which) {
+				case -1:
+					//ok
+					//取消下载
+					KuwoLog.i(TAG, "dialog 取消的music id ="+musicId);
+					downloadLogic.cancelDownloadMusic(mActivity, musicId);
+					totalOrderList.remove(position);
+					orderAdapter.notifyDataSetChanged();
+					dialog.dismiss();
+					break;
+				case -2:
+					//cancel
+					dialog.dismiss();
+					break;
+				default:
+					break;
+				}
+			}
+		}, R.string.logout_dialog_title, R.string.yes, -1,R.string.no, "是否要取消点歌吗？");
+		
+	}
+
+	public void loadRecordSongView() {
+//		recordSongTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+		rl_song_progress.setVisibility(View.INVISIBLE);
+		rl_song_record.setVisibility(View.VISIBLE);
+		rl_song.setVisibility(View.INVISIBLE);
+		rl_song_order.setVisibility(View.INVISIBLE);
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				KgeDao kgeDao = new KgeDao(mActivity);
+				Message msg = recordSongHandler.obtainMessage();
+				msg.what = 0;
+				msg.obj = kgeDao.queryForAll();
+				recordSongHandler.sendMessage(msg);
+			}
+		}).start();
+	}
+	
+	private Handler recordSongHandler = new Handler() {
+
+		@Override
+		public void handleMessage(Message msg) {
+			switch (msg.what) {
+			case 0:
+				if(msg.obj != null) {
+					List<Kge> result = (List<Kge>) msg.obj;
+					totalRecordList.clear();
+					if(result != null && result.size() != 0) {
+						tv_song_record_empty.setVisibility(View.INVISIBLE);
+						lv_song_record.setVisibility(View.VISIBLE);
+						totalRecordList.addAll(result);
+						recordAdapter.setRecordList(totalRecordList);
+						lv_song_record.setAdapter(recordAdapter);
+					}else {
+						KuwoLog.i(TAG, "你还没有录歌哦！");
+						lv_song_record.setVisibility(View.INVISIBLE);
+						tv_song_record_empty.setVisibility(View.VISIBLE);
+					}
+				}
+				break;
+			default:
+				break;
+			}
+		}
+		
+	};
+	
+	public void reloadRecordList() {
+		KuwoLog.i(TAG, "reloadRecordList");
+		new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				KgeDao kgeDao = new KgeDao(mActivity);
+				Message msg = recordSongHandler.obtainMessage();
+				msg.what = 0;
+				msg.obj = kgeDao.queryForAll();
+				recordSongHandler.sendMessage(msg);
+			}
+		}).start();
+	}
+
+	private class RecordListAdapter extends BaseAdapter {
+		private List<Kge> mKgeList;
+		private float firstX;
+		private float lastX;
+		private Button currentDeleteBT;
+		private Button currentUploadBT;
+		private Button currentShareBT;
+
+		public RecordListAdapter(List<Kge> kgeList) {
+			mKgeList = kgeList;
+		}
+		
+		public void setRecordList(List<Kge> kgeList) {
+			mKgeList = kgeList;
+		}
+		
+		@Override
+		public int getCount() {
+			return mKgeList.size();
+		}
+
+		@Override
+		public Object getItem(int position) {
+			return mKgeList.get(position);
+		}
+
+		@Override
+		public long getItemId(int position) {
+			return position;
+		}
+		
+		private void showDeleteDialog(final Kge kge, final int position) {
+			AlertDialog.Builder builder = new AlertDialog.Builder(mActivity);
+			builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					String prefix = kge.id==null ? "" : kge.id;
+					String kgeFileName = prefix+"_"+kge.date+".aac";
+					deleteRecordKge(kgeFileName);
+					mKgeList.remove(position);
+					notifyDataSetChanged();
+					if(mKgeList.size() == 0) {
+						lv_song_record.setVisibility(View.INVISIBLE);
+						tv_song_record_empty.setVisibility(View.VISIBLE);
+					}else {
+						tv_song_record_empty.setVisibility(View.INVISIBLE);
+						lv_song_record.setVisibility(View.VISIBLE);
+					}
+				}
+				
+				private void deleteRecordKge(String kgeFileName) {
+					File kgeFile = DirectoryManager.getFile(DirContext.RECORD, kgeFileName);
+					if(kgeFile.exists()) {
+						kgeFile.delete();
+					}
+					KgeDao kgeDao = new KgeDao(mActivity);
+					kgeDao.delete(kge.date);
+				}
+			});
+			builder.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+				
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					dialog.dismiss();
+				}
+			});
+			builder.setMessage("您确定要删除么？");
+			AlertDialog dialog = builder.create();
+			dialog.show();
+		}
+
+		@Override
+		public View getView(final int position, View convertView, ViewGroup parent) {
+			View view = null;
+			RecordViewHolder viewHolder = null;
+			if (convertView == null) {
+				view = View.inflate(mActivity, R.layout.record_list_item, null);
+				viewHolder = new RecordViewHolder();
+				viewHolder.kgeNameTV = (TextView) view.findViewById(R.id.tv_record_kge_name);
+				viewHolder.kgeTimeTV = (TextView) view.findViewById(R.id.tv_record_kge_time);
+				viewHolder.kgeDeleteBT = (Button) view.findViewById(R.id.bt_record_kge_delete);
+				viewHolder.kgeUploadBT = (Button) view.findViewById(R.id.bt_record_kge_upload);
+				viewHolder.kgeShareBT = (Button) view.findViewById(R.id.bt_record_kge_share);
+				viewHolder.kgeScoreTV = (TextView) view.findViewById(R.id.tv_record_kge_score);
+				view.setTag(viewHolder);
+			} else {
+				view = convertView;
+				viewHolder = (RecordViewHolder) view.getTag();
+			}
+			
+			final Kge kge = mKgeList.get(position);
+			
+			if(kge.score == null) {
+				viewHolder.kgeScoreTV.setText("");
+			}else {
+				viewHolder.kgeScoreTV.setText(kge.score+"分");
+			}
+			if (TextUtils.isEmpty(kge.title)) {
+				viewHolder.kgeNameTV.setText("自由清唱");
+			} else {
+				viewHolder.kgeNameTV.setText(kge.title);
+			}
+			SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+			String date = formatter.format(new Date(kge.date));
+			viewHolder.kgeTimeTV.setText(date);
+			if(Config.getPersistence().isLogin && kge.hasUpload) {
+				viewHolder.kgeUploadBT.setVisibility(View.INVISIBLE);
+				viewHolder.kgeShareBT.setVisibility(View.VISIBLE);
+			}else {
+				viewHolder.kgeUploadBT.setVisibility(View.VISIBLE);
+				viewHolder.kgeUploadBT.setTextColor(mActivity.getResources().getColor(R.color.bt_song__list_upload));
+			}
+			
+			view.setOnLongClickListener(new OnLongClickListener() {
+				
+				@Override
+				public boolean onLongClick(View v) {
+					showDeleteDialog(kge, position);
+					return true;
+				}
+			});
+			
+			view.setOnClickListener(new OnClickListener() {
+				
+				@Override
+				public void onClick(View v) {
+					Intent intent = new Intent(mActivity, PlayActivity.class);
+					intent.putExtra("mFlag", "localPlay");
+					intent.putExtra("kge", kge);
+					mActivity.startActivityForResult(intent, Constants.REQUEST_PLAY_LOCAL_KGE);
+				}
+			});
+			/*view.setOnTouchListener(new OnTouchListener() {
+				
+				@Override
+				public boolean onTouch(View v, MotionEvent event) {
+					final RecordViewHolder vHolder = (RecordViewHolder) v.getTag();
+					boolean deleteBtShowing = false;
+					if(event.getAction() == MotionEvent.ACTION_DOWN) {
+						firstX = event.getX();
+						if(currentDeleteBT != null) {
+							currentDeleteBT.setVisibility(View.GONE);
+							deleteBtShowing = false;
+						}
+						if(kge.hasUpload) {
+							if(currentShareBT != null) {
+								currentShareBT.setVisibility(View.VISIBLE);
+							}
+						}else {
+							if(currentUploadBT != null) {
+								currentUploadBT.setVisibility(View.VISIBLE);
+							}
+						}
+					}else if(event.getAction() == MotionEvent.ACTION_UP) {
+						lastX = event.getX();
+						if(vHolder.kgeDeleteBT != null) {
+							if(Math.abs(firstX-lastX) > 75) {
+								vHolder.kgeDeleteBT.setVisibility(View.VISIBLE);
+								deleteBtShowing = true;
+								vHolder.kgeUploadBT.setVisibility(View.GONE);
+								vHolder.kgeShareBT.setVisibility(View.GONE);
+								currentDeleteBT = vHolder.kgeDeleteBT;
+								currentUploadBT = vHolder.kgeUploadBT;
+								currentShareBT = vHolder.kgeShareBT;
+							}else {
+								if(!deleteBtShowing) {
+									Intent intent = new Intent(mActivity, PlayActivity.class);
+									intent.putExtra("mFlag", "localPlay");
+									intent.putExtra("kge", kge);
+									mActivity.startActivity(intent);
+								}
+							}
+						}
+					}
+					return true;
+				}
+			});*/
+			
+			viewHolder.kgeDeleteBT.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					KuwoLog.i(TAG, "delete click");
+					currentDeleteBT.setVisibility(View.GONE);
+					String prefix = kge.id==null ? "" : kge.id;
+					String kgeFileName = prefix+"_"+kge.date+".aac";
+					deleteRecordKge(kgeFileName);
+					mKgeList.remove(position);
+					notifyDataSetChanged();
+					if(mKgeList.size() == 0) {
+						lv_song_record.setVisibility(View.INVISIBLE);
+						tv_song_record_empty.setVisibility(View.VISIBLE);
+					}else {
+						tv_song_record_empty.setVisibility(View.INVISIBLE);
+						lv_song_record.setVisibility(View.VISIBLE);
+					}
+				}
+				
+				private void deleteRecordKge(String kgeFileName) {
+					File kgeFile = DirectoryManager.getFile(DirContext.RECORD, kgeFileName);
+					if(kgeFile.exists()) {
+						kgeFile.delete();
+					}
+					KgeDao kgeDao = new KgeDao(mActivity);
+					kgeDao.delete(kge.date);
+				}
+			});
+			viewHolder.kgeUploadBT.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					KuwoLog.i(TAG, "upload click");
+					if(AppContext.getNetworkSensor().hasAvailableNetwork()) {
+						if(Config.getPersistence().isLogin) {
+							String kgeId = TextUtils.isEmpty(kge.id) ? "" : kge.id;
+							String aacFileName = kgeId + "_" + kge.date + ".aac";
+							String zipPath = null;
+							if(kge.squareActivityName != null)
+								zipPath = DirectoryManager.getFilePath(DirContext.SDCARD_HIDDEN, "my_picture"+kge.squareActivityName+".zip");
+							else
+								zipPath = DirectoryManager.getFilePath(DirContext.SDCARD_HIDDEN, "my_picturelastPictures.zip");
+							String aacPath = DirectoryManager.getFilePath(DirContext.RECORD, aacFileName);
+							Intent intent = new Intent(mActivity, ShareActivity.class);
+							intent.putExtra("mFlag", "uploadMySong");
+							intent.putExtra("needSaveSong", false);
+							intent.putExtra("uploadKgeId", kgeId);
+							if(!TextUtils.isEmpty(kgeId)) {
+								intent.putExtra("musicName", kge.title);
+							}
+							intent.putExtra("kgeDate", kge.date);
+							intent.putExtra("zipPath", zipPath);
+							intent.putExtra("aacPath", aacPath);
+							intent.putExtra("uid", Config.getPersistence().user.uid);
+							mActivity.startActivityForResult(intent, Constants.REQUEST_UPLOAD);
+						}else {
+							showLoginDialog(R.string.login_dialog_tip);
+						}
+					}else {
+						Toast.makeText(mActivity, "网络不通，请稍后再试", 0).show();
+					}
+				}
+			});
+			viewHolder.kgeShareBT.setOnClickListener(new OnClickListener() {
+
+				@Override
+				public void onClick(View v) {
+					KuwoLog.i(TAG, "share click");
+					if(AppContext.getNetworkSensor().hasAvailableNetwork()) {
+						Intent intent = new Intent(mActivity, ShareActivity.class);
+						intent.putExtra("mFlag", "shareMySong");
+						intent.putExtra("kid", kge.kid);//KID
+						intent.putExtra("shareKgeId", kge.id);
+						if(!TextUtils.isEmpty(kge.id)) {
+							intent.putExtra("musicName", kge.title);
+						}
+						intent.putExtra("kgeDate", kge.date);
+						intent.putExtra("uid", Config.getPersistence().user.uid);
+						mActivity.startActivity(intent);
+					}else {
+						Toast.makeText(mActivity, "网络不通，请稍后再试", 0).show();
+					}
+				}
+			});
+
+			return view;
+		}
+	}
+	
+	static class RecordViewHolder {
+		TextView kgeNameTV;
+		TextView kgeTimeTV;
+		TextView kgeScoreTV;
+		Button kgeDeleteBT;
+		Button kgeUploadBT;
+		Button kgeShareBT;
+	}
+	
+	private void showLoginDialog(int tip) {
+		DialogUtils.alert(mActivity, new DialogInterface.OnClickListener() {
+			
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				switch (which) {
+				case -1:
+					//ok
+					dialog.dismiss();
+					Intent loginIntent = new Intent(mActivity, LoginActivity.class);
+					mActivity.startActivity(loginIntent);
+					break;
+				case -2:
+					//cancel
+					dialog.dismiss();
+					break;
+				default:
+					break;
+				}
+				
+			}
+		} , R.string.logout_dialog_title, R.string.dialog_ok, R.string.dialog_cancel, -1, tip);
+	}
+
+	private View.OnClickListener mOnClickListener = new View.OnClickListener() {
+
+		@Override
+		public void onClick(View v) {
+			int id = v.getId();
+			switchScene(id);
+		}
+	};
+	
+	public void jumpToRecordedPage() {
+//		recordSongTV.performClick();
+	}
+
+	private void switchScene(int id) {
+//		songTV.setBackgroundResource(R.drawable.song_top_new_songs_selector);
+//		orderSongTV.setBackgroundResource(R.drawable.song_top_rank_songs_selector);
+//		recordSongTV.setBackgroundResource(R.drawable.song_top_singer_songs_selector);
+		switch (id) {
+//		case R.id.song_top_songs:
+//			// 点歌台
+//			songTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+//			loadSongView();
+//			break;
+//		case R.id.song_top_songs_order:
+//			// 已点歌曲
+//			orderSongTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+//			loadOrderSongView();
+//			break;
+//		case R.id.song_top_songs_record:
+//			// 已录歌曲
+//			recordSongTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+//			loadRecordSongView();
+//			break;
+		case R.id.et_song_search:
+//			songTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+			Intent searchIntent = new Intent(mActivity, SearchActivity.class);
+			mActivity.startActivity(searchIntent);
+			break;
+		case R.id.bt_song_search:
+			// 搜索
+//			songTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+			break;
+		case R.id.bt_free_sing:
+			// 自由清唱
+//			songTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+			Intent freeIntent = new Intent(mActivity, SingActivity.class);
+			freeIntent.putExtra("mode", MTVBusiness.MODE_AUDIO);
+			freeIntent.putExtra("action", MTVBusiness.ACTION_RECORD);
+			mActivity.startActivity(freeIntent);
+			break;
+		case R.id.bt_order_list:
+			Intent orderListIntent = new Intent(mActivity, OrderListActivity.class);
+			mActivity.startActivity(orderListIntent);
+			break;
+		case R.id.bt_singer_list:
+			// 歌手列表
+//			songTV.setBackgroundResource(R.drawable.song_top_btn_pressed);
+			Intent singerListIntent = new Intent(mActivity, SingerListActivity.class);
+			mActivity.startActivity(singerListIntent);
+			break;
+		case R.id.bt_record_list:
+			Intent recordListIntent = new Intent(mActivity, RecordListActivity.class);
+			mActivity.startActivity(recordListIntent);
+			break;
+		default:
+			break;
+		}
+	}
+}

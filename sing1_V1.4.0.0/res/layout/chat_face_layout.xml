@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res/cn.kuwo.sing"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/white" >
+
+    <GridView 
+        android:id="@+id/gv_chat_face"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:numColumns="6"
+        />
+
+</RelativeLayout>

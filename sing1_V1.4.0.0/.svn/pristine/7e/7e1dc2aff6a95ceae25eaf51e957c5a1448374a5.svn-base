@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/feedback_title_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <!-- title -->
+
+        <TextView
+            android:id="@+id/feedback_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/feedback_title"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/feedback_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/feedback_title_rl"
+        android:background="#ededed" >
+
+        <EditText
+            android:id="@+id/feedback_opinion"
+            android:layout_width="fill_parent"
+            android:layout_height="119dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/feedback_input_bg"
+            android:gravity="top"
+            android:hint="@string/feedback_opinion_hint"
+            android:singleLine="false"
+            android:textColorHint="#aaaaaa"
+            android:textSize="15dp" />
+
+        <TextView
+            android:id="@+id/feedback_contact_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/feedback_opinion"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="10dp"
+            android:text="@string/feedback_contact_tip"
+            android:textColor="#ffffff"
+            android:textSize="15dp" />
+
+        <EditText
+            android:id="@+id/feedback_contact"
+            android:layout_width="fill_parent"
+            android:layout_height="38dp"
+            android:layout_below="@id/feedback_contact_tip"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="7dp"
+            android:background="@drawable/feedback_input_bg"
+            android:hint="@string/feedback_contact_hint"
+            android:singleLine="true"
+            android:textColorHint="#aaaaaa"
+            android:textSize="15dp" />
+
+        <Button
+            android:id="@+id/bt_upload"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/feedback_contact"
+            android:text="上传" />
+    </RelativeLayout>
+
+</RelativeLayout>

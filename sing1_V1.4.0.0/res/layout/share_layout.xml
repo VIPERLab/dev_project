@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ededed" >
+
+    <!-- title -->
+    <RelativeLayout
+        android:id="@+id/rl_share_layout"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <TextView
+            android:id="@+id/tv_share_layout_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="分享"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/bt_share_layout_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+        
+        <Button
+            android:id="@+id/bt_share_layout_go"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="发布"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+	
+    <EditText 
+        android:id="@+id/et_share_content"
+        android:layout_width="fill_parent"
+        android:layout_height="150dip"
+        android:layout_below="@+id/rl_share_layout"
+        android:gravity="top"
+        />
+    
+    <CheckBox 
+        android:id="@+id/cb_share_weibo"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/sina_share_down"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@+id/et_share_content"
+        android:layout_margin="5dp"
+        android:button="@null"
+        />
+    
+    <CheckBox 
+        android:id="@+id/cb_share_qq"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/qq_share_down"
+        android:layout_below="@+id/et_share_content"
+        android:layout_toRightOf="@+id/cb_share_weibo"
+        android:layout_margin="5dp"
+        android:button="@null"
+        />
+    
+     <CheckBox 
+        android:id="@+id/cb_share_renren"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/renren_logo_down"
+        android:layout_below="@+id/et_share_content"
+        android:layout_toRightOf="@+id/cb_share_qq"
+        android:layout_margin="5dp"
+        android:button="@null"
+        /> 
+    
+    <TextView 
+        android:id="@+id/tv_share_text_count_tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/et_share_content"
+        android:layout_marginTop="20dp"
+        android:layout_alignParentRight="true"
+        android:textSize="16sp"
+        android:textColor="@android:color/darker_gray"
+        />
+</RelativeLayout>

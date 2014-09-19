@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="artist_info_unselected">#919191</color>
+    <color name="bg_ad">#d5e5eb</color>
+    <color name ="bg_list_index">#e7e7e7</color>
+    <color name="txt_list_index">#bababa</color>
+    <color name="no_account">#14bdfd</color>
+    <color name="download_list_item_selector">#8ec3d7</color>
+    <color name="list_item_selector">#e3f5fb</color>
+    <color name="listitem_bg_light">#fff7f7f7</color>
+    <color name="skin_listitem_bg_selector">#b7b7b7</color>
+    <color name="menu_item_selected">#FFacced9</color>
+    <color name="menu_bg">#FFEAEDEE</color>
+	<!-- 设置项背景颜色（未选中和选中） -->
+	<color name="setting_checked">#e3f5fb</color>
+	<color name="setting_unchecked">#ffffff</color>
+	
+    <color name="black80">#cc000000</color>
+	<color name="lyric_current">#ff872447</color>
+	<color name="lyric_back">#ff535619</color>
+
+	<color name="hilight">#ffd4fe8a</color>
+    <color name="light_blue">#ff487cae</color>
+    <color name="transparent_white">#99ffffff</color>
+    <color name="list_divider">#28ffffff</color>
+    <color name="dark_gray_lyrics">#ff9b9b9b</color>
+    <color name="playing">#ff025000</color>
+    <color name="wrong_music">#ff6b3526</color>
+    <color name="black30">#4d000000</color>
+    <color name="black40">#66000000</color>
+    <color name="black50">#80000000</color>
+    <color name="white30">#4cffffff</color>
+    <color name="white50">#80ffffff</color>
+    <color name="white80">#ccffffff</color>
+    <color name="white">#ffffffff</color>
+    <color name="blue">#ff0000ff</color>
+    <color name="bg_gray">#ffc3c3c3</color>
+    <color name="lyric_green">#ff2aff00</color>
+    <color name="lyric_yellow">#fffffc00</color>
+    <color name="lyric_blue">#ff00ffc0</color>
+    <color name="lyric_purple">#ffff90bf</color>
+    <color name="lyric_red">#ffff3600</color>
+    <color name="lyric_light_blue">#ff93e4ff</color>
+
+
+	<color name="lyric_gray">#3A3A15</color>
+	<color name="lyric_alpha_gray">#993A3A15</color>
+
+    <color name="listitem_bg_dark">#fff0f0f0</color>
+    
+    <color name="listitem_text">#ff4d4d4d</color>
+    <color name="title_text">#ff626c70</color>
+
+    <color name="menu_focus">#FFf88935</color>
+	<drawable name="text_color">#FFFFFFFF</drawable>
+	<drawable name="search_title_color">#404e59</drawable>
+	<drawable name="search_text_color">#7a8a97</drawable>
+	<drawable name="search_helper_color">#480101</drawable>
+	
+	<color name="notification_text_color">#FF142634</color>
+	<color name="notification_background_color">#FFe5ebf0</color>    
+
+    <!-- 供用户选择的高亮歌词颜色
+    <color name="lyric_white">#ffffffff</color>
+    <color name="lyric_green">#ff00ff30</color>
+    <color name="lyric_yellow">#fff9ff5b</color>
+    <color name="lyric_blue">#ff5bf5ff</color>
+    <color name="lyric_purple">#fff192ff</color>
+    <color name="lyric_red">#ffff6c7a</color> -->
+	<color name="tip_text_color">#FFAFAFAF</color>
+	<color name="black">#ff000000</color>
+	<color name="transparent">#00000000</color>
+	<color name="almost_transparent">#01000000</color>
+	<!-- 听听曲库子榜单选中背景色 -->
+	<color name="online_sub_category_checked">#4c004977</color>
+	<color name="online_tab_header_selected">#ffffffff</color>
+	<color name="online_tab_header_unselected">#ffa8a8a8</color>
+	<color name="bg_local">#eaf2fc</color>
+	<color name="cur_play">#FFFF9000</color>
+	<color name="dark_black">#ff3b4f50</color>
+	<color name="list_item_1">#3c3c3c</color>
+	<color name="list_item_2">#bababa</color>
+	<color name="bg_local_root">#f1f4f4</color>
+	<color name="play_list_mode">#404040</color>
+	<color name="no_music">#ff5b7f86</color>
+	<!-- 本地根场景列表颜色  -->
+	<color name="local_root_grid_item_blue">#ff87defc</color>
+	<color name="local_root_grid_item_green">#ffbadea1</color>
+	<color name="local_root_grid_item_grown">#fff8b892</color>
+	<color name="local_root_grid_item_orange">#fff9c87b</color>
+	<color name="local_root_grid_item_purple">#ffe59eee</color>
+	
+	<!-- 字体相关颜色 -->
+	<color name="text_color_local_root_grid_item">#ffffffff</color>
+	<color name="text_color_list_label">#ffffffff</color>
+	
+	<!-- 最新場景列表顏色值 -->
+	<color name="recommend_color_list_divider_item">#ffffffff</color>
+	
+	<!-- 列表项的分割线 -->
+	<color name="list_separator">#ffe7e7e7</color>
+	<color name="listitem_current">#ff9000</color>
+	<color name="listitem_item_menu">#f1f1f1</color>
+	<color name="adv_background_color">#f0eef2</color>
+	
+	<!-- 列表项的选中背景 -->
+	<color name="menu_list_selector">#787878</color>
+	<color name="setting_item_selector">#e0f0f3</color>
+	<color name="menu_item_text">#707070</color>
+	
+	
+	<!-- 歌词场景浮层颜色 -->
+	<color name="current_list_title">#009ae8</color>
+	<!-- 升级兼容背景 -->
+	<color name="bg_compatibility">#d9e6ec</color>
+	<!-- 歌曲列表操作项选中或按下背景状态 -->
+	<color name="bg_opt_selected">#eaeaea</color>
+	<!-- 列表项的选中背景 -->
+	<color name="bg_list_item_selected">#58b4e9</color>
+	<color name="bt_song__list_order">#458ACF</color>
+	<color name="bt_song__list_upload">#458ACF</color>
+	<color name="bt_song_list_progress">#F67D0F</color>
+	<color name="kw_image_view_text_bg">#77000000</color>
+	<color name="kw_image_view_text_bg_transparent">#FFFFFFFF</color>
+	
+	<color name="background_tab_pressed">#6633B5E5</color>
+	<color name="background_slidetab">#30a3c6</color>
+	<color name="item_detail_bg">#f5f1ed</color>
+</resources>

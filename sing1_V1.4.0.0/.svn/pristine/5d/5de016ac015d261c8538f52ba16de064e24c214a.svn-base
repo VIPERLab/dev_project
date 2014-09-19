@@ -1,0 +1,464 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ededed" >
+
+    <FrameLayout
+        android:id="@+id/fl_play_scene"
+        android:layout_width="fill_parent"
+        android:layout_height="320dip" >
+        
+        <LinearLayout
+            android:id="@+id/ll_play_scene"
+            android:layout_width="fill_parent"
+            android:layout_height="320dp" 
+            android:orientation="vertical">
+
+            <ImageSwitcher
+                android:id="@+id/play_scene"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_alignParentTop="true"
+                android:background="@drawable/sing_scene_temp"
+                android:clickable="true" />
+
+            <SurfaceView
+                android:id="@+id/play_scene_vedio"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:layout_alignParentTop="true"
+                android:background="@drawable/sing_scene_temp"
+                android:clickable="true"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/pay_attention_imageview"
+            android:layout_width="240dip"
+            android:layout_height="240dip"
+            android:layout_gravity="center"
+            android:background="@drawable/heart"
+            android:visibility="visible" />
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/ll_lrc_play_controller"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/fl_play_scene"
+        android:orientation="vertical" >
+
+        <!-- 歌词 -->
+
+        <TextView
+            android:id="@+id/play_lrc"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="13dp"
+            android:gravity="center"
+            android:padding="0dp"
+            android:textColor="#ffffff"
+            android:textSize="20dp" />
+        <!-- 播放控制栏 -->
+
+        <RelativeLayout
+            android:id="@+id/play_controller_rl"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/post_processed_add_img_bg" >
+
+            <!-- 头像 -->
+
+            <Button
+                android:id="@+id/play_singer_photo"
+                android:layout_width="51dp"
+                android:layout_height="50dp"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="3dp" />
+
+            <!-- 暂停播放按钮 -->
+
+            <Button
+                android:id="@+id/play_play_pause"
+                android:layout_width="20dp"
+                android:layout_height="24dp"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="10dp"
+                android:layout_toRightOf="@id/play_singer_photo"
+                android:background="@drawable/post_processed_pause_btn" />
+
+            <!-- 已播放时间 -->
+
+            <TextView
+                android:id="@+id/play_played_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="9dp"
+                android:layout_toRightOf="@id/play_play_pause"
+                android:text="@string/player_duration"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+
+            <!-- 总播放时间 -->
+
+            <TextView
+                android:id="@+id/play_total_time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="10dp"
+                android:text="@string/player_duration"
+                android:textColor="#ffffff"
+                android:textSize="15dp" />
+
+            <!-- 播放进度条 -->
+
+            <SeekBar
+                android:id="@+id/player_seekbar"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="3dp"
+                android:layout_marginRight="3dp"
+                android:layout_toLeftOf="@id/play_total_time"
+                android:layout_toRightOf="@id/play_played_time"
+                android:max="100"
+                android:maxHeight="17dp"
+                android:minHeight="17dp"
+                android:paddingLeft="9dp"
+                android:paddingRight="9dp"
+                android:progressDrawable="@drawable/player_seekbar_style"
+                android:thumb="@drawable/progress_slider_bg"
+                android:thumbOffset="9dp" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <!-- menu控制栏 -->
+    
+    <LinearLayout 
+        android:id="@+id/llPlayMenuSecond"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/fl_play_scene"
+        android:background="@android:color/white"
+        android:gravity="center"
+        android:orientation="horizontal" 
+        >
+        
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="8dp"
+            android:layout_weight="1" >
+
+            <Button
+                android:id="@+id/btUpload"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/post_processed_post_btn_selector" />
+            
+            <TextView 
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/btUpload"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="上传"
+                android:textColor="@android:color/black"
+                android:textSize="15sp"
+                />
+        </RelativeLayout>
+        
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="8dp"
+            android:layout_weight="1" >
+
+            <Button
+                android:id="@+id/btDelete"
+                android:layout_width="65dp"
+                android:layout_height="65dp"
+                android:layout_centerHorizontal="true"
+                android:background="@drawable/post_processed_delete_btn_selector" />
+            
+            <TextView 
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/btDelete"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="删除"
+                android:textColor="@android:color/black"
+                android:textSize="15sp"
+                />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/play_menu_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_below="@id/fl_play_scene"
+        android:background="@android:color/white"
+        android:gravity="center"
+        android:orientation="horizontal" >
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="5dp"
+            android:layout_weight="1" >
+
+            <ImageView
+                android:id="@+id/bt_play_attention"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                android:src="@drawable/played_not_attention_btn_selector" />
+
+            <TextView
+                android:id="@+id/tv_play_attention"
+                style="@style/PlayText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/bt_play_attention"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="关注" />
+
+            <TextView
+                android:id="@+id/tv_play_attention_count"
+                style="@style/PlayNumText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_play_attention"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1" >
+
+            <ImageView
+                android:id="@+id/bt_play_send_flower"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                android:src="@drawable/played_flowers_btn_selector" />
+
+            <TextView
+                android:id="@+id/tv_play_flower"
+                style="@style/PlayText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/bt_play_send_flower"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="送花" />
+
+            <TextView
+                android:id="@+id/tv_play_flower_count"
+                style="@style/PlayNumText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_play_flower"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1" >
+
+            <ImageView
+                android:id="@+id/bt_play_i_want"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                android:src="@drawable/played_i_want_btn_selector" />
+
+            <TextView
+                android:id="@+id/tv_play_attention"
+                style="@style/PlayText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/bt_play_i_want"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="我要唱" />
+
+            <TextView
+                style="@style/PlayNumText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_play_attention"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_weight="1" >
+
+            <ImageView
+                android:id="@+id/bt_play_discuss"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                android:src="@drawable/played_discuss_btn_selector" />
+
+            <TextView
+                android:id="@+id/tv_play_discuss"
+                style="@style/PlayText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/bt_play_discuss"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="评论" />
+
+            <TextView
+                android:id="@+id/tv_play_discuss_count"
+                style="@style/PlayNumText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_play_discuss"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="5dp"
+            android:layout_weight="1" >
+
+            <ImageView
+                android:id="@+id/bt_play_share"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="centerInside"
+                android:src="@drawable/played_shared_btn_selector" />
+
+            <TextView
+                android:id="@+id/tv_play_share"
+                style="@style/PlayText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/bt_play_share"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="分享" />
+
+            <TextView
+                style="@style/PlayNumText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_play_share"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="5dp"
+                android:text="" />
+        </RelativeLayout>
+    </LinearLayout>
+
+    <!-- 歌曲名称 -->
+
+    <TextView
+        android:id="@+id/play_name"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="14dp"
+        android:layout_toLeftOf="@+id/play_back_btn"
+        android:singleLine="true"
+        android:text="@string/play_name_loading"
+        android:textColor="#ffffff"
+        android:textSize="20dp" />
+
+    <!-- 返回按钮 -->
+
+    <Button
+        android:id="@+id/play_back_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentTop="true"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/sing_back_btn" />
+
+    <ImageView
+        android:id="@+id/sendflower_imageview"
+        android:layout_width="160dip"
+        android:layout_height="240dip"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="40dip"
+        android:background="@drawable/flower"
+        android:visibility="visible" />
+
+    <!-- 弹出对话框后灰色背景 -->
+
+    <RelativeLayout
+        android:id="@+id/play_inclick_bg"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone" >
+
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@drawable/post_processed_inclick_bg"
+            android:clickable="true" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_share_select_dialog"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone" >
+
+        <include
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/share_select_dialog" />
+    </RelativeLayout>
+    
+    <RelativeLayout
+        android:id="@+id/rl_weixin_share_dialog"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone" >
+
+        <include
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/weixin_share_dialog" />
+    </RelativeLayout>
+
+</RelativeLayout>

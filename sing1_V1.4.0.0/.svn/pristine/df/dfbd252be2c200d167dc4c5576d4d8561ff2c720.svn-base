@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    android:background="#ededed" >
+
+    <RelativeLayout
+        android:id="@+id/layout_scene"
+	    android:layout_width="fill_parent"
+	    android:layout_height="0dp"
+	    android:layout_weight="1" >
+	    
+	    <!-- 滚动图片 -->
+	    <ImageSwitcher
+	        android:id="@+id/sing_scene"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:background="@drawable/sing_scene_temp" />
+	
+	    <SurfaceView
+	        android:id="@+id/sing_video"
+	        android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"
+	        android:background="@drawable/sing_scene_temp"
+	        android:visibility="gone" />
+        
+	    <!-- 歌词背景 -->
+	    <LinearLayout
+	        android:id="@+id/sing_lrc_bg"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_alignBottom="@id/sing_scene"
+	        android:background="@drawable/sing_lrc_bg"
+	        android:padding="7dp" >
+	
+	        <cn.kuwo.sing.ui.compatibility.LrcView
+	            android:id="@+id/sing_lrc_bottom"
+	            android:layout_width="wrap_content"
+	            android:layout_height="65dp"
+	            android:clickable="false"
+	            android:ellipsize="none"
+	            android:textColor="#ffffff"
+	            android:textSize="20dp" />
+	    </LinearLayout>
+	    
+        <TextView
+	        android:id="@+id/sing_name_singer"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentLeft="true"
+	        android:layout_toLeftOf="@+id/sing_back_btn"
+	        android:layout_marginLeft="10dp"
+	        android:layout_marginRight="10dp"
+	        android:layout_marginTop="14dp"
+	        android:text="我的歌声里-李代沫"
+	        android:textColor="#ffffff"
+	        android:singleLine="true"
+	        android:textSize="20dp" />
+
+	    <RelativeLayout
+	        android:id="@+id/relativeLayout1"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentLeft="true"
+	        android:layout_below="@id/sing_name_singer"
+	        android:layout_marginLeft="10dp"
+	        android:layout_marginTop="10dp" >
+	
+	        <!-- 录制状态图片 -->
+	        <ImageView
+	            android:id="@+id/sing_record_img"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_centerVertical="true"
+	            android:background="@drawable/sing_record_status" />
+	
+	        <!-- 录制状态文字 -->
+	        <TextView
+	            android:id="@+id/sing_record_status"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_centerVertical="true"
+	            android:layout_marginLeft="10dp"
+	            android:layout_toRightOf="@id/sing_record_img"
+	            android:gravity="center"
+	            android:padding="0dp"
+	            android:text="@string/sing_record_status"
+	            android:textColor="#ffffff"
+	            android:textSize="16dp" />
+	
+	        <!-- 已录时间 -->
+	        <TextView
+	            android:id="@+id/sing_recorded_time"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_centerVertical="true"
+	            android:layout_marginLeft="10dp"
+	            android:layout_toRightOf="@id/sing_record_status"
+	            android:gravity="center"
+	            android:padding="0dp"
+	            android:textColor="#ffffff"
+	            android:textSize="16dp" />
+	
+	        <!-- 音乐总时间 -->
+	        <TextView
+	            android:id="@+id/sing_total_time"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_centerVertical="true"
+	            android:layout_marginLeft="0dp"
+	            android:layout_toRightOf="@id/sing_recorded_time"
+	            android:gravity="center"
+	            android:padding="0dp"
+	            android:textColor="#ffffff"
+	            android:textSize="16dp" />
+	    </RelativeLayout>
+	    
+	    <!-- 返回按钮 -->
+	    <Button
+	        android:id="@+id/sing_back_btn"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentRight="true"
+	        android:layout_alignParentTop="true"
+	        android:layout_marginRight="5dp"
+	        android:layout_marginTop="5dp"
+	        android:background="@drawable/sing_back_btn" />
+    </RelativeLayout>
+
+
+	<!-- 中间 -->
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="100dp"
+        android:orientation="vertical"
+          >
+
+        <!-- 自由清唱计时 -->
+        <RelativeLayout
+            android:id="@+id/sing_free_view"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone" >
+
+            <TextView
+                android:id="@+id/sing_free_view_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="10dip"
+                android:layout_marginTop="10dip"
+                android:text="你现在可以录制5分钟的音频啦！"
+                android:textColor="#2b2b2b"
+                android:textSize="15sp" />
+         
+            
+            <!-- 播放进度条 -->
+
+            <SeekBar
+                android:id="@+id/sing_free_seekbar"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_below="@id/sing_free_view_text"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="15dip"
+                android:max="100"
+                android:maxHeight="17dp"
+                android:minHeight="17dp"
+                android:paddingLeft="9dp"
+                android:paddingRight="9dp"
+                android:progressDrawable="@drawable/player_seekbar_style"
+                android:thumb="@drawable/progress_slider_bg"
+                android:thumbOffset="9dp" />
+        </RelativeLayout>
+
+        <!-- 波形图 -->
+        <LinearLayout
+	        android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"
+	         >
+            
+			<cn.kuwo.sing.ui.compatibility.WaveView
+			    android:id="@+id/sing_waves_view"
+			    android:layout_width="fill_parent"
+			    android:layout_height="fill_parent"
+			    android:layout_gravity="bottom"
+			    android:background="@drawable/sing_wave_bg" 
+			    />
+		</LinearLayout>
+    </LinearLayout>
+
+    <!-- 演唱得分 -->
+    <RelativeLayout
+        android:id="@+id/sing_layout_score"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <TextView
+            android:id="@+id/tv_single_score_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:text="单句得分: "
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/tv_single_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/tv_single_score_tip"
+            android:text="0"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tv_single_score_last_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/tv_single_score"
+            android:text="分 （加油啊）"
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/tv_comprehensive_score_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/tv_comprehensive_score"
+            android:text="综合得分： "
+            android:textColor="@android:color/black" />
+
+        <TextView
+            android:id="@+id/tv_comprehensive_score"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/tv_comprehensive_score_last_tip"
+            android:text="0"
+            android:textColor="@android:color/black"
+            android:textSize="18sp" />
+
+        <TextView
+            android:id="@+id/tv_comprehensive_score_last_tip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="5dp"
+            android:text="分"
+            android:textColor="@android:color/black" />
+    </RelativeLayout>
+
+    <!-- 底部背景 -->
+    <RelativeLayout
+        android:id="@+id/rl_sing_bottom"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/sing_bottom_bg" >
+
+        <Button
+            android:id="@+id/sing_play_pause_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="7dp"
+            android:background="@drawable/sing_pause_btn_bg_selector" />
+
+        <Button
+            android:id="@+id/sing_original_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="14dp"
+            android:layout_toRightOf="@+id/sing_play_pause_btn"
+            android:background="@drawable/bt_sing_selector"
+            android:text="原唱" />
+
+        <Button
+            android:id="@+id/sing_finish_btn"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginRight="7dp"
+            android:background="@drawable/sing_finish_selector" />
+    </RelativeLayout>
+
+</LinearLayout>

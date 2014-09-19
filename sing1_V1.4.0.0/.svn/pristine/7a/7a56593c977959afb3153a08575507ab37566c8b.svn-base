@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/white" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/rl_dynamic_title"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <TextView
+            android:id="@+id/tv_dynamic_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="动态"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/fl_dynamic"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/rl_dynamic_title" >
+
+        <RelativeLayout
+            android:id="@+id/rl_dynamic_image"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_marginBottom="80dip" >
+
+            <ImageView
+                android:id="@+id/iv_login_register"
+                android:layout_width="240dip"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:src="@drawable/login_register" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rl_dynamic_webview"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed" >
+
+            <cn.kuwo.sing.ui.compatibility.KuwoWebView
+                android:id="@+id/dynamic_web_view"
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                android:background="#ededed" />
+            
+            <RelativeLayout
+                android:id="@+id/rl_dynamic_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+               	android:layout_centerInParent="true"
+                android:background="@drawable/pb_background"
+                android:visibility="invisible" >
+
+                <ProgressBar
+                    android:id="@+id/pb_dynamic_loading"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="40dip"
+                    android:layout_height="40dip"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="10dp"
+                    android:indeterminate="false"
+                    android:indeterminateDrawable="@anim/progress_bar_anim" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/pb_dynamic_loading"
+                    android:layout_centerHorizontal="true"
+                    android:gravity="center_horizontal"
+                    android:text="@string/kuwolistview_header_hint_loading"
+                    android:textColor="@android:color/white" />
+            </RelativeLayout>
+        </RelativeLayout>
+    </FrameLayout>
+
+</RelativeLayout>

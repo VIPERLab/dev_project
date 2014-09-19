@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#ededed" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/rl_hot_songs_list"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <TextView
+            android:id="@+id/tv_hot_songs_list_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="热门歌手"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/bt_hot_songs_list_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/rl_hot_songs_list"
+        android:background="#ededed" >
+
+        <RelativeLayout
+            android:id="@+id/rl_hot_song_layout_no_network"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed"
+			android:visibility="invisible">
+        <ImageView
+            android:id="@+id/iv_hot_song_layout_no_network"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:src="@drawable/fail_network" />
+
+    	</RelativeLayout>
+
+        <ListView
+            android:id="@+id/lv_hot_songs_list"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed"
+            android:cacheColorHint="#00000000"
+            android:divider="@drawable/list_view_divider"
+            android:dividerHeight="1dip"
+           />
+
+        <RelativeLayout
+            android:id="@+id/rl_hot_song_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/pb_background"
+            android:visibility="visible" >
+
+            <ProgressBar
+                android:id="@+id/pb_hot_song_loading"
+                style="?android:attr/progressBarStyle"
+                android:layout_width="40dip"
+                android:layout_height="40dip"
+                android:layout_centerHorizontal="true"
+                android:layout_marginBottom="10dp"
+                android:layout_marginTop="10dp"
+                android:indeterminate="false"
+                android:indeterminateDrawable="@anim/progress_bar_anim" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/pb_hot_song_loading"
+                android:layout_centerHorizontal="true"
+                android:gravity="center_horizontal"
+                android:text="@string/kuwolistview_header_hint_loading"
+                android:textColor="@android:color/white" />
+        </RelativeLayout>
+    </FrameLayout>
+</RelativeLayout>

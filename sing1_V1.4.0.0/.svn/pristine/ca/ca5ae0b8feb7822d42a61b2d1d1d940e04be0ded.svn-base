@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="150dp"
+    android:background="@drawable/post_processed_dialog_bgs" >
+
+    <Button 
+        android:id="@+id/btWeixinShareToFriend"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="用微信分享给朋友"
+        android:background="@drawable/post_processed_capture_btn"
+        />
+    
+    <Button 
+        android:id="@+id/btWeixinShareToCircle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btWeixinShareToFriend"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="分享到微信朋友圈"
+        android:background="@drawable/post_processed_capture_btn"
+        />
+
+    <!-- 取消 -->
+
+    <Button
+        android:id="@+id/btWeixinShareCancle"
+        android:layout_width="279dp"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btWeixinShareToCircle"
+        android:layout_centerHorizontal="true"
+        android:background="@drawable/post_processed_cancle_btn"
+        android:layout_marginTop="8dp"
+        android:text="取消"
+        android:textColor="#ffffff"
+        android:textSize="18dp" />
+
+</RelativeLayout>

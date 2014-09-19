@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/post_processed_dialog_bg"
+    android:orientation="vertical"
+    android:padding="10dp" >
+
+    <!-- tip -->
+
+    <TextView
+        android:id="@+id/ordered_songs_cancel_tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="40dp"
+        android:gravity="center|left"
+        android:text="@string/ordered_songs_cancel_tip"
+        android:textColor="#ffffff"
+        android:textSize="20dp" />
+
+    <!-- 取消 -->
+
+    <Button
+        android:id="@+id/ordered_songs_cancel_cancel_btn"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/ordered_songs_cancel_tip"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/post_processed_cancle_btn"
+        android:text="@string/app_cancel_btn"
+        android:textColor="#ffffff"
+        android:textSize="18dp" />
+
+    <!-- 确定 -->
+
+    <Button
+        android:id="@+id/ordered_songs_cancel_sure_btn"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/ordered_songs_cancel_tip"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="50dp"
+        android:background="@drawable/temp_sure"
+        android:text="@string/app_sure_btn"
+        android:textColor="#ffffff"
+        android:textSize="18dp" />
+
+</RelativeLayout>

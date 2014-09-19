@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" 
+    android:background="#ededed">
+    
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/rl_share_setting"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <TextView
+            android:id="@+id/tv_share_setting_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="分享设置"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/bt_share_setting_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+    
+    <RelativeLayout
+            android:id="@+id/rl_share_setting_content"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/rl_share_setting"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/input_bg"
+            android:padding="1px" >
+
+            <TextView
+                android:id="@+id/tv_share_setting_sina"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_alignParentTop="true"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@+id/tv_share_setting__sina_status_tip"
+                android:clickable="true"
+                android:gravity="center_vertical"
+                android:singleLine="true"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="新浪微博"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+            
+            <TextView
+                android:id="@+id/tv_share_setting__sina_status_tip"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_toLeftOf="@+id/iv_share_setting_sina_go"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp"
+                android:clickable="false"
+                android:gravity="center"
+                android:textColor="#0f72d8"
+                android:text="绑定" />
+            
+            <ImageView 
+                android:id="@+id/iv_share_setting_sina_go"
+                android:layout_width="wrap_content"
+                android:layout_height="fill_parent"
+                android:layout_alignParentRight="true"
+                android:layout_above="@+id/share_setting_line1"
+                android:layout_marginRight="10dp"
+                android:src="@drawable/item_go"
+                />
+
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/share_setting_line1"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/tv_share_setting_sina"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/tv_share_setting_qq"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_below="@+id/share_setting_line1"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@+id/tv_share_setting_qq_status_tip"
+                android:clickable="true"
+                android:singleLine="true"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="QQ空间"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+            
+            <TextView
+                android:id="@+id/tv_share_setting_qq_status_tip"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_below="@+id/share_setting_line1"
+                android:layout_toLeftOf="@+id/iv_share_setting_qq_go"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp"
+                android:clickable="false"
+                android:gravity="center"
+                android:textColor="#0f72d8"
+                android:text="绑定" />
+            
+            <ImageView 
+                android:id="@+id/iv_share_setting_qq_go"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/share_setting_line1"
+                android:layout_marginRight="10dp"
+                android:src="@drawable/item_go" />
+            
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/share_setting_line2"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@+id/tv_share_setting_qq"
+                android:background="@drawable/input_every_bg_repeat" />
+            
+             <TextView
+                android:id="@+id/tv_share_setting_renren"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_below="@+id/share_setting_line2"
+                android:layout_alignParentLeft="true"
+                android:layout_toLeftOf="@+id/tv_share_setting_renren_status_tip"
+                android:clickable="true"
+                android:singleLine="true"
+                android:gravity="center_vertical"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="人人网"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+            
+            <TextView
+                android:id="@+id/tv_share_setting_renren_status_tip"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_below="@+id/share_setting_line2"
+                android:layout_toLeftOf="@+id/iv_share_setting_renren_go"
+                android:layout_marginRight="5dp"
+                android:layout_marginLeft="5dp"
+                android:clickable="false"
+                android:gravity="center"
+                android:textColor="#0f72d8"
+                android:text="绑定" />
+            
+            <ImageView 
+                android:id="@+id/iv_share_setting_renren_go"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_alignParentRight="true"
+                android:layout_below="@+id/share_setting_line2"
+                android:layout_marginRight="10dp"
+                android:src="@drawable/item_go" />
+
+        </RelativeLayout>
+        
+    <TextView 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rl_share_setting_content"
+        android:gravity="center_horizontal"
+        android:layout_marginTop="10dp"
+        android:text="当您无法分享到已绑定的平台时，请重新绑定过期的帐号"
+        android:textSize="12sp"
+        android:textColor="@android:color/darker_gray"
+       />
+
+</RelativeLayout>

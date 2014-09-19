@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ordered_songs_item_rl"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/ordered_songs_title_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <!-- title -->
+
+        <TextView
+            android:id="@+id/ordered_songs_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="@string/ordered_songs_title"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/ordered_songs_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+
+        <!-- modify -->
+
+        <Button
+            android:id="@+id/ordered_songs_go_modify_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/ordered_songs_go_modify"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <!-- 已点歌曲列表 -->
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/ordered_songs_title_rl"
+        android:background="#ededed" >
+
+        <ListView
+            android:id="@+id/ordered_songs_lv"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:cacheColorHint="@null"
+            android:divider="@drawable/ordered_songs_parting_line"
+            android:fadingEdge="none" />
+
+        <ImageView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/ordered_songs_lv"
+            android:background="@drawable/ordered_songs_parting_line" />
+    </RelativeLayout>
+
+    <!-- 弹出对话框后灰色背景 -->
+
+    <RelativeLayout
+        android:id="@+id/ordered_songs_inclick_bg"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone" >
+
+        <Button
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="@drawable/post_processed_inclick_bg"
+            android:clickable="true" />
+    </RelativeLayout>
+
+    <!-- 添加图片对话框 -->
+
+    <RelativeLayout
+        android:id="@+id/ordered_songs_cancel_dialog"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:layout_marginLeft="30dp"
+        android:layout_marginRight="30dp"
+        android:visibility="gone" >
+
+        <include
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/ordered_songs_cancel_dialog" />
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llUserHomeBaseInfo"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/user_home_top_bg"
+    android:orientation="vertical" >
+
+    <cn.kuwo.sing.widget.CircleImageView
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/ivUserHomePortrait"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="40dp"
+        android:clickable="true"
+        android:src="@drawable/secretm"
+        app:border_color="@color/light"
+        app:border_width="2dp" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:orientation="vertical" >
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:orientation="horizontal" >
+
+            <ImageView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:scaleType="fitXY"
+                android:src="@drawable/iv_man" />
+
+            <TextView
+                android:id="@+id/tvUserHomeUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="5dp"
+                android:text="CoolGuy"
+                android:textColor="@color/white" />
+
+            <TextView
+                android:id="@+id/tvUserHomeUserID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginLeft="10dp"
+                android:text="ID: 83840561"
+                android:textColor="@color/white" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tvUserHomeOtherInfo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:gravity="center_horizontal"
+            android:layout_marginTop="5dp"
+            android:singleLine="true"
+            android:text="90后  来自:北京—海淀  现居:北京"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="50dp"
+        android:layout_marginTop="10dp"
+        android:background="@color/transparent"
+        android:checkedButton="@+id/my_fans"
+        android:orientation="horizontal" >
+
+        <Button
+            android:id="@+id/btUserHomeFans"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:background="@color/transparent"
+            android:layout_weight="1"
+            android:button="@null"
+            android:gravity="center"
+            android:text="10534\n作品"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/btUserHomeAttention"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:background="@color/transparent"
+            android:layout_weight="1"
+            android:button="@null"
+            android:gravity="center"
+            android:text="153\n关注"
+            android:textColor="@color/white" />
+
+        <Button
+            android:id="@+id/btUserHomeOptions"
+            android:layout_width="0dp"
+            android:layout_height="fill_parent"
+            android:background="@color/transparent"
+            android:layout_weight="1"
+            android:button="@null"
+            android:gravity="center"
+            android:text="编辑"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+</LinearLayout>

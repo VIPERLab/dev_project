@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_song_list_item"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/transparent" >
+	
+	<FrameLayout
+        android:id="@+id/fl_song_list_item_status"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="8dip" >
+
+         <cn.kuwo.sing.ui.compatibility.ProgressButtonView
+             android:id="@+id/pbv_song_list_view_progress"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:background="@drawable/trans_btn_selector"
+             />
+         <Button 
+             android:id="@+id/bt_order_list_delete"
+             android:layout_width="wrap_content"
+             android:layout_height="wrap_content"
+             android:visibility="gone"
+             android:background="@drawable/bt_delete_selector"
+             android:text="删除"
+             android:textColor="#ffffff"
+             />
+    </FrameLayout>
+    
+	<TextView
+		android:id="@+id/tv_song_list_item_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@+id/fl_song_list_item_status"
+        android:paddingTop="3dp"
+        android:paddingLeft="3dp"
+        android:paddingRight="3dp"
+        android:singleLine="true"
+        android:text="歌曲名称"
+        android:textColor="#2b2b2b"
+        android:textSize="17sp" />
+    
+	 <TextView
+   		android:id="@+id/tv_song_list_item_artist"
+   		android:layout_width="wrap_content"
+   		android:layout_height="wrap_content"
+   		android:layout_alignParentLeft="true"
+		android:layout_toLeftOf="@id/fl_song_list_item_status"
+		android:layout_below="@id/tv_song_list_item_name"
+		android:paddingTop="3dp"
+		android:paddingLeft="3dp"
+		android:paddingRight="3dp"
+	   	android:singleLine="true"
+	   	android:text="歌手名称"
+	   	android:textColor="@android:color/darker_gray"
+	   	android:textSize="13sp" />
+
+</RelativeLayout>

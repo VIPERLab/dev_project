@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/post_processed_dialog_bg"
+    android:orientation="vertical"
+    android:padding="10dp" >
+
+    <!-- tip -->
+
+    <TextView
+        android:id="@+id/post_processed_save_tip"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginTop="10dp"
+        android:gravity="center|left"
+        android:text="@string/post_processed_save_tip"
+        android:textColor="#ffffff"
+        android:textSize="16dp" />
+
+    <!-- 输入框 -->
+
+    <EditText
+        android:id="@+id/post_processed_save_input"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/post_processed_save_tip"
+        android:layout_marginTop="21dp"
+        android:background="@drawable/feedback_input_bg"
+        android:singleLine="true" />
+
+    <!-- 取消 -->
+
+    <Button
+        android:id="@+id/post_processed_save_cancel_btn"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/post_processed_save_input"
+        android:layout_marginLeft="10dp"
+        android:layout_marginTop="21dp"
+        android:background="@drawable/post_processed_cancle_btn"
+        android:text="@string/app_cancel_btn"
+        android:textColor="#ffffff"
+        android:textSize="18dp" />
+
+    <!-- 确定 -->
+
+    <Button
+        android:id="@+id/post_processed_save_sure_btn"
+        android:layout_width="100dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/post_processed_save_input"
+        android:layout_marginRight="10dp"
+        android:layout_marginTop="21dp"
+        android:background="@drawable/temp_sure"
+        android:text="@string/app_sure_btn"
+        android:textColor="#ffffff"
+        android:textSize="18dp" />
+
+</RelativeLayout>

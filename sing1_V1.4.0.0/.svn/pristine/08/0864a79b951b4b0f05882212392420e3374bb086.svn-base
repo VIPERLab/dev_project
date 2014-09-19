@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/register_title_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <!-- title -->
+
+        <TextView
+            android:id="@+id/register_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="@string/register_title"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/register_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <!-- register input -->
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/register_title_rl"
+        android:background="@color/white" >
+
+       <RelativeLayout
+            android:id="@+id/login_content_rl"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/input_bg"
+            android:padding="1px" >
+
+            <TextView
+                android:id="@+id/register_account"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_alignParentTop="true"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/register_account"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+            <!-- account -->
+
+            <EditText
+                android:id="@+id/register_account_input"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/register_account"
+                android:layout_alignTop="@id/register_account"
+                android:layout_toRightOf="@id/register_account"
+                android:background="@null"
+                android:singleLine="true"
+                android:paddingRight="35dip"
+                android:gravity="center_vertical|left"
+                android:hint="@string/register_account_hint"
+                android:textColorHint="#aaaaaa"
+                android:textSize="15dp" />
+
+            <!-- delete btn -->
+
+            <ImageView
+                android:id="@+id/register_account_clear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/register_account_input"
+                android:layout_alignRight="@id/register_account_input"
+                android:layout_alignTop="@id/register_account_input"
+                android:layout_marginRight="11dp"
+                android:src="@drawable/input_delete"
+                android:visibility="invisible" />
+            
+          
+
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/register_every_line1"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/register_account"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/register_psw"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_below="@id/register_every_line1"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/register_psw"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+              
+            <!-- psw -->
+
+            <EditText
+                android:id="@+id/register_psw_input"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/register_psw"
+                android:layout_alignTop="@id/register_psw"
+                android:layout_toRightOf="@id/register_psw"
+                android:background="@null"
+                android:singleLine="true"
+                android:paddingRight="35dip"
+                android:inputType="textPassword"
+                android:gravity="center_vertical|left"
+                android:hint="@string/register_psw_hint"
+                android:textColorHint="#aaaaaa"
+                android:textSize="15dp" />
+            
+              <!-- delete btn -->
+
+            <ImageView
+                android:id="@+id/register_psw_clear"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/register_psw_input"
+                android:layout_alignRight="@id/register_psw_input"
+                android:layout_alignTop="@id/register_psw_input"
+                android:layout_marginRight="11dp"
+                android:src="@drawable/input_delete"
+                android:visibility="invisible" />
+        </RelativeLayout>
+
+        <!-- checkbox -->
+
+        <CheckBox
+            android:id="@+id/register_display_psw_check"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@id/login_content_rl"
+            android:layout_marginLeft="10dp"
+            android:layout_marginTop="17dp"
+            android:button="@drawable/display_psw_checkbox_bg_selector"
+            android:checked="false" />
+
+      
+        <TextView
+            android:id="@+id/register_display_psw"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/login_content_rl"
+            android:layout_toRightOf="@+id/register_display_psw_check"
+            android:layout_marginTop="24dp"
+            android:gravity="center"
+            android:text="@string/register_display_psw"
+            android:textColor="#000000"
+            android:textSize="20dp" />
+
+        <!-- login btn -->
+
+        <Button
+            android:id="@+id/register_btn"
+            android:layout_width="173dp"
+            android:layout_height="41dp"
+            android:layout_alignParentRight="true"
+            android:layout_below="@id/login_content_rl"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="17dp"
+            android:background="@drawable/button_bg_selector"
+            android:padding="0dp"
+            android:text="@string/register_btn"
+            android:textColor="#ffffff"
+            android:textSize="22dp" />
+
+        <!-- use sina qq -->
+
+        <RelativeLayout
+            android:id="@+id/register_use_other_rl"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/register_btn"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="48dp"
+            android:background="@drawable/input_bg"
+            android:padding="1px" >
+
+            <TextView
+                android:id="@+id/register_use_sina"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_alignParentTop="true"
+                android:clickable="true"
+                android:drawableLeft="@drawable/use_sina_logo"
+                android:drawablePadding="15dp"
+                android:gravity="center_vertical|left"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/register_use_sina"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/register_every_line2"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/register_use_sina"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/register_use_qq"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_below="@id/register_every_line2"
+                android:clickable="true"
+                android:drawableLeft="@drawable/use_qq_logo"
+                android:drawablePadding="15dp"
+                android:gravity="center_vertical|left"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/register_use_qq"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+            
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/register_every_line3"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/register_use_qq"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/register_use_renren"
+                android:layout_width="fill_parent"
+                android:layout_height="50dp"
+                android:layout_below="@id/register_every_line3"
+                android:clickable="true"
+                android:drawableLeft="@drawable/use_renren_logo"
+                android:drawablePadding="15dp"
+                android:gravity="center_vertical|left"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/register_use_renren"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+        </RelativeLayout>
+    </RelativeLayout>
+</RelativeLayout>

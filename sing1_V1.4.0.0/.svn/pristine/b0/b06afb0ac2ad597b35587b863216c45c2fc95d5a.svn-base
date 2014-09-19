@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" 
+    android:background="@color/white">
+    
+	 <!-- title -->
+    <RelativeLayout
+        android:id="@+id/rl_comment_send"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <TextView
+            android:id="@+id/tv_comment_send_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="新评论"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+        <Button
+            android:id="@+id/bt_comment_send_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_cancel_btn"
+            android:textColor="#ffffff" />
+        
+           <!-- send -->
+        <Button
+            android:id="@+id/bt_comment_send"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_send_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+    
+    <EditText 
+        android:id="@+id/et_comment_send"
+        android:layout_width="fill_parent"
+        android:layout_height="150dp"
+        android:layout_below="@+id/rl_comment_send"
+        android:gravity="top"
+        android:inputType="textPhonetic"
+        />
+ 
+    
+</RelativeLayout>

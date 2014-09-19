@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="235dp"
+    android:layout_height="162dp"
+    android:background="@drawable/sing_mode_bg" >
+
+    <TextView
+        android:id="@+id/sing_original_tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginLeft="17dp"
+        android:layout_marginTop="17dp"
+        android:gravity="center|left"
+        android:padding="0dp"
+        android:text="@string/sing_original_tip"
+        android:textColor="#000000"
+        android:textSize="18dp" />
+
+    <TextView
+        android:id="@+id/sing_original_played_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_below="@id/sing_original_tip"
+        android:layout_marginLeft="17dp"
+        android:layout_marginTop="27dp"
+        android:gravity="center"
+        android:padding="0dp"
+        android:text="01:30"
+        android:textColor="#999999"
+        android:textSize="14dp" />
+
+    <TextView
+        android:id="@+id/sing_original_total_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_below="@id/sing_original_tip"
+        android:layout_marginRight="17dp"
+        android:layout_marginTop="27dp"
+        android:gravity="center"
+        android:padding="0dp"
+        android:text="04:30"
+        android:textColor="#999999"
+        android:textSize="14dp" />
+
+    <!-- 播放进度条 -->
+
+    <SeekBar
+        android:id="@+id/played_seekbar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/sing_original_tip"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="3dp"
+        android:layout_marginRight="3dp"
+        android:layout_marginTop="28dp"
+        android:layout_toLeftOf="@id/sing_original_total_time"
+        android:layout_toRightOf="@id/sing_original_played_time"
+        android:max="100"
+        android:maxHeight="17dp"
+        android:minHeight="17dp"
+        android:paddingLeft="9dp"
+        android:paddingRight="9dp"
+        android:progress="0"
+        android:progressDrawable="@drawable/player_seekbar_style"
+        android:secondaryProgress="70"
+        android:thumb="@drawable/progress_slider_bg"
+        android:thumbOffset="9dp" />
+
+    <Button
+        android:id="@+id/sing_original_return_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/played_seekbar"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="28dp"
+        android:background="@drawable/sing_original_return_btn_selector"
+        android:gravity="center"
+        android:padding="0dp"
+        android:textColor="#999999"
+        android:textSize="14dp" />
+
+</RelativeLayout>

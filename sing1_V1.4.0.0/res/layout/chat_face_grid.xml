@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:gridlayout="http://schemas.android.com/apk/res/cn.kuwo.sing"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white" >
+
+    <cn.kuwo.sing.widget.GridLayout
+        android:id="@+id/gl_chat_face_grid"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        gridlayout:alignmentMode="alignBounds"
+        gridlayout:columnCount="6"
+        gridlayout:rowCount="5"
+        gridlayout:columnOrderPreserved="false"
+        gridlayout:useDefaultMargins="true" />
+
+</RelativeLayout>

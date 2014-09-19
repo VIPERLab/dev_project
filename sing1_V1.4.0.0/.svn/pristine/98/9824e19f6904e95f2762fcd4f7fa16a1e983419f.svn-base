@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+     >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/modify_title_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <!-- title -->
+
+        <TextView
+            android:id="@+id/modify_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="@string/modify_title"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/modify_back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+
+        <!-- modify_ok -->
+
+        <Button
+            android:id="@+id/modify_ok"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_sure_btn"
+            android:textColor="#ffffff" />
+    </RelativeLayout>
+
+    <!-- modify input -->
+
+    <RelativeLayout
+        android:id="@+id/modify_content_rl"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@id/modify_title_rl"
+        android:background="#ededed" >
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/input_bg"
+            android:padding="1px" >
+
+            <TextView 
+                android:id="@+id/modify_nickname"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_alignParentTop="true"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/modify_nickname"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+            <!-- account -->
+
+            <EditText
+                android:id="@+id/modify_nickname_input"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_nickname"
+                android:layout_alignTop="@id/modify_nickname"
+                android:layout_toRightOf="@id/modify_nickname"
+                android:background="@null"
+                android:gravity="center_vertical|left"
+                android:textSize="15dp" />
+
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/modify_every_line1"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/modify_nickname"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/modify_sex"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_below="@id/modify_every_line1"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/modify_sex"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+            <CheckBox
+                android:id="@+id/modify_girl_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_sex"
+                android:layout_alignTop="@id/modify_sex"
+                android:layout_toRightOf="@id/modify_sex"
+                android:button="@drawable/modify_sex_radio_bg_selector"
+                android:checked="true" />
+
+            <TextView
+                android:id="@+id/modify_girl_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_sex"
+                android:layout_alignTop="@id/modify_sex"
+                android:layout_marginLeft="15dp"
+                android:layout_toRightOf="@id/modify_girl_check"
+                android:gravity="center"
+                android:text="@string/modify_girl"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+            <CheckBox
+                android:id="@+id/modify_boy_check"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_sex"
+                android:layout_alignTop="@id/modify_sex"
+                android:layout_marginLeft="40dp"
+                android:layout_toRightOf="@id/modify_girl_text"
+                android:button="@drawable/modify_sex_radio_bg_selector"
+                android:checked="false" />
+
+            <TextView
+                android:id="@+id/modify_boy_text"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_sex"
+                android:layout_alignTop="@id/modify_sex"
+                android:layout_marginLeft="15dp"
+                android:layout_toRightOf="@id/modify_boy_check"
+                android:gravity="center"
+                android:text="@string/modify_boy"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/modify_every_line2"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/modify_sex"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/modify_home"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_below="@id/modify_every_line2"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/modify_home"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+            <EditText
+                android:id="@+id/modify_home_input"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_home"
+                android:layout_alignTop="@id/modify_home"
+                android:layout_toRightOf="@id/modify_home"
+                android:background="@null"
+                android:gravity="center_vertical|left"
+                android:textSize="15dp" />
+
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/modify_every_line3"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/modify_home"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/modify_location"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_below="@id/modify_every_line3"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/modify_location"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+            <EditText
+                android:id="@+id/modify_location_input"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_location"
+                android:layout_alignTop="@id/modify_location"
+                android:layout_toRightOf="@id/modify_location"
+                android:background="@null"
+                android:gravity="center_vertical|left"
+                android:textSize="15dp" />
+
+            <!-- 分割线 -->
+
+            <ImageView
+                android:id="@+id/modify_every_line4"
+                android:layout_width="fill_parent"
+                android:layout_height="1dp"
+                android:layout_below="@id/modify_location"
+                android:background="@drawable/input_every_bg_repeat" />
+
+            <TextView
+                android:id="@+id/modify_birthday"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_below="@id/modify_every_line4"
+                android:gravity="center"
+                android:paddingLeft="10dp"
+                android:paddingRight="10dp"
+                android:text="@string/modify_birthday"
+                android:textColor="#000000"
+                android:textSize="19dp" />
+
+            <EditText
+                android:id="@+id/modify_birthday_input"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_alignBottom="@id/modify_birthday"
+                android:layout_alignTop="@id/modify_birthday"
+                android:layout_toRightOf="@id/modify_birthday"
+                android:background="@null"
+                android:gravity="center_vertical|left"
+                android:textSize="15dp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

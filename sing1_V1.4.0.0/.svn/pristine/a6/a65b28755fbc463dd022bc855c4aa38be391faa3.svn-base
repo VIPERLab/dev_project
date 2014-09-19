@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent" >
+
+    <RelativeLayout
+        android:id="@+id/rlMyHomeTop"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/top_rellayout_bg" >
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="我的主页"
+            android:textColor="#ffffff"
+            android:textSize="21dp"
+            android:visibility="visible" />
+
+        <Button
+            android:id="@+id/btMyHomeMsg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="20dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="消息"
+            android:textColor="#ffffff" />
+
+        <ImageView
+            android:id="@+id/ivMyHomeMsgPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentTop="true"
+            android:layout_marginRight="20dip"
+            android:layout_marginTop="5dip"
+            android:gravity="center_horizontal"
+            android:src="@drawable/msg_tip" />
+    </RelativeLayout>
+
+    <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/rlMyHomeTop"
+        android:background="#ededed" >
+        
+        <RelativeLayout
+            android:id="@+id/rlMyHomeNoNetwork"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed"
+            android:visibility="invisible" >
+
+            <ImageView
+                android:id="@+id/ivMyHomeNoNetwork"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:src="@drawable/fail_network" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rlMyHomeLoginOrRegister"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_marginBottom="80dip" >
+
+            <ImageView
+                android:id="@+id/ivMyHomeLoginOrRegister"
+                android:layout_width="240dip"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:layout_marginBottom="50dip"
+                android:src="@drawable/login_register" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/rlMyHomeLoginView"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:background="#ededed" >
+            
+            <include 
+                android:layout_width="fill_parent"
+                android:layout_height="fill_parent"
+                layout="@layout/user_home_include"/>
+
+            <RelativeLayout
+                android:id="@+id/rlMyHomeLoading"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:background="@drawable/pb_background"
+                android:visibility="invisible" >
+
+                <ProgressBar
+                    android:id="@+id/pbMyHomeLoading"
+                    style="?android:attr/progressBarStyle"
+                    android:layout_width="40dip"
+                    android:layout_height="40dip"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginBottom="10dp"
+                    android:layout_marginTop="10dp"
+                    android:indeterminate="false"
+                    android:indeterminateDrawable="@anim/progress_bar_anim" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/pbMyHomeLoading"
+                    android:layout_centerHorizontal="true"
+                    android:gravity="center_horizontal"
+                    android:text="@string/kuwolistview_header_hint_loading"
+                    android:textColor="@android:color/white" />
+            </RelativeLayout>
+        </RelativeLayout>
+    </FrameLayout>
+    
+    <ImageView 
+        android:id="@+id/ivMyHomeInclickBg"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:scaleType="fitXY"
+        android:src="@drawable/post_processed_inclick_bg"
+        android:visibility="gone"
+        />
+    
+    <RelativeLayout
+        android:id="@+id/rlMyHomeImgDialog"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone" >
+
+        <include
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            layout="@layout/local_add_head" />
+    </RelativeLayout>
+</RelativeLayout>

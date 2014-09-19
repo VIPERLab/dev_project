@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/llUserHomeBaseInfo"
+    android:layout_width="fill_parent"
+    android:layout_height="200dp"
+    android:background="@drawable/user_home_top_bg"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:id="@+id/rlUserHomeBaseInfo"
+        android:layout_width="fill_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" >
+
+        <ImageView
+            android:id="@+id/ivUserHomePortrait"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="15dp"
+            android:background="@drawable/portrait_bg"
+            android:clickable="true"
+            android:scaleType="fitXY"
+            android:src="@drawable/secretm" />
+
+        <RelativeLayout
+            android:layout_width="fill_parent"
+            android:layout_height="80dp"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="6dp"
+            android:layout_toRightOf="@+id/ivUserHomePortrait" >
+
+            <TextView
+                android:id="@+id/tvUserHomeUsername"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentTop="true"
+                android:layout_gravity="top"
+                android:layout_marginTop="5dp"
+                android:text="我的昵称"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/tvUserHomeUserID"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:text="ID:342521342"
+                android:textColor="@android:color/white" />
+
+            <TextView
+                android:id="@+id/tvUserHomeOtherInfo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_marginTop="5dp"
+                android:singleLine="true"
+                android:text="90后  来自:北京—海淀  现居:北京"
+                android:textColor="@android:color/white" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/user_home_top_trans_bg" >
+
+        <Button
+            android:id="@+id/btUserHomeFans"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="8dp"
+            android:background="@drawable/bt_user_home_option_selector"
+            android:clickable="true"
+            android:text="粉丝（12）"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/btUserHomeAttention"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="6dp"
+            android:layout_toRightOf="@+id/btUserHomeFans"
+            android:background="@drawable/bt_user_home_option_selector"
+            android:clickable="true"
+            android:text="关注（5）"
+            android:textColor="@android:color/white" />
+
+        <Button
+            android:id="@+id/btUserHomeOptions"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="8dp"
+            android:background="@drawable/bt_user_home_option_selector"
+            android:text="功能按键"
+            android:textColor="@android:color/white" />
+    </RelativeLayout>
+
+</LinearLayout>

@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@android:color/white" >
+
+    <!-- title -->
+
+    <RelativeLayout
+        android:id="@+id/rl_live_room"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/top_rellayout_bg" >
+
+        <TextView
+            android:id="@+id/tv_live_room_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:clickable="false"
+            android:gravity="center"
+            android:text="直播室"
+            android:textColor="#ffffff"
+            android:textSize="21dp" />
+
+        <!-- back -->
+
+        <Button
+            android:id="@+id/bt_live_room_back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="10dp"
+            android:background="@drawable/back_btn_bg_selector"
+            android:text="@string/app_back_btn"
+            android:textColor="#ffffff" />
+        
+        <ImageView 
+            android:id="@+id/iv_leave_room"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginRight="6dip"
+            android:src="@drawable/leave_room"
+            />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/rl_live_room_desc"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/rl_live_room" >
+
+        <TextView
+            android:id="@+id/tv_live_room_singer_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_margin="6dip"
+            android:text="正在演唱：歌手名称"
+            android:textColor="@android:color/black"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/tv_live_room_singer_id"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/tv_live_room_singer_name"
+            android:layout_toRightOf="@+id/tv_live_room_singer_name"
+            android:text="(歌手ID)"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/tv_live_room_singer_flower_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/tv_live_room_singer_id"
+            android:layout_alignBottom="@+id/tv_live_room_singer_id"
+            android:layout_marginRight="29dp"
+            android:layout_toLeftOf="@+id/tv_live_room_duration"
+            android:text="鲜花数：4323"
+            android:textColor="@android:color/black"
+            android:textSize="10sp" />
+
+        <TextView
+            android:id="@+id/tv_live_room_duration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBaseline="@+id/tv_live_room_singer_name"
+            android:layout_alignParentRight="true"
+            android:layout_margin="6dip"
+            android:text="554s"
+            android:textColor="@android:color/black"
+            android:textSize="10sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/ll_live_room_content"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_below="@+id/rl_live_room_desc" >
+
+        <Gallery
+            android:id="@+id/gallery_singer_image"
+            android:layout_width="fill_parent"
+            android:layout_height="120dip"
+            android:layout_alignParentTop="true" />
+
+        <ListView
+            android:id="@+id/lv_live_room_chat"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/rl_live_room_chat_sender"
+            android:layout_below="@+id/gallery_singer_image"
+            android:cacheColorHint="#00000000"
+            android:divider="@null"
+            android:dividerHeight="0dip" />
+
+        <RelativeLayout
+            android:id="@+id/rl_live_room_chat_sender"
+            android:layout_width="fill_parent"
+            android:layout_height="50dip"
+            android:layout_alignParentBottom="true" >
+
+            <ImageView
+                android:id="@+id/iv_live_room_face"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentTop="true"
+                android:src="@drawable/face" />
+
+            <EditText
+                android:id="@+id/et_live_room_input"
+                android:layout_width="100dip"
+                android:layout_height="40dip"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentTop="true"
+                android:layout_toLeftOf="@+id/bt_live_room_sender"
+                android:layout_toRightOf="@+id/iv_live_room_face" 
+                android:hint="输入聊天内容"/>
+
+            <Button
+                android:id="@+id/bt_live_room_sender"
+                android:layout_width="wrap_content"
+                android:layout_height="50dip"
+                android:layout_alignParentRight="true"
+                android:text="发送"
+                android:textSize="18dip" />
+        </RelativeLayout>
+    </RelativeLayout>
+</RelativeLayout>

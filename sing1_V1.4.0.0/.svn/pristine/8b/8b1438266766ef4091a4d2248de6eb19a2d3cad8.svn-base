@@ -1,0 +1,167 @@
+# view res/layout/square_fragment_activity.xml #generated:61
+-keep class android.support.v4.view.ViewPager { <init>(...); }
+
+# view AndroidManifest.xml #generated:28
+-keep class cn.kuwo.sing.context.App { <init>(...); }
+
+# view AndroidManifest.xml #generated:74
+-keep class cn.kuwo.sing.ui.activities.AboutActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:166
+-keep class cn.kuwo.sing.ui.activities.CommentActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:140
+-keep class cn.kuwo.sing.ui.activities.CommentSendActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:207
+-keep class cn.kuwo.sing.ui.activities.CommonActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:93
+-keep class cn.kuwo.sing.ui.activities.DynamicActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:43
+-keep class cn.kuwo.sing.ui.activities.EntryActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:102
+-keep class cn.kuwo.sing.ui.activities.GuideActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:202
+-keep class cn.kuwo.sing.ui.activities.HotSingerActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:188
+-keep class cn.kuwo.sing.ui.activities.LiveActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:174
+-keep class cn.kuwo.sing.ui.activities.LiveRoomActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:109
+-keep class cn.kuwo.sing.ui.activities.LocalActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:114
+-keep class cn.kuwo.sing.ui.activities.LocalEditActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:170
+-keep class cn.kuwo.sing.ui.activities.LocalMainActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:98
+-keep class cn.kuwo.sing.ui.activities.LocalNoticeActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:120
+-keep class cn.kuwo.sing.ui.activities.LoginActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:57
+-keep class cn.kuwo.sing.ui.activities.MainActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:124
+-keep class cn.kuwo.sing.ui.activities.ModifyActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:69
+-keep class cn.kuwo.sing.ui.activities.NoSdcardActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:161
+-keep class cn.kuwo.sing.ui.activities.PlayActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:156
+-keep class cn.kuwo.sing.ui.activities.PostProcessedActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:128
+-keep class cn.kuwo.sing.ui.activities.RegisterActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:179
+-keep class cn.kuwo.sing.ui.activities.SearchActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:132
+-keep class cn.kuwo.sing.ui.activities.SettingActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:88
+-keep class cn.kuwo.sing.ui.activities.ShareActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:105
+-keep class cn.kuwo.sing.ui.activities.ShareSettingActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:136
+-keep class cn.kuwo.sing.ui.activities.SingActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:192
+-keep class cn.kuwo.sing.ui.activities.SingerListActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:145
+-keep class cn.kuwo.sing.ui.activities.SongActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:149
+-keep class cn.kuwo.sing.ui.activities.SongSubListActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:152
+-keep class cn.kuwo.sing.ui.activities.SquareActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:83
+-keep class cn.kuwo.sing.ui.activities.SquareActivityActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:79
+-keep class cn.kuwo.sing.ui.activities.SquareFragmentActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:197
+-keep class cn.kuwo.sing.ui.activities.SubSingerListActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:184
+-keep class cn.kuwo.sing.ui.activities.ThirdPartyLoginActivity { <init>(...); }
+
+# view res/layout/common_activity.xml #generated:62
+# view res/layout/continent_famel_singers_activity.xml #generated:78
+# view res/layout/dynamic_layout.xml #generated:54
+# view res/layout/local_activity.xml #generated:76
+# view res/layout/local_main_activity.xml #generated:68
+# view res/layout/local_message_layout.xml #generated:39
+# view res/layout/local_notice_activity.xml #generated:61
+# view res/layout/square_activity_layout.xml #generated:61
+# view res/layout/third_party_login_activity.xml #generated:47
+-keep class cn.kuwo.sing.ui.compatibility.KuwoWebView { <init>(...); }
+
+# view res/layout/sing_activity.xml #generated:37
+-keep class cn.kuwo.sing.ui.compatibility.LrcView { <init>(...); }
+
+# view res/layout/song_list_item.xml #generated:16
+-keep class cn.kuwo.sing.ui.compatibility.ProgressButtonView { <init>(...); }
+
+# view res/layout/sing_activity.xml #generated:184
+-keep class cn.kuwo.sing.ui.compatibility.WaveView { <init>(...); }
+
+# view AndroidManifest.xml #generated:218
+-keep class cn.kuwo.sing.util.NetworkChangeReceiver { <init>(...); }
+
+# view res/layout/chat_face_grid.xml #generated:8
+-keep class cn.kuwo.sing.widget.GridLayout { <init>(...); }
+
+# view res/layout/comment_layout.xml #generated:48
+# view res/layout/search_activity.xml #generated:106
+# view res/layout/song_list_layout.xml #generated:78
+# view res/layout/square_hot_layout.xml #generated:25
+# view res/layout/square_layout.xml #generated:24
+# view res/layout/square_new_layout.xml #generated:24
+# view res/layout/square_super_layout.xml #generated:25
+-keep class cn.kuwo.sing.widget.KuwoListView { <init>(...); }
+
+# view res/layout/sub_singer_activity.xml #generated:72
+-keep class cn.kuwo.sing.widget.SideBar { <init>(...); }
+
+# view res/layout/guide_activity.xml #generated:7
+-keep class cn.kuwo.sing.widget.ViewFlow { <init>(...); }
+
+# view AndroidManifest.xml #generated:63
+-keep class cn.kuwo.sing.wxapi.WXEntryActivity { <init>(...); }
+
+# view AndroidManifest.xml #generated:37
+-keep class com.umeng.common.net.DownloadingService { <init>(...); }
+
+# view AndroidManifest.xml #generated:215
+-keep class com.umeng.fb.ui.FeedbackConversation { <init>(...); }
+
+# view AndroidManifest.xml #generated:214
+-keep class com.umeng.fb.ui.FeedbackConversations { <init>(...); }
+
+# view AndroidManifest.xml #generated:211
+-keep class com.umeng.fb.ui.SendFeedback { <init>(...); }
+
+# view res/layout/umeng_fb_conversation.xml #generated:11
+-keep class com.umeng.fb.ui.ThreadView { <init>(...); }
+

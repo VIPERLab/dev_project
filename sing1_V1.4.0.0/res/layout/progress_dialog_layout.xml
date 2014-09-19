@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_progress"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/pb_background"
+    android:visibility="visible" >
+
+    <ProgressBar
+        android:id="@+id/pb__loading"
+        android:layout_width="40dip"
+        android:layout_height="40dip"
+        android:layout_centerHorizontal="true"
+        android:indeterminate="false"
+        android:indeterminateDrawable="@anim/progress_bar_anim"
+        android:layout_marginBottom="10dp"
+        android:layout_marginTop="10dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/pb__loading"
+        android:layout_centerHorizontal="true"
+        android:gravity="center_horizontal"
+        android:text="@string/kuwolistview_header_hint_loading"
+        android:textColor="@android:color/white" />
+
+</RelativeLayout>
