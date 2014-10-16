@@ -4674,8 +4674,8 @@
 		46EC724E15A2D349007FF377 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer: 永杰 单 (4UR834XUJ8)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: 永杰 单 (4UR834XUJ8)";
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "KwSing/KwSing-Prefix.pch";
 				GCC_VERSION = "";
@@ -4685,7 +4685,7 @@
 					/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = "KwSing/KwSing-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/KwSing/UI/Umeng\"",
@@ -4695,7 +4695,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "F3BA030C-2A0A-4F10-A220-EBE2A78B73DB";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "F3BA030C-2A0A-4F10-A220-EBE2A78B73DB";
-				SDKROOT = iphoneos;
+				SDKROOT = iphoneos8.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
@@ -4704,8 +4704,8 @@
 		46EC724F15A2D349007FF377 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				CODE_SIGN_IDENTITY = "iPhone Developer: 永杰 单 (4UR834XUJ8)";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer: 永杰 单 (4UR834XUJ8)";
+				CODE_SIGN_IDENTITY = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
 				COPY_PHASE_STRIP = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "KwSing/KwSing-Prefix.pch";
@@ -4715,7 +4715,7 @@
 					/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = "KwSing/KwSing-Info.plist";
-				IPHONEOS_DEPLOYMENT_TARGET = 5.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.0;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/KwSing/UI/Umeng\"",
@@ -4731,7 +4731,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "F3BA030C-2A0A-4F10-A220-EBE2A78B73DB";
 				"PROVISIONING_PROFILE[sdk=iphoneos*]" = "F3BA030C-2A0A-4F10-A220-EBE2A78B73DB";
-				SDKROOT = iphoneos;
+				SDKROOT = iphoneos8.0;
 				TARGETED_DEVICE_FAMILY = 1;
 				WRAPPER_EXTENSION = app;
 			};
