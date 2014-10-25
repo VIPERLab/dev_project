@@ -1993,6 +1993,7 @@
 					/Users/xionggai/Documents/KwBook/kwbook/kwbook/UI/Umeng,
 					/Users/shanyongjie2004/projects/kwbook/kwbook/Core/lib,
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "6199AB10-5C81-40CC-9A55-EA3C5FE3801C";
 				VALID_ARCHS = "armv7 armv7s";
@@ -2020,6 +2021,7 @@
 					/Users/xionggai/Documents/KwBook/kwbook/kwbook/UI/Umeng,
 					/Users/shanyongjie2004/projects/kwbook/kwbook/Core/lib,
 				);
+				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "6199AB10-5C81-40CC-9A55-EA3C5FE3801C";
 				VALID_ARCHS = "armv7 armv7s";
