@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size"
+    android:background="@drawable/sport_dialog_background"
+    android:focusable="true"
+    android:padding="10dip" >
+
+    <RelativeLayout
+        android:id="@+id/detail_comment_title"
+        style="@style/fillh_auto_size"
+        android:gravity="center_vertical" >
+
+        <LinearLayout
+            android:id="@+id/detail_close_commment_button"
+            style="@style/auto_size"
+            android:layout_centerVertical="true"
+            android:clickable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" >
+
+            <ImageView
+                style="@style/auto_size"
+                android:src="@drawable/detail_commment_close_button_icon" />
+
+            <TextView
+                style="@style/auto_size"
+                android:layout_gravity="center_vertical"
+                android:paddingLeft="5dip"
+                android:text="关闭"
+                android:textColor="#868686" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/centerMessage"
+            style="@style/auto_size"
+            android:layout_centerHorizontal="true"
+            android:text="跟帖"
+            android:textColor="@color/black"
+            android:textSize="20sp" />
+
+        <LinearLayout
+            android:id="@+id/detail_submit_comment_button"
+            style="@style/auto_size"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:clickable="true"
+            android:gravity="center_vertical"
+            android:orientation="horizontal" >
+
+            <ImageView
+                style="@style/auto_size"
+                android:src="@drawable/detail_submit_comment_button_icon" />
+
+            <TextView
+                style="@style/auto_size"
+                android:gravity="center"
+                android:paddingLeft="5dip"
+                android:text="发布"
+                android:textColor="#868686" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/talk_to_talk"
+        style="@style/auto_size"
+        android:layout_below="@id/detail_comment_title"
+        android:layout_marginTop="10dp"
+        android:textColor="#868686"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:id="@+id/centerEditText"
+        style="@style/fillh_auto_size"
+        android:layout_below="@id/talk_to_talk"
+        android:orientation="vertical" >
+
+        <EditText
+            android:id="@+id/detail_comment_editText"
+            android:layout_width="fill_parent"
+            android:layout_height="70dip"
+            android:layout_gravity="center_vertical"
+            android:layout_marginTop="5dip"
+            android:background="@color/white"
+            android:gravity="top|left"
+            android:hint="在这里留言"
+            android:textColorHint="#cccccc"
+            android:textSize="16sp" >
+        </EditText>
+    </LinearLayout>
+
+    <RelativeLayout
+        style="@style/fillh_auto_size"
+        android:layout_below="@id/centerEditText"
+        android:layout_marginTop="6dp" >
+
+        <TextView
+            android:id="@+id/userName_TV"
+            style="@style/auto_size"
+            android:layout_alignParentLeft="true"
+            android:textColor="#868686"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/leave"
+            style="@style/auto_size"
+            android:layout_alignParentRight="true"
+            android:text="退出登录"
+            android:textColor="#868686"
+            android:textSize="14sp" />
+    </RelativeLayout>
+
+</RelativeLayout>

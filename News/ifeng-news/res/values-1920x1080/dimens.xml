@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- config size here -->
+    <dimen name="title_glue">40dip</dimen>
+    <dimen name="bottom_glue">40dip</dimen>
+    <dimen name="diff_bottom_glue">21dip</dimen>
+    <dimen name="drag_item_normal_height">48dip</dimen>
+    <dimen name="drag_item_expand_height">96dip</dimen>
+    <dimen name="activity_horizontal_margin">16dp</dimen>
+    <dimen name="activity_vertical_margin">16dp</dimen>
+    
+    <!-- widget size -->
+	<dimen name="widget_title_size">16sp</dimen>
+	<dimen name="widget_date_size">13sp</dimen>
+	<dimen name="widget_head_width">90dip</dimen>
+	<dimen name="widget_head_height">66dip</dimen>
+	<dimen name="widget_logo_margin_left">10dip</dimen>
+	<dimen name="widget_title_margin_top">3dip</dimen>
+	
+	 <!-- share size -->
+    <dimen name="share_cover_margin">20dp</dimen>
+    <dimen name="share_cover_padding_top">30dp</dimen>
+    <dimen name="share_title_size">13sp</dimen>
+    <dimen name="share_divier_margin_top">20dp</dimen>
+    <dimen name="share_cancle_title_size">24sp</dimen>
+    <dimen name="share_cancle_title_padding">15dp</dimen>
+</resources>

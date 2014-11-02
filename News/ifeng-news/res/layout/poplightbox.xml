@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black" >
+
+    <TableRow
+        android:id="@+id/bottombar"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/gallery_bottom_title_bar_background" >
+
+        <LinearLayout
+            style="@style/weight_auto_size"
+            android:layout_weight="1" >
+
+            <FrameLayout
+                style="@style/weight_auto_size"
+                android:layout_gravity="bottom"
+                android:layout_weight="1" >
+
+                <ImageView
+                    android:id="@+id/slide_back"
+                    style="@style/fillh_auto_size"
+                    android:background="@drawable/gallery_title_bar_button"
+                    android:clickable="true"/>
+
+                <TextView
+                    style="@style/gallery_title_bar_button"
+                    android:drawableLeft="@drawable/gallery_back"
+                    android:text="@string/back" >
+                </TextView>
+            </FrameLayout>
+
+            <ImageView
+                style="@style/auto_size"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/gallery_divider" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/weight_auto_size"
+            android:layout_weight="1"
+            android:visibility="invisible" >
+
+            <!--
+                 <ImageView
+                style="@style/auto_size"
+                android:src="@drawable/gallery_divider" />
+            -->
+
+            <FrameLayout
+                style="@style/fillh_auto_size"
+                android:layout_gravity="bottom" >
+
+                <ImageView
+                    android:id="@+id/slide_comment"
+                    style="@style/fillh_auto_size"
+                    android:background="@drawable/gallery_title_bar_button"
+                    android:clickable="true"/>
+
+                <TextView
+                    style="@style/gallery_title_bar_button"
+                    android:drawableLeft="@drawable/gallery_comment"
+                    android:text="@string/detail_title_bar_write_comment" >
+                </TextView>
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/weight_auto_size"
+            android:layout_weight="1"
+            android:visibility="invisible" >
+
+            <ImageView
+                style="@style/auto_size"
+                android:src="@drawable/gallery_divider" />
+
+            <FrameLayout
+                style="@style/fillh_auto_size"
+                android:layout_gravity="bottom" >
+
+                <ImageView
+                    android:id="@+id/slide_share"
+                    style="@style/fillh_auto_size"
+                    android:background="@drawable/gallery_title_bar_button"
+                    android:clickable="true" />
+
+                <TextView
+                    style="@style/gallery_title_bar_button"
+                    android:drawableLeft="@drawable/gallery_share"
+                    android:text="@string/detail_title_bar_share" >
+                </TextView>
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/weight_auto_size"
+            android:layout_weight="1" >
+
+            <ImageView
+                style="@style/auto_size"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/gallery_divider" />
+
+            <FrameLayout
+                style="@style/fillh_auto_size"
+                android:layout_gravity="bottom" >
+
+                <ImageView
+                    android:id="@+id/slide_download"
+                    style="@style/fillh_auto_size"
+                    android:background="@drawable/gallery_title_bar_button"
+                    android:clickable="true" />
+
+                <TextView
+                    style="@style/gallery_title_bar_button"
+                    android:drawableLeft="@drawable/gallery_download"
+                    android:text="@string/detail_title_bar_download" >
+                </TextView>
+            </FrameLayout>
+        </LinearLayout>
+    </TableRow>
+
+    <RelativeLayout
+        android:id="@+id/container"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@id/bottombar"
+        android:visibility="gone" >
+
+        <com.ifeng.news2.widget.zoom.PhotoView
+            android:id="@+id/mImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerInParent="true"
+            android:scaleType="fitCenter" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/tip"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="20dp"
+        android:text="正在加载，请稍候"
+        android:textColor="@color/white"
+        android:textSize="20sp" />
+
+</RelativeLayout>

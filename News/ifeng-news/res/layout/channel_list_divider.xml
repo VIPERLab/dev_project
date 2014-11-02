@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size" >
+
+    <ImageView
+        android:id="@+id/divider"
+        style="@style/fillh_auto_size"
+        android:layout_centerVertical="true"
+        android:background="@drawable/channel_list_divider" />
+
+    <RelativeLayout
+        android:id="@+id/hisstory_tag"
+        style="@style/fillh_auto_size"
+        android:paddingBottom="15dp"
+        android:paddingTop="10dp"
+        android:visibility="gone" >
+
+        <ImageView
+            style="@style/fillh_auto_size"
+            android:layout_centerVertical="true"
+            android:background="@drawable/channel_list_divider" />
+
+        <TextView
+            android:layout_width="80dp"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:background="@drawable/channellist_selector"
+            android:gravity="center"
+            android:text="24小时前"
+            android:textColor="#6e6e6e"
+            android:textSize="13sp" />
+    </RelativeLayout>
+
+</RelativeLayout>

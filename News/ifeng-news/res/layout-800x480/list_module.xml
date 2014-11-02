@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:news="http://api.3g.ifeng.com/textview"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" 
+    >
+
+    <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        android:layout_marginTop="8dp"
+        android:paddingLeft="8dp"
+        android:paddingRight="8dp" >
+
+        <FrameLayout
+            android:id="@+id/thumbnail_wrapper"
+            style="@style/auto_size"
+            android:layout_alignParentLeft="true"
+            android:paddingLeft="4dp"
+            android:paddingRight="9dp"
+            android:paddingTop="3dp"
+             >
+
+            <ImageView
+                android:id="@+id/bg_thumbnail"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:src="@drawable/default_channel_index" />
+
+            <ImageView
+                android:id="@+id/thumbnail"
+                android:layout_width="58dp"
+                android:layout_height="58dp"
+                android:layout_gravity="center"
+                android:scaleType="centerCrop" />
+
+            <ImageView
+                android:id="@+id/video"
+                style="@style/auto_size"
+                android:layout_gravity="center"
+                android:src="@drawable/ico_video"
+                android:visibility="gone" />
+        </FrameLayout>
+
+        <RelativeLayout
+            style="@style/channel_list_left"
+            android:layout_toRightOf="@id/thumbnail_wrapper"
+            android:paddingLeft="4dp" >
+
+            <TextView
+                android:id="@+id/title"
+                style="@style/channel_list_title"
+                android:text="教皇的访问使的巨大的幸福" />
+
+            <TextView
+                android:id="@+id/editTime"
+                style="@style/channel_list_description"
+                android:layout_below="@id/title"
+                android:text="1小时前"
+                android:visibility="gone" />
+
+            <RelativeLayout
+                android:id="@+id/list_module_intro"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/editTime" >
+
+                <com.ifeng.news2.widget.IfengTextView
+                    android:id="@+id/introduction"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    news:lineSpacingExtra="5"
+                    news:maxLines="2"
+                    android:text="到巨到巨大的古巴大的古巴感到巨大的幸福的巴感到巨大的幸福"
+                    news:textColor="#A6A6A6"
+                    news:textSize="14" />
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:layout_marginRight="9dip"
+                    android:gravity="bottom" >
+
+                    <ImageView
+                        android:id="@+id/listIcon"
+                        style="@style/channel_list_description"
+                        android:gravity="bottom"
+                        android:visibility="gone" />
+
+                    <TextView
+                        android:id="@+id/comments"
+                        style="@style/channel_list_description"
+                        android:gravity="bottom" />
+                </FrameLayout>
+            </RelativeLayout>
+        </RelativeLayout>
+    </RelativeLayout>
+
+</LinearLayout>

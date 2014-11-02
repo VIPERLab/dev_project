@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/plot_diagram_module"
+    android:orientation="vertical" >
+
+    <LinearLayout style="@style/plot_topic" >
+
+        <ImageView
+            style="@style/plot_topic_divider"
+            android:src="@color/plot_topic_divider_solid_line" />
+    </LinearLayout>
+
+    <RelativeLayout style="@style/plot_diagram_content" >
+
+        <RelativeLayout
+            android:id="@+id/diagram_module"
+            style="@style/auto_size" >
+
+            <ImageView
+                style="@style/plot_diagram_image"
+                android:background="@drawable/plot_diagram_image_background" />
+
+            <ImageView
+                android:id="@+id/plot_diagram_icon"
+                style="@style/plot_diagram_image"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/plot_diagram_text"
+            style="@style/plot_diagram_text"
+            android:layout_alignTop="@id/diagram_module"
+            android:layout_toRightOf="@id/diagram_module" />
+    </RelativeLayout>
+
+    <LinearLayout style="@style/plot_topic" >
+
+        <ImageView
+            style="@style/plot_topic_divider"
+            android:src="@color/plot_topic_divider_solid_line" />
+    </LinearLayout>
+
+</LinearLayout>

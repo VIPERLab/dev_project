@@ -1,0 +1,284 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">凤凰新闻</string>
+    <string name="history">凤凰快讯</string>
+    <!-- config for crash report -->
+    <string name="crash_toast_text">亲,凤凰新闻崩溃了!</string>
+    <string name="crash_notif_ticker_text">发生了未知错误,建议重启凤凰新闻...</string>
+    <string name="crash_notif_title">凤凰新闻崩溃了...</string>
+    <string name="crash_notif_text">请点击这里汇报错误</string>
+    <string name="crash_dialog_title">亲,凤凰新闻崩溃了</string>
+    <string name="crash_dialog_text">凤凰新闻发生了未知的异常,即将强制关闭。请提交错误反馈来协助我们修正错误,您只需要点击发送即可。</string>
+    <string name="crash_dialog_comment_prompt">请您在这里记录崩溃情况:</string>
+    <string name="crash_dialog_ok_toast">亲,感谢反馈!</string>
+    <string name="getUnit_fail">获取内容失败</string>
+    <string name="load_fail">加载失败</string>
+    <string name="back">返 回</string>
+    <string name="detail_title_bar_write_comment">跟 帖</string>
+    <string name="sport_live_bar_chat">发言</string>
+    <string name="sport_live_bar_communicate">聊天</string>
+    <string name="detail_title_bar_download">下 载</string>
+    <string name="detail_title_bar_share">分 享</string>
+    <string name="detail_title_bar_more">更 多</string>
+    <string name="string_filling"> </string>
+    <string name="see_more">查看更多</string>
+    <string name="has_no_more">无更多内容</string>
+    <string name="subscription">频道订阅</string>
+    <string name="photo_program">圖片</string>
+    <string name="ifeng_program">鳳凰節目</string>
+    <string name="subscription_discription">拖动调整频道顺序</string>
+     <string name="more_channel">更多频道</string>
+     <string name="more_channel_discription">点击/拖动添加频道</string>
+
+    <!-- widgets -->
+    <string name="share_to_sina">分享到新浪微博</string>
+    <string name="share_to_other">分享到其他</string>
+    <string name="share_to_email">分享到邮箱</string>
+    <!-- channel list -->
+    <string name="source">来源: </string>
+    <string name="gallery_more_text">查看更多图集</string>
+    <string name="comments">評論</string>
+    <string name="share">分享</string>
+    <string name="favourite">收藏</string>
+    <string name="font">字体大小</string>
+    <string name="cancle">取消</string>
+    <string name="submit">发布</string>
+    <string name="sinaweibo">新浪微博</string>
+    <string name="unbind">未绑定</string>
+    <string name="binded">已绑定</string>
+    <string name="account_bound">分享绑定</string>
+    <string name="font_size_setting">正文字号</string>
+    <string name="font_size_small">小号</string>
+    <string name="font_size_middle">中号</string>
+    <string name="font_size_big">大号</string>
+    <string name="font_size_large">特大号</string>
+    <string name="share_text">%1$s（分享自@凤凰新闻客户端） </string>
+    <string name="share_text2">%1$s @凤凰新闻客户端</string>
+    <string name="pic_live_share_text">~实时报道锁定凤凰新闻图文直播~</string>
+    <string name="share_text_from">来自凤凰新闻客户端：</string>
+    <string name="share_type">凤凰新闻客户端</string>
+    <string name="share_sms_from">\r\n~来自凤凰新闻客户端，与您分享</string>
+    <string name="submit_comment">发布</string>
+    <string name="sending">正在发布，请稍候</string>
+    <string name="support">操作中，请稍候</string>
+    <string name="reset_guide">重置新手向导</string>
+    <string name="clear_cache">清除缓存</string>
+    <string name="idea">意见反馈</string>
+    <string name="about_us">软件信息</string>
+    <string name="text_size">字号设置</string>
+    <string name="big">大</string>
+    <string name="mid">中</string>
+    <string name="small">小</string>
+    <string name="MB">MB</string>
+    <string name="confirm">确定</string>
+    <string name="setting_function">阅读设置</string>
+    <string name="reset_guide_summery">重新开启新手向导</string>
+    <string name="move_read">左右滑动翻页</string>
+    <string name="move_read_summery">滑动页面翻阅上一篇或下一篇文章</string>
+    <string name="load_image">2G/3G无图模式</string>
+    <string name="load_image_summery">关闭后正文页不加载图片</string>
+    <string name="load_offline_summery">无网时也可以看新闻</string>
+    <string name="lock_orientation">开启或者关闭横竖屏锁定</string>
+    <string name="setting_cache">缓存设置</string>
+    <string name="clear_cache_summery">目前缓存</string>
+    <string name="font_size">正文字体</string>
+    <string name="font_size_summery">设置正文字体大小</string>
+    <string name="about">关于</string>
+    <string name="sport_register_tip">用户名注册后不能修改，请输入2-20位，可以是英文，数字，中文，其他字符不允许注册。</string>
+    <string name="about_ifeng">关于凤凰新闻</string>
+    <string name="check_edition">检测新版本</string>
+    <string name="check_editioning">正在检查更新</string>
+    <string name="check_editioned">已是最新版本</string>
+    <string name="version_code">版本号</string>
+    <string name="ifeng_news">凤凰新闻</string>
+    <string name="ifeng_detail">  凤凰网是全球领先的跨平台网络新媒体公司，整合旗下综合门户凤凰网(www.ifeng.com)、手机凤凰网(3g.ifeng.com)和凤凰视频(v.ifeng.com)三大平台，秉承中华情怀，全球视野，兼容开放，进步力量的媒体理念，为主流华人提供互联网、无线通信、电视网三网融合无缝衔接的新媒体</string>
+    <string name="feedback">意见反馈</string>
+    <string name="app_update">软件升级</string>
+    <string name="update">更新</string>
+    <string name="update_suggest">发现新版本，建议立即更新使用。</string>
+    <string name="focus_update">您的版本过低，请立即升级。</string>
+    <string name="feed_back">凤凰新闻意见反馈</string>
+    <string name="feed_back_email">Appfeedback@ifeng.com</string>
+    <string name="please_choose">请选择：</string>
+    <string name="clear_collection">清空收藏</string>
+    <string name="account_manage">帐号管理</string>
+    <string name="fav_folder">收藏夹</string>
+    <string name="setting">设置</string>
+    <string name="my_application">我的应用</string>
+    <string name="download_offline">离线</string>
+    <string name="refresh">刷新</string>
+    <string name="loading">正在载入,请稍候...</string>
+    <string name="go_back">返回</string>
+    <string name="weixin_uninstall_fail">您未安装微信，无法进行微信分享哦</string>
+    <string name="yixin_uninstall_fail">您未安装易信，无法进行易信分享哦</string>
+    <string name="weixin_share_content_fail">分享到微信失败，请稍后重试</string>
+    <string name="yixin_share_content_fail">分享到易信失败，请稍后重试</string>
+    <string name="weibo_share">新浪微博</string>
+    <string name="tenqz_share">QQ空间</string>
+    <string name="tenqq_share">QQ好友</string>
+    <string name="sms_share">短信</string>
+    <string name="tenqt_share">腾讯微博</string>
+    <string name="weixin_share">微信好友</string>
+    <string name="pengyou_share">微信朋友圈</string>
+    <string name="yixin_share">易信好友</string>
+    <string name="yxpengyou_share">易信朋友圈</string>
+    <string name="share_to_renren">分享到人人网</string>
+    <string name="share_to_renren_gallery">分享到人人相册</string>
+    <string name="share_to_tencent_sns">分享到腾讯空间</string>
+    <string name="share_to_tencent">分享到腾讯微博</string>
+    <string name="share_to_kaixin">分享到开心网</string>
+    <string name="share_to_kifeng">分享到凤凰快博</string>
+    
+    <string name="auth_failed">验证失败</string>
+    <string name="activity_sample_code">开心网接口Demo</string>
+    <string name="title_getuserinfo">获取我的用户信息</string>
+    <string name="title_postrecord">发表记录</string>
+    <string name="tv_nouserinfo">返回的用户信息为空</string>
+    <string name="title_getfriendlist">获取开心网好友列表</string>
+    <string name="tv_nofriend">返回的好友列表为空</string>
+    <string name="male">男</string>
+    <string name="female">女</string>
+    <string name="online">在线</string>
+    <string name="offline">不在线</string>
+    <string name="downloading">正在下载...</string>
+    <string name="uploading">正在上传...</string>
+    <string name="post_record_empty_content">请输入内容</string>
+    <string name="post_record_success">记录发表成功...</string>
+    <string name="post_record_fail">记录发表失败...</string>
+    <string name="send_to_qq_cancle">分享QQ取消</string>
+    <string name="send_to_qq_success">分享QQ成功</string>
+    <string name="send_to_qq_error">您未安装qq，无法进行qq分享哦</string>
+    <string name="loading_photo">正在加载图片...</string>
+    <string name="getting_logged_in_user">正在获取用户UID...</string>
+    <string name="task_failed">请求的任务失败</string>
+    <string name="task_failed_arg_err">传入的参数错误，请检查代码</string>
+    <string name="network_err_title">网络异常</string>
+    <string name="network_err_message">当前无可用网络</string>
+    <string name="task_cancel_auth_success">取消授权成功</string>
+    <string name="task_failed_class_cast_err">Java换型错误，请检查代码</string>
+    <string name="task_failed_json_parse_err">JSON解析错误，请检查代码</string>
+    <string name="task_failed_malformed_url_err">错误的 URL,请检查请求的URL</string>
+    <string name="task_failed_encoder_err">字符串转换失败，请检查代码</string>
+    <string name="json_upload_photo_result">返回结果(JSON格式)</string>
+    <string name="personal_account">个人帐号</string>
+    <string name="sina_account">新浪微博帐号</string>
+    <string name="tenqt_account">腾讯微博帐号</string>
+    <string name="tenqz_account">QQ空间帐号</string>
+    <string name="renren_account">人人网帐号</string>
+    <string name="sina_bind">绑定新浪微博帐号</string>
+    <string name="tenqt_bind">绑定腾讯微博帐号</string>
+    <string name="tenqz_bind">绑定QQ空间帐号</string>
+    <string name="renren_bind">绑定人人网帐号</string>
+    <string name="sina_binded">已绑定新浪微博帐号</string>
+    <string name="tenqt_binded">已绑定腾讯微博帐号</string>
+    <string name="tenqz_binded">已绑定QQ空间帐号</string>
+    <string name="renren_binded">已绑定人人网帐号</string>
+    <string name="tenqz_unbind">注销已绑定QQ空间帐号</string>
+    <string name="sina_unbind">注销已绑定新浪微博帐号</string>
+    <string name="tenqt_unbind">注销已绑定腾讯微博帐号</string>
+    <string name="renren_unbind">注销已绑定人人网帐号</string>
+    <string name="not_bind_sina">未绑定新浪微博</string>
+    <string name="not_bind_tenqt">未绑定腾讯微博</string>
+    <string name="not_bind_tenqz">未绑定QQ空间</string>
+    <string name="not_bind_renren">未绑定人人网</string>
+    <string name="accounts_summery">绑定其他平台帐号</string>
+    <string name="offlin_download_txt">正在载入...</string>
+    <string name="push_news">新闻推送</string>
+    <string name="push_detail">开启或关闭新闻推送功能</string>
+    <string name="non_disturbance">夜间无声推送</string>
+    <string name="non_disturbance_detail">开启后22:00–8:00推送无声音</string>
+    <!-- @gm For pull refresh -->
+    <string name="header_hint_normal">下拉刷新</string>
+    <string name="header_hint_ready">松开刷新</string>
+    <string name="header_last_time">上次更新时间：</string>
+    <string name="header_hint_loading">正在加载</string>
+    <string name="my_collection">收藏</string>
+    <string name="hot_comment">評論熱榜</string>
+    <string name="hot_realtime">實時熱榜</string>
+    <string name="hot_alaway">24熱榜</string>
+    <!-- @gm -->
+    <!-- @lxl For SplashActivity begin -->
+    <string name="splash_induction">启动画面简介</string>
+    <string name="splash_button_detail">点击查看详情</string>
+    <string name="splash_button_skip">跳过</string>
+    <!-- @lxl For SplashActivity end -->
+
+    <string name="not_network_message">当前无可用网络</string>
+    <string name="not_latest_message">当前未获取最新内容</string>
+    <string name="current_edition">当前版本</string>
+    <string name="title_activity_wxentry">WXEntryActivity</string>
+    <string name="action_settings">Settings</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="errcode_success">发送成功</string>
+    <string name="errcode_cancel">发送取消</string>
+    <string name="errcode_deny">发送被拒绝</string>
+    <string name="errcode_unknown">发送返回</string>
+
+    <string name="direct_seeding_entertainment">凤凰娱乐</string>
+    <string name="direct_seeding_financial">凤凰财经</string>
+    <string name="direct_seeding_technology">凤凰科技</string>
+    <string name="direct_seeding_news">凤凰新闻</string>
+    <string name="direct_seeding_fashion">凤凰时尚</string>
+    
+    <string name="direct_seeding_in_living">直播中</string>
+    <string name="direct_seeding_before_living">即将直播</string>
+    <string name="direct_seeding_after_living">直播结束</string>
+    
+    <item name="tag_holder" type="id"></item>
+    <item name="tag_data" type="id"></item>
+    <item name="tag_title" type="id"></item>
+    
+    <!-- app widget -->
+	 <string name="appwidget_label_4_2">凤凰新闻4x2</string>
+	 <string name="appwidget_label_4_3">凤凰新闻4x3</string>
+	 <string name="appwidget_label_4_4">凤凰新闻4x4</string>
+	 <string name="appwidget_label_4_1">凤凰新闻4x1</string>
+	 <string name="appwidget_loading">正在加载，请稍候...</string>
+	 <string name="appwidget_error_loading">加载失败，请稍候重试</string>
+	 
+	 <!-- video detail -->
+	 <string name="video_relative_title">相关视频</string>
+	 <string name="video_dialog_play_or_not">您当前使用的是2g/3g网络，是否继续播放？</string>
+	 <string name="video_dialog_positive">是</string>
+	 <string name="video_dialog_negative">否</string>
+	 
+	 <!-- single share -->
+	 <string name="comment_single_support">支持</string>
+	 <string name="comment_single_reply">回复</string>
+	 <string name="comment_single_share">分享</string>
+	 
+	 <!--  单条跟帖分享评论格式 -->
+	<string name="share_comment_text_tx">网友评论:%1$s【凤凰新闻 :%2$s】%3$s @凤凰新闻客户端</string>
+	<string name="share_comment_text_tx_t">网友评论:%1$s @fenghuangxinwen 【%2$s】%3$s</string>
+    <string name="share_comment_text_qqspaceandx">网友评论:%1$s\r\n凤凰新闻:%2$s%3$s</string>
+    <string name="share_comment_text_qqspaceandxTwo">网友评论:%1$s\r\n%2$s</string>
+    <string name="comments_content">网友评论:%1$s</string>
+    <string name="comments_news">凤凰新闻:%1$s</string>
+    <string name="comment_send_msg">网友评论:%1$s\r\n【凤凰新闻:%2$s】 %3$s \r\n来自凤凰新闻客户端,与您分享</string>
+	 
+	 
+	 <!-- survey module -->
+	 <string name="survey_see_results">查看结果</string>
+	 <string name="survey_join">参与调查</string>
+	 <string name="survey_commit_but">提交</string>
+	 
+	 <!-- vote module -->
+	<string name="vote_question_message">点击选项投票，投票后查看结果</string>
+	<string name="vote_result_message">感谢您的参与</string>
+	
+	
+	<!-- toast  alert -->
+	<string name="toast_publish_success_title">发布成功</string>
+	<string name="toast_publish_success_content">参与就是力量</string>
+	<string name="toast_publish_fail_title">发布失败</string>
+	<string name="toast_publish_fail_content">稍后再试吧</string>
+	<string name="toast_edit_empty_title">没有内容么？</string>
+	<string name="toast_edit_empty_content">内容不能为空</string>
+	<string name="toast_store_success_title">收藏成功</string>
+	<string name="toast_store_success_content">在我的收藏里</string>
+	<string name="toast_store_cancel_title">取消收藏</string>
+	<string name="toast_store_cancel_content">已移出收藏列表</string>
+	
+	
+</resources>

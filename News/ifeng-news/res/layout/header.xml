@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+   	android:orientation="vertical"
+    android:gravity="bottom"
+    android:background="@color/medium_gray" >
+	<LinearLayout 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal">
+    <RelativeLayout
+        android:id="@+id/header_content"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp" >
+
+        <RelativeLayout
+            android:id="@+id/header_relative"
+            android:layout_width="wrap_content"
+            android:layout_height="60dp"
+             >
+
+            <ImageView
+                android:id="@+id/header_arrow"
+                android:layout_width="54dip"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:orientation="horizontal"
+                android:src="@drawable/arrow" />
+
+            <com.ifeng.news2.widget.GifView
+                android:id="@+id/attach"
+                android:layout_width="54dip"
+                android:layout_height="35dip"
+                android:layout_alignParentLeft="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/loading"
+                android:visibility="gone" >
+            </com.ifeng.news2.widget.GifView>
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/header_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/header_relative"
+            android:orientation="vertical" >
+
+            <TextView
+                android:id="@+id/header_hint_textview"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/header_hint_normal"
+                android:paddingLeft="20dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="3dp"
+                 >
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/header_last_time"
+                    android:textSize="12sp" />
+
+                <TextView
+                    android:id="@+id/header_time"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="12sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+    </RelativeLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:id="@+id/shadow"
+            android:layout_width="fill_parent"
+            android:layout_height="11px"
+            android:background="@drawable/header_shadow" />
+</LinearLayout>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+    xmlns:android="http://schemas.android.com/apk/res/android" 
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@color/white">
+    
+  <RelativeLayout            
+        android:layout_width="fill_parent"
+        android:layout_height="80dp">
+        
+        <ImageView
+            android:id="@+id/comment_logo" 
+            android:layout_marginTop="30dp"                                     
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:src="@drawable/comment_hot_tag"      
+            />
+        
+        <TextView
+            android:id="@+id/join_count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/count"
+            android:paddingRight="7dip"
+            android:textColor="@color/list_readed_text_color"
+            android:textSize="15sp"
+            />
+
+        <TextView
+            android:id="@+id/count"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:paddingRight="7dip"
+            android:textColor="@color/list_readed_text_color"
+            android:textSize="15sp"
+            />
+    </RelativeLayout>  
+    
+   <TextView 
+       android:id="@+id/no_comments_message"
+     	android:visibility="gone"
+         android:layout_marginTop="15dp"
+         android:layout_marginBottom="20dp"
+         android:layout_width="fill_parent"
+         android:layout_marginLeft="20dp"
+         android:layout_height="wrap_content"
+         android:textColor="#4d4d4d"
+         android:textSize="15sp"
+         android:text="暂无跟帖"
+         />
+    </LinearLayout> 

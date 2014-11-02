@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/plot_atlas_module"
+    android:orientation="vertical" >
+
+    <LinearLayout style="@style/plot_topic" >
+
+        <ImageView
+            style="@style/plot_topic_divider"
+            android:src="@color/plot_topic_divider_solid_line" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/plot_atlas_content"
+        android:orientation="vertical" >
+
+        <RelativeLayout style="@style/fillh_auto_size" >
+
+            <com.ifeng.news2.widget.PlotAtlasImageView
+                android:id="@+id/plot_atlas_icon"
+                style="@style/plot_topic" />
+
+            <RelativeLayout
+                android:id="@+id/plot_atlas_tag_icon"
+                style="@style/plot_topic"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentRight="true" >
+
+                <TextView
+                    style="@style/auto_size"
+                    android:layout_alignParentBottom="true"
+                    android:layout_alignParentRight="true"
+                    android:background="#88000000"
+                    android:paddingBottom="2dip"
+                    android:paddingLeft="5dip"
+                    android:paddingRight="5dip"
+                    android:paddingTop="2dip"
+                    android:text="图集"
+                    android:textColor="@color/white" />
+            </RelativeLayout>
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/plot_atlas_text"
+            style="@style/plot_atlas_text"
+            android:visibility="gone" />
+    </LinearLayout>
+
+    <LinearLayout style="@style/plot_topic" >
+
+        <ImageView
+            style="@style/plot_topic_divider"
+            android:src="@color/plot_topic_divider_solid_line" />
+    </LinearLayout>
+
+</LinearLayout>

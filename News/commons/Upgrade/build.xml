@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- ====================================================================== 
+     2012-5-10 下午2:14:30                                                        
+
+     project    
+     description
+                   
+     wangfeng                                                                
+     ====================================================================== -->
+<project name="Upgrade" default="compile" basedir=".">
+    <description>
+            compile用于编译生成jar包
+    </description>
+	
+	<property name="src" location="src"></property>
+	<!-- build 的class目标-->
+	<property name="build" location="build"></property>
+	<!-- jar包生成的目标路径 -->
+	<property name="dist" location="dist"></property>
+	<!--依赖路径 -->
+	<property name="qad" location="E:\workSpace_advance\QADFramework"></property>
+	<property name="android.sdk" location="E:/android-sdk-windows/platforms/android-8"></property>
+	
+	<target name="play">
+		<!--tstamp用于生成时间戳属性 -->
+	</target>
+	
+	<target name="init">
+		<echo>Do clean</echo>
+		<antcall target="clean"></antcall>
+		<mkdir dir="${build}"/>
+	</target>
+	
+	<target name="compile" depends="init" description="编译项目">
+		<tstamp></tstamp>
+		<javac srcdir="${src}" destdir="${build}" encoding="UTF-8">
+			<classpath location="${android.sdk}/android.jar"></classpath>
+			<classpath location="${qad}\bin\qadframework.jar"></classpath>
+			<exclude name="**/test/**"/>
+		</javac>
+		<property name="destJar" value="${dist}/upgrade_${DSTAMP}.jar"></property>
+		<property name="srcJar" value="${dist}/upgrade_${DSTAMP}-source.jar"></property>
+		<jar basedir="${build}" compress="true" destfile="${destJar}"></jar>
+		<jar basedir="${src}" compress="true" destfile="${srcJar}"></jar>
+		<copyfile dest="${dist}/upgrade_latest.jar" src="${destJar}"/>
+		<copyfile dest="${dist}/upgrade-source-latest.jar" src="${srcJar}"/>
+		<antcall target="clean"></antcall>
+	</target>
+	
+	<target name="clean">
+		<delete dir="build"></delete>
+	</target>
+
+</project>

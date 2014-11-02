@@ -1,0 +1,38 @@
+body{
+    background-image: url('body_bg.png');
+    padding-left:11px;
+    padding-right:11px;
+}
+.content{
+    color:#4d4d4d;
+    margin-top:20px;
+    line-height:1.6;
+    font-size:18px;
+    clear:both;
+}
+.content p{
+    text-indent:2em;
+    margin:15px 0px;
+    font-family:monospace,sans-serif;
+}
+
+p > strong{
+    color:#000000;
+}
+
+p > span{
+    color:#000000;
+}
+
+.content p[style]{text-indent: 0em;}
+.content img{
+	width:100%;
+	background-repeat:no-repeat;
+	background-size:contain,auto;
+	background-position:center center;
+	background-clip:content-box;
+	background-origin:content-box;
+}
+
+
+img {-webkit-tap-highlight-color: rgba(0, 0, 0, 0);box-sizing:border-box;}

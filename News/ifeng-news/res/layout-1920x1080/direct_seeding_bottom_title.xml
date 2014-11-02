@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/channellist_selector"
+    android:orientation="vertical" >
+
+     <RelativeLayout
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" >
+
+        <TextView
+            android:id="@+id/direct_seeding_content_TV"
+            style="@style/auto_size"
+            android:layout_marginLeft="18dp"
+            android:layout_marginRight="18dp"
+            android:layout_marginTop="15dp"
+            android:text="年的劲歌金曲！第24届金曲奖将于7月6日举行，让我们一起来跟随金曲奖，细数华语乐坛去年的劲歌金曲！"
+            android:textColor="#414040"
+            android:textSize="14sp" />
+
+        <RelativeLayout
+            android:id="@+id/state_wrapper"
+            style="@style/fillh_auto_size"
+            android:layout_below="@id/direct_seeding_content_TV"
+            android:layout_marginRight="18dp"
+            android:layout_marginTop="10dp" >
+
+            <com.ifeng.news2.widget.GifView
+                android:id="@+id/direct_seeding_GV"
+                style="@style/auto_size"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="5dp"
+                android:background="@drawable/direct_seeding_point" />
+
+            <TextView
+                android:id="@+id/direct_seeding_status_TV"
+                style="@style/auto_size"               
+                android:layout_toLeftOf="@id/direct_seeding_GV"
+                android:layout_alignWithParentIfMissing="true" 
+                android:layout_centerVertical="true"
+                android:text="直播中"
+                android:textColor="#0080e1"
+                android:textSize="14.5sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <ImageView
+        android:id="@+id/bottom_line"
+        style="@style/fillh_auto_size"
+        android:layout_marginTop="5dp"
+        android:background="@drawable/direct_seeding_title_gray_line" />
+
+</LinearLayout>

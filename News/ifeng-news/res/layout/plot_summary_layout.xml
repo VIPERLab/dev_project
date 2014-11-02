@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/plot_topic"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/plot_summary"
+        style="@style/plot_summary_text"
+        android:gravity="bottom"/>
+    <LinearLayout
+        style="@style/fillh_auto_size"
+        android:background="@drawable/plot_topic_dotted_divider" />
+
+</LinearLayout>

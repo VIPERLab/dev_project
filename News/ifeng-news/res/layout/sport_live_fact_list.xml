@@ -1,0 +1,97 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/fillh_auto_size"
+    android:paddingLeft="20dip"
+    android:paddingRight="20dip" >
+
+    <LinearLayout
+        style="@style/fillh_auto_size"
+        android:orientation="horizontal" >
+
+        <RelativeLayout
+            android:id="@+id/left_module"
+            style="@style/fill_both_size"
+            android:layout_weight="3"
+            android:gravity="center" >
+
+            <ImageView
+                android:layout_width="1dip"
+                android:layout_height="match_parent"
+                android:layout_centerHorizontal="true"
+                android:background="@color/transparent_gray" />
+
+            <LinearLayout
+                style="@style/auto_size"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:background="@color/sport_bg_color"
+                android:gravity="center"
+                android:orientation="vertical" >
+
+                <ImageView
+                    android:id="@+id/sport_icon"
+                    style="@style/auto_size"
+                    android:background="@drawable/sport_hot_comment_icon" />
+
+                <TextView
+                    android:id="@+id/sport_icon_name"
+                    style="@style/sport_liver_module"
+                    android:drawablePadding="5dip"
+                    android:text="主持"
+                    android:textColor="@color/loading_fail_font" />
+            </LinearLayout>
+        </RelativeLayout>
+
+        <RelativeLayout
+            style="@style/fillh_auto_size"
+            android:layout_weight="1" >
+
+            <RelativeLayout
+                android:id="@+id/content_module"
+                style="@style/fillh_auto_size"
+                android:paddingBottom="20dip"
+                android:paddingTop="20dip" >
+
+                <RelativeLayout style="@style/fillh_auto_size" >
+
+                    <TextView
+                        android:id="@+id/sport_title"
+                        style="@style/sport_live_title"
+                        android:textColor="@color/sport_title_color"
+                        android:paddingBottom="5dip" />
+
+                    <RelativeLayout
+                        android:id="@+id/sport_fact_icon_module"
+                        style="@style/fillh_auto_size"
+                        android:layout_below="@id/sport_title"
+                        android:visibility="gone" >
+
+                        <ImageView
+                            android:id="@+id/sport_fact_icon"
+                            android:layout_width="fill_parent"
+                            android:layout_height="120dip"
+                            android:scaleType="fitStart" />
+                    </RelativeLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/sport_live_reply_module"
+                        style="@style/fillh_auto_size"
+                        android:layout_below="@id/sport_title"
+                        android:background="@drawable/sport_reply_bg"
+                        android:visibility="gone" >
+
+                        <include
+                            style="@style/fillh_auto_size"
+                            layout="@layout/sport_live_comment_item" />
+                    </RelativeLayout>
+                </RelativeLayout>
+            </RelativeLayout>
+
+            <LinearLayout
+                style="@style/fillh_auto_size"
+                android:layout_below="@id/content_module"
+                android:background="@drawable/sport_divide_line" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>

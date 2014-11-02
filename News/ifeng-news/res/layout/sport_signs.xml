@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size"
+    android:orientation="horizontal"
+    android:paddingLeft="20dip"
+    android:paddingRight="20dip" >
+
+    <!-- paddingLef、paddingRight 属性值要和sport_live_fact_list属性值一致否者左侧线会不在一条线上 -->
+
+    <RelativeLayout
+        style="@style/fill_both_size"
+        android:layout_weight="3"
+        android:gravity="center" >
+
+        <ImageView
+            android:layout_width="1dip"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:background="@color/transparent_gray" />
+
+        <ImageView
+            style="@style/auto_size"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:background="@drawable/sport_point" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        style="@style/fillh_auto_size"
+        android:layout_weight="1"
+        android:paddingTop="20dip" >
+
+        <LinearLayout
+            android:id="@+id/sport_fact_signs"
+            style="@style/auto_size"
+            android:background="@drawable/sport_current_event" 
+            android:paddingLeft="15dp"
+            android:paddingRight="10dp"
+            android:paddingTop="2dp"
+            android:paddingBottom="2dp">
+
+            <TextView
+                android:id="@+id/sprot_fact_signs_prompt"
+                style="@style/sport_live_signs_module"
+                android:textColor="@color/white" />
+        </LinearLayout>
+
+        <LinearLayout
+            style="@style/fillh_auto_size"
+            android:layout_below="@id/sport_fact_signs"
+            android:paddingTop="20dip" >
+
+            <LinearLayout
+                style="@style/fillh_auto_size"
+                android:background="@drawable/sport_divide_line" />
+        </LinearLayout>
+    </RelativeLayout>
+
+</LinearLayout>

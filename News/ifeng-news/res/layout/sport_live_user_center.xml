@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/sport_dialog_background" >
+
+    <TextView
+        android:id="@+id/userCenterTV"
+        style="@style/auto_size"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="8dp"
+        android:text="凤凰用户中心"
+        android:textColor="#000000"
+        android:textSize="18sp" />
+
+    <RelativeLayout
+        android:id="@+id/centerComponent"
+        style="@style/fillh_auto_size"
+        android:layout_below="@id/userCenterTV"
+        android:layout_centerInParent="true">
+
+        <TextView
+            android:layout_marginTop="8dp"
+            android:id="@+id/tip"
+            style="@style/auto_size"
+            android:layout_alignParentLeft="true"
+            android:layout_marginLeft="20dp"
+            android:text="免登录发言"
+            android:textColor="#868686"
+            android:textSize="12sp" />
+        
+        <TextView 
+            android:layout_marginTop="8dp"
+            android:id="@+id/register"
+            style="@style/auto_size"
+            android:layout_alignParentRight="true"
+            android:layout_marginRight="20dp"
+            android:textSize="11sp"
+            android:textColor="#206bc0"
+            android:text="注册"
+            />
+        
+        <TextView 
+            android:layout_marginTop="8dp"
+            android:id="@+id/verticalLine"
+            style="@style/auto_size"
+            android:layout_toLeftOf="@id/register"
+            android:text="|"
+            android:textSize="11sp"
+            />
+		<TextView 
+		    android:layout_toLeftOf="@id/verticalLine"
+            android:layout_marginTop="8dp"
+            android:id="@+id/login"
+            style="@style/auto_size"           
+            android:textSize="11sp"
+            android:textColor="#206bc0"
+            android:text="登录"
+            />
+        
+        <EditText
+            android:id="@+id/input_ET"
+            android:layout_width="fill_parent"
+            android:layout_height="30dp"
+            android:layout_below="@id/tip"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/white"
+            android:hint="直接输入昵称"
+            android:maxLines="1"
+            android:textSize="10sp" />
+    </RelativeLayout>
+
+    <RelativeLayout       
+        style="@style/auto_size"
+        android:layout_below="@id/centerComponent"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="10dp" >
+
+        <ImageView
+            android:id="@+id/sport_submit"
+            style="@style/auto_size"
+            android:src="@drawable/sport_live_regist_ok" 
+            android:paddingBottom="10dp"/>
+
+        <TextView
+            style="@style/auto_size"
+            android:layout_centerInParent="true"
+            android:text="完成"
+            android:textColor="#868686"
+            android:textSize="14sp" 
+            android:paddingBottom="10dp"/>
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+
+    <com.ifeng.news2.widget.IfengBottom
+        android:id="@+id/ifeng_bottom"
+        style="@style/fillh_auto_size"
+        android:layout_alignParentBottom="true" />
+
+    <WebView
+        android:id="@+id/web_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@id/ifeng_bottom" />
+
+    <LinearLayout
+        android:id="@+id/shadow"
+        style="@style/fillh_auto_size"
+        android:layout_above="@id/ifeng_bottom"
+        android:background="@drawable/detail_tabbar_shadow" />
+
+    <LinearLayout
+        android:id="@+id/loading"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone" >
+
+        <ImageView
+            android:id="@+id/stat_image_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:src="@drawable/logo_light" />
+
+        <TextView
+            android:id="@+id/stat_text_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/loading" />
+    </LinearLayout>
+
+</RelativeLayout>

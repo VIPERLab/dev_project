@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/offline_down"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:padding="8dp"
+    android:background="@color/transparent" >
+
+    <LinearLayout
+        android:id="@+id/image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginLeft="4dp" >
+
+        <ImageView
+            android:id="@+id/offline_down_pic"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/icon" />
+    </LinearLayout>
+
+    <RelativeLayout
+        android:id="@+id/notification_content"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginRight="20dp"
+        android:layout_toRightOf="@id/image"
+        android:paddingLeft="13dp" >
+
+        <RelativeLayout
+            android:id="@+id/message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical" >
+
+            <TextView
+                android:id="@+id/offline_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:gravity="center_vertical"
+                android:text="离线完成 " />
+           
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/message"
+            android:orientation="horizontal"
+            android:paddingTop="2dip" >          
+            <TextView 
+                android:id="@+id/offline_complete"
+                style="@style/auto_size"
+                android:text="无网络时,您也可以看新闻"/>
+        </LinearLayout>
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size"
+    android:background="@drawable/detail_tabbar_background"
+    android:gravity="bottom" >
+
+    <LinearLayout
+        style="@style/auto_size"
+        android:layout_alignParentLeft="true" >
+
+        <FrameLayout style="@style/auto_size" >
+
+            <ImageView
+                android:id="@+id/back"
+                style="@style/auto_size"
+                android:clickable="true"
+                android:src="@drawable/detail_title_bar_button" />
+
+            <TextView
+                style="@style/detail_title_bar_button"
+                android:drawableLeft="@drawable/back"
+                android:text="@string/back" >
+            </TextView>
+        </FrameLayout>
+
+        <ImageView
+            style="@style/auto_size"
+            android:layout_gravity="center_vertical"
+            android:src="@drawable/detail_tabbar_cutoff" />
+    </LinearLayout>
+
+</RelativeLayout>

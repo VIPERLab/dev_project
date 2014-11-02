@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- theme -->
+    <style name="IfengTheme" parent="@android:style/Theme.Light.NoTitleBar">
+
+        <!-- <item name="android:background">@drawable/debug_border</item> -->
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+    </style>
+    <!-- layout -->
+    <style name="block_title_bar" parent="@style/fillh_auto_size">
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="title_logo" parent="@style/auto_size">
+        <item name="android:src">@drawable/titlebar_logo</item>
+        <item name="android:layout_gravity">center</item>
+    </style>
+
+    <style name="block_channel_list" parent="@style/fillh_auto_size">
+        <item name="android:background">@color/ivory2</item>
+        <item name="android:cacheColorHint">@color/ivory2</item>
+    </style>
+
+</resources>

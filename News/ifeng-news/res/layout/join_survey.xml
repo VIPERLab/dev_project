@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size" >
+
+    <Button
+        android:id="@+id/topic_join_survey_but"
+        style="@style/survey_topic_join_but_style"
+        android:text="@string/survey_join" >
+    </Button>
+
+</LinearLayout>

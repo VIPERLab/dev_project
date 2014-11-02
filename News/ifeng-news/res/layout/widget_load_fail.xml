@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/retry"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/ivory2">
+
+    <ImageView
+        android:id="@+id/eye"
+        style="@style/auto_size"
+        android:src="@drawable/default_slide" 
+        android:layout_centerInParent="true"/>
+
+    <TextView
+        android:id="@+id/label_fail"
+        style="@style/auto_size"
+        android:layout_centerInParent="true"
+        android:layout_below="@id/eye"
+        android:paddingBottom="8dip"
+        android:paddingTop="8dip"
+        android:text="获取内容失败"
+        android:textColor="@color/black"
+        android:textSize="12sp" />
+
+    <TextView
+        style="@style/auto_size"
+        android:layout_below="@id/label_fail"
+        android:text="点击重试"
+        android:textColor="@color/black"
+        android:textSize="12sp" 
+        android:layout_centerInParent="true"/>
+
+</RelativeLayout>

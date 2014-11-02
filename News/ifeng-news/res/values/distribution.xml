@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources> 
+  <string name="publish_id">test</string>  
+  <string name="enable_ad">true</string>
+  <string name="isopen_autoupdate">true</string>
+  <string name="ADD_UMENG_STAT">true</string>
+  <string name="special_userkey">false</string>
+  <string name="imocha_ad">true</string>
+  <string name="isDEGUG">false</string>
+  <string name="enablePush">true</string>
+</resources>

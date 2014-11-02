@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:paddingBottom="6dip"
+    android:paddingTop="8dip" >
+
+    <RelativeLayout
+        style="@style/fillh_auto_size"
+        android:layout_weight="1"
+        android:paddingRight="4dip" >
+
+        <ImageView
+            style="@style/fillh_auto_size"
+            android:src="@drawable/default_channel_slides_index" />
+
+        <com.ifeng.news2.widget.ChannelSlideImageView
+            android:id="@+id/thumbnail_first"
+            style="@style/fillh_auto_size"
+            android:scaleType="centerCrop" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        style="@style/fillh_auto_size"
+        android:layout_weight="1"
+        android:paddingLeft="2dip"
+        android:paddingRight="2dip" >
+
+        <ImageView
+            style="@style/fillh_auto_size"
+            android:src="@drawable/default_channel_slides_index" />
+
+        <com.ifeng.news2.widget.ChannelSlideImageView
+            android:id="@+id/thumbnail_second"
+            style="@style/fillh_auto_size"
+            android:scaleType="centerCrop" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        style="@style/fillh_auto_size"
+        android:layout_weight="1"
+        android:paddingLeft="4dip" >
+
+        <ImageView
+            style="@style/fillh_auto_size"
+            android:src="@drawable/default_channel_slides_index" />
+
+        <com.ifeng.news2.widget.ChannelSlideImageView
+            android:id="@+id/thumbnail_third"
+            style="@style/fillh_auto_size"
+            android:scaleType="centerCrop" />
+    </RelativeLayout>
+<!-- channel_slide_item -->
+</LinearLayout>

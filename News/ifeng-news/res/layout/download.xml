@@ -1,0 +1,69 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="#fff0f0e6"
+    android:orientation="vertical"
+    android:paddingLeft="7dip"
+    android:paddingRight="7dip" >
+
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="57dip"
+        android:layout_marginBottom="15dip" >
+
+        <ProgressBar
+            android:id="@+id/offline_down_pb"
+            style="@android:style/Widget.ProgressBar.Horizontal"
+            android:layout_width="fill_parent"
+            android:layout_height="20dip"
+            android:layout_alignParentBottom="true"
+            android:max="100"
+            android:progressDrawable="@drawable/ifeng_progress_drawable" />
+
+        <TextView
+            android:id="@+id/offline_down_title"
+            android:layout_above="@id/offline_down_pb"
+            android:layout_alignParentLeft="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" 
+            android:textColor="@color/black"
+            android:paddingBottom="4dip"
+            />
+        
+        <TextView
+            android:id="@+id/offline_down_report"
+            android:layout_alignParentRight="true"
+            android:layout_above="@id/offline_down_pb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" 
+            android:textColor="@color/deep_gray"
+            android:textSize="30sp"
+            />
+        
+    </RelativeLayout>
+
+    <!--
+         <View
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content" android:background="@drawable/divider"/>
+    -->
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingBottom="33dip"
+        android:paddingTop="7dip"
+        android:text="系统将下载所有频道的离线文章和图片,可能会占用较多的时间完成该任务,建议您使用wifi网络,并在下载完成之前不要退出凤凰新闻。"
+        android:textColor="@color/gray" 
+        android:id="@+id/offline_down_introduction"/>
+
+    <Button
+        android:id="@+id/cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:paddingLeft="53dip"
+        android:paddingRight="53dip"
+        android:text="取消下载" />
+
+</LinearLayout>

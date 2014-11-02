@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="120dp"
+    android:background="@drawable/sport_live_title_background" >
+
+    <RelativeLayout
+        android:id="@+id/matchMode_one"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:visibility="visible" >
+
+        <RelativeLayout
+            android:id="@+id/sport_top"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:background="@drawable/sport_live_title_point_background" >
+
+            <TextView
+                android:id="@+id/sport_step"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:text=""
+                android:textColor="#ffffff"
+                android:textSize="12sp" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_below="@id/sport_top"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="2dp"
+            android:orientation="vertical" >
+
+            <ImageView
+                android:id="@+id/teamLogoLeft"
+                android:layout_width="52dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center_horizontal"
+                android:scaleType="centerCrop"
+                android:src="@drawable/sport_live_title_default_teamlogo" />
+
+            <TextView
+                android:id="@+id/teamNameLeft"
+                android:layout_width="75sp"
+                android:layout_height="fill_parent"
+                android:gravity="center_horizontal"
+                android:text="主队"
+                android:textColor="#000000"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_below="@id/sport_top"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="2dp"
+            android:orientation="vertical" >
+
+            <ImageView
+                android:id="@+id/teamLogoRight"
+                android:layout_width="52dp"
+                android:layout_height="56dp"
+                android:layout_gravity="center_horizontal"
+                android:scaleType="centerCrop"
+                android:src="@drawable/sport_live_title_default_teamlogo" />
+
+            <TextView
+                android:id="@+id/teamNameRight"
+                android:layout_width="75sp"
+                android:layout_height="fill_parent"
+                android:gravity="center_horizontal"
+                android:text="客队"
+                android:textColor="#000000"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/sport_point"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text=":"
+            android:textColor="#bb0b15"
+            android:textSize="32sp" />
+    </RelativeLayout>
+
+    <TextView
+        android:id="@+id/matchMode_two"
+        style="@style/auto_size"
+        android:layout_centerInParent="true"
+        android:text=""
+        android:textColor="#000000"
+        android:textSize="20sp"
+        android:visibility="gone" />
+
+</RelativeLayout>

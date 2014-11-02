@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/light_blood"
+    android:orientation="horizontal" >
+
+    <Button
+        android:id="@+id/comment"
+        android:layout_width="fill_parent"
+        android:layout_height="49dip"
+        android:padding="4dp"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="@string/hot_comment"
+        android:textColor="@color/white"
+        android:background="@drawable/widget_menu_item_bg"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/realtime"
+        android:layout_width="fill_parent"
+        android:layout_height="49dip"
+        android:padding="4dp"
+        android:layout_weight="1"
+        android:clickable="true"
+        android:gravity="center"
+        android:background="@drawable/widget_menu_item_bg"
+        android:text="@string/hot_realtime"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
+
+    <Button
+        android:id="@+id/alaway"
+        android:layout_width="fill_parent"
+        android:layout_height="49dip"
+        android:padding="4dp"
+        android:layout_weight="1"
+        android:background="@drawable/widget_menu_item_bg"
+        android:clickable="true"
+        android:gravity="center"
+        android:text="@string/hot_alaway"
+        android:textColor="@color/white"
+        android:textSize="16sp" />
+
+</LinearLayout>

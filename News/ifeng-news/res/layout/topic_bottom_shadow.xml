@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size"
+    android:orientation="vertical"
+    android:background="@drawable/topic_sub_title_shadow" >
+</LinearLayout>

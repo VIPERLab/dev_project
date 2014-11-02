@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MsgBoxInfo versionCode="6"
+    forceUpdate="false"
+    productId="ifengnews" >
+
+</MsgBoxInfo>
+
+<PushServiceInfo class="com.ifeng.news2.messagebox.core.PushService" >
+
+    <Actions
+        start="action.com.ifeng.messagebox.core.startup"
+        stop="action.com.ifeng.messagebox.core.shutdown" />
+    
+    <Extras
+        extra.com.ifeng.messagebox.core.product="ifengnews" />
+
+</PushServiceInfo>

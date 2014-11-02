@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fill_both_size" 
+    android:background="@drawable/channellist_selector">
+
+   <com.ifeng.news2.widget.IfengBottomTitleTabbar
+        android:layout_alignParentBottom="true"
+        android:id="@+id/ifeng_bottom"
+        style="@style/fillh_auto_size"
+        mode="mode_vote_day"/>
+   
+
+       <FrameLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@id/ifeng_bottom"
+        android:layout_below="@id/report_title" >
+
+        <include
+            android:id="@+id/loading"
+            layout="@layout/loading"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/loading_fail"
+            layout="@layout/load_fail"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <com.handmark.pulltorefresh.library.internal.IfengScrollView
+        android:id="@+id/vote_detail"
+        style="@style/fill_both_size"
+        android:layout_above="@id/ifeng_bottom"
+        android:orientation="vertical" />
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:id="@+id/shadow"
+        style="@style/fillh_auto_size"
+        android:layout_above="@id/ifeng_bottom"
+        android:background="@drawable/detail_tabbar_shadow" />
+
+</RelativeLayout>

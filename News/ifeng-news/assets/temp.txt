@@ -1,0 +1,357 @@
+[{"meta":
+{
+"type":"title",
+"expireTime":"123",
+"id":"1111",
+"documentId":"121212",
+"catagory":"image",
+"updateTime":"2013-2-25"
+},
+"body":{
+"head":{
+"title":"专题大标题",
+"type":"title",
+"image":"http://img1.gtimg.com/sports/pics/hv1/59/125/1270/82613684.jpg"
+},
+"subject":[{
+"title":"2013春运,回家的路",
+"view":"title",
+"subjects":[],
+"podItems":[],
+"content":{
+"title":"春运1",
+"thumnail":"",
+"intro":"简介说明1",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://i.ifeng.com/1.jpg","http://i.ifeng.com/2.jpg"],
+"links":[{
+"type":"title",
+"url":"http://i.ifeng.com",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+}},
+{
+"title":"2013春运,回家的路2",
+"view":"soloImage",
+"subjects":[],
+"podItems":[],
+"content":{
+"title":"焦点图标题",
+"thumnail":"http://img1.gtimg.com/sports/pics/hv1/59/125/1270/82613684.jpg",
+"intro":"简介说明2",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://i.ifeng.com/1.jpg","http://i.ifeng.com/2.jpg"],
+"links":[{
+"type":"slide",
+"url":"http://i.ifeng.com",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+}},{    "title":"高清视频",
+    "view":"links",
+    "subjects":[
+    ],
+    "podItems":[
+        {
+            "title":"高清视频1",
+            "thumnail":"",
+            "intro":"简介说明高清视频",
+            "editTime":"2013-2-25",
+            "updateTime":"2013-2-1",
+            "images":[
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"
+            ],
+            "links":[
+                {
+                    "type":"androidLive",
+                    "url":"http://3gs.ifeng.com/userfiles/video/2013/02/28/f10a5300-108b-4680-812f-439579094017280.mp4",
+                    "subtype":"title"
+                }
+            ],
+            "commentCount":"13",
+            "particpateCount":"15"
+        },
+        {
+            "title":"高清视频2",
+            "thumnail":"",
+            "intro":"简介说明高清视频2",
+            "editTime":"2013-2-25",
+            "updateTime":"2013-2-1",
+            "images":[
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"
+            ],
+            "links":[
+                {
+                    "type":"web",
+                    "url":"www.baidu.com",
+                    "subtype":"title"
+                }
+            ],
+            "commentCount":"13",
+            "particpateCount":"15"
+        },
+        {
+            "title":"高清视频3",
+            "thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+            "intro":"简介说明高清视频3",
+            "editTime":"2013-2-25",
+            "updateTime":"2013-2-1",
+            "images":[
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+                "http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"
+            ],
+            "links":[
+                {
+                    "type":"androidLive",
+                    "url":"http://3gs.ifeng.com/userfiles/video/2013/02/28/c58364b5-e1cb-4ede-afc4-492112835116280.mp4",
+                    "subtype":"title"
+                }
+            ],
+            "commentCount":"13",
+            "particpateCount":"15"
+        }
+    ]
+
+},
+{
+"title":"2013春运,回家的路3",
+"view":"text",
+"subjects":[],
+"podItems":[],
+"content":{
+"title":"春运3",
+"thumnail":"",
+"intro":"焦点图文字焦点图文图文字焦点图图焦点图文字焦点图文字焦点图文字焦点图文字焦点图文字焦点图焦点图焦点图",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://i.ifeng.com/1.jpg","http://i.ifeng.com/2.jpg"],
+"links":[{
+"type":"title",
+"url":"http://i.ifeng.com",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+}},
+{
+"title":"实时报道",
+"view":"list",
+"subjects":[],
+"podItems":[{
+"title":"最新资讯1",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明最新资讯1简介说明最新资讯1简介说明最新资讯1简介说明最新资讯1",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s4.mimg.ifeng.com/upload/day_130227/201302270629219092.jpg"],
+"links":[{
+"type":"topic",
+"url":"http://news.ifeng.com/app/special-api/unit-list/lzfdl.shtml",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"最新资讯2",
+"thumnail":"",
+"intro":"简介说明最新资讯2",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s4.mimg.ifeng.com/upload/day_130227/201302270629219092.jpg"],
+"commentCount":"13",
+"particpateCount":"15",
+"hasVideo":true,
+"links":[{
+"type":"androidLive",
+"url":"http://3gs.ifeng.com/userfiles/video/2013/02/20/5fbcd0be-a4cf-4c45-808a-5bc48c17aa7e280.mp4",
+"subtype":"title"
+}]
+},{
+"title":"最新资讯3",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明最新资讯3",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s4.mimg.ifeng.com/upload/day_130227/201302270629219092.jpg"],
+"links":[{
+"type":"doc",
+"url":"http://i.ifeng.com/ipadtestdoc?imgwidth=100&aid=54447750&channel=%E7%83%AD%E7%82%B9&chid=1&android=1",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+}]},{
+"title":"图集1",
+"view":"album",
+"subjects":[],
+"podItems":[{
+"title":"图集",
+"thumnail":"",
+"intro":"简介说明高清视频",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":false,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"slide",
+"url":"http://api.iapps.ifeng.com/news/detail.json?aid=25995514&isslide=y&source=cmpp",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"图集2图集2图集2图集2图集2图集2图集2图集2",
+"thumnail":"",
+"intro":"简介说明高清视频2",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":false,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"slide",
+"url":"http://api.iapps.ifeng.com/news/detail.json?aid=25995514&isslide=y&source=cmpp",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"图集3",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明高清视频3",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":false,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"slide",
+"url":"http://api.iapps.ifeng.com/news/detail.json?aid=25995514&isslide=y&source=cmpp",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"图集4",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明高清视频4",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":false,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"slide",
+"url":"http://api.iapps.ifeng.com/news/detail.json?aid=25995514&isslide=y&source=cmpp",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+}]},
+{
+"title":"热点图集",
+"view":"slides",
+"subjects":[],
+"podItems":[{
+"title":"春运回家路上高清图集1",
+"thumnail":"",
+"intro":"简介说明热点图集",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"slide",
+"url":"http://api.iapps.ifeng.com/news/detail.json?aid=25995514&isslide=y&source=cmpp",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"春运回家路上高清图集2",
+"thumnail":"",
+"intro":"简介说明热点图集",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"images":["http://s3.mimg.ifeng.com/upload/day_130228/201302281401044977.jpg","http://s3.mimg.ifeng.com/upload/day_130228/201302281401044977.jpg","http://s3.mimg.ifeng.com/upload/day_130228/201302281401044977.jpg"],
+"links":[{
+"type":"slide",
+"url":"http://api.iapps.ifeng.com/news/detail.json?aid=25995514&isslide=y&source=cmpp",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+}]},{
+"title":"高清视频",
+"view":"album",
+"subjects":[],
+"podItems":[{
+"title":"高清视频1",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明高清视频",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":true,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"androidLive",
+"url":"http://3gs.ifeng.com/userfiles/video/2013/02/28/f10a5300-108b-4680-812f-439579094017280.mp4",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"高清视频2",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明高清视频2",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":true,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"androidLive",
+"url":"http://3gs.ifeng.com/userfiles/video/2013/02/28/470cd6b4-cd3e-4ace-99dc-9b6d53907407280.mp4",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"高清视频3",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明高清视频3",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":true,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"androidLive",
+"url":"http://3gs.ifeng.com/userfiles/video/2013/02/28/c58364b5-e1cb-4ede-afc4-492112835116280.mp4",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+},{
+"title":"高清视频4",
+"thumnail":"http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg",
+"intro":"简介说明高清视频4",
+"editTime":"2013-2-25",
+"updateTime":"2013-2-1",
+"hasVideo":true,
+"images":["http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg","http://s1.mimg.ifeng.com/upload/day_130227/201302270813344315.jpg"],
+"links":[{
+"type":"androidLive",
+"url":"http://3gs.ifeng.com/userfiles/video/2013/02/20/5fbcd0be-a4cf-4c45-808a-5bc48c17aa7e280.mp4",
+"subtype":"title"
+}],
+"commentCount":"13",
+"particpateCount":"15"
+}]}
+
+]}
+}]

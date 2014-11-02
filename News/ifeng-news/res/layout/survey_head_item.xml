@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/top_module"
+    style="@style/survey_head_style"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/title"
+        style="@style/survey_head_title_style" />
+
+    <TextView
+        android:id="@+id/time_state"
+        style="@style/survey_head_time_style" />
+
+    <TextView
+        android:id="@+id/survey_introd"
+        style="@style/survey_head_introd_style" />
+
+</LinearLayout>

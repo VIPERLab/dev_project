@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginBottom="8dp" >
+
+        <com.ifeng.news2.widget.TopicFocusImageView
+            android:id="@+id/module_focus_image"
+            android:layout_width="fill_parent"
+            android:layout_height="0dip"
+            android:background="@drawable/channellist_selector"
+            android:src="@drawable/default_topic_focus_image" />
+
+        <TextView
+            android:id="@+id/module_focus_text"
+            android:layout_width="fill_parent"
+            android:layout_height="27dp"
+            android:layout_alignParentBottom="true"
+            android:background="@drawable/header_slide_panel"
+            android:gravity="center_vertical"
+            android:paddingLeft="7dip"
+            android:paddingRight="39dip"
+            android:singleLine="true"
+            android:text=""
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </RelativeLayout>
+
+</LinearLayout>

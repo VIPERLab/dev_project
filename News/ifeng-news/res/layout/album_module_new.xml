@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size"
+    android:background="@drawable/channellist_selector"
+    android:orientation="vertical" >
+
+    <include
+        android:id="@+id/topic_album_left_module"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        layout="@layout/title_left_module" />
+
+    <LinearLayout
+        style="@style/fillh_auto_size"
+        android:orientation="horizontal" >
+
+        <RelativeLayout
+            android:id="@+id/left_layout"
+            style="@style/fillh_auto_size"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_weight="1" >
+
+            <RelativeLayout
+                android:id="@+id/left_image_layout"
+                style="@style/auto_size" >
+
+                <ImageView
+                    style="@style/fillh_auto_size"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/album_item" />
+
+                <com.ifeng.news2.widget.TopicAlbumImageView
+                    android:id="@+id/left_image"
+                    style="@style/fillh_auto_size"
+                    android:scaleType="centerCrop" />
+
+                <ImageView
+                    android:id="@+id/left_video"
+                    style="@style/auto_size"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/ico_video"
+                    android:visibility="gone" />
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/left_title"
+                style="@style/album_title"
+                android:layout_below="@id/left_image_layout" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/right_layout"
+            style="@style/fillh_auto_size"
+            android:layout_marginLeft="8dp"
+            android:layout_marginRight="8dp"
+            android:layout_marginTop="16dp"
+            android:layout_weight="1" >
+
+            <RelativeLayout
+                android:id="@+id/right_image_layout"
+                style="@style/auto_size" >
+
+                <ImageView
+                    style="@style/fillh_auto_size"
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/album_item" />
+
+                <com.ifeng.news2.widget.TopicAlbumImageView
+                    android:id="@+id/right_image"
+                    style="@style/fillh_auto_size"
+                    android:scaleType="centerCrop" />
+
+                <ImageView
+                    android:id="@+id/right_video"
+                    style="@style/auto_size"
+                    android:layout_centerInParent="true"
+                    android:src="@drawable/ico_video"
+                    android:visibility="gone" />
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/right_title"
+                style="@style/album_title"
+                android:layout_below="@id/right_image_layout" />
+        </RelativeLayout>
+    </LinearLayout>
+
+</LinearLayout>

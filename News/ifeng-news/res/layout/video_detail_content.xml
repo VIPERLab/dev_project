@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/channellist_selector" >
+
+    <RelativeLayout
+        android:id="@+id/video_content_rl"
+        style="@style/fill_both_size" >
+
+        <RelativeLayout
+            android:id="@+id/video_head_rl"
+            style="@style/fillh_auto_size"
+            android:background="@color/white" >
+
+            <com.qad.view.RecyclingImageView
+                android:id="@+id/video_head_img"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/video_detail_head_img_height"
+                android:scaleType="centerCrop"
+                android:src="@drawable/video_head_img_default" />
+
+            <ImageView
+                android:id="@+id/video_head_icon"
+                android:layout_width="@dimen/video_detail_head_cover_img_size"
+                android:layout_height="@dimen/video_detail_head_cover_img_size"
+                android:layout_centerInParent="true"
+                android:src="@drawable/video_head_play_icon" />
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/video_title_rl"
+            style="@style/fillh_auto_size"
+            android:layout_below="@id/video_head_rl"
+            android:background="@color/white"
+            android:paddingTop="@dimen/video_detail_title_margin_top" >
+
+            <com.ifeng.news2.util.AutoResizeTextView
+                android:id="@+id/video_title_tv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+          	    android:layout_marginRight="15dip"
+          	    android:layout_marginLeft="15dip"
+                android:lineSpacingExtra="@dimen/video_detail_title_line_spacing_extra"
+                android:textColor="@color/video_detail_title_color"
+                android:textSize="@dimen/video_detail_title_text_size"
+                android:typeface="sans" />
+
+            <TextView
+                android:id="@+id/video_date_tv"
+                style="@style/auto_size"
+                android:layout_alignLeft="@id/video_title_tv"
+                android:layout_below="@id/video_title_tv"
+                android:layout_marginTop="@dimen/video_detail_date_margin_top"
+                android:textColor="@color/video_detail_date_color"
+                android:textSize="@dimen/video_detail_date_text_size"
+                android:typeface="sans" />
+
+            <TextView
+                android:id="@+id/video_channel_tv"
+                style="@style/auto_size"
+                android:layout_below="@id/video_title_tv"
+                android:layout_marginLeft="3dip"
+                android:layout_marginTop="@dimen/video_detail_date_margin_top"
+                android:layout_toRightOf="@id/video_date_tv"
+                android:textColor="@color/video_detail_date_color"
+                android:textSize="@dimen/video_detail_date_text_size"
+                android:typeface="sans" />
+
+            <ImageView
+                android:id="@+id/video_detail_divier"
+                style="@style/fillh_auto_size"
+                android:layout_below="@id/video_channel_tv"
+                android:layout_marginTop="@dimen/video_detail_title_margin_top"
+                android:src="@drawable/video_detail_divier" />
+        </RelativeLayout>
+
+        <WebView
+            android:id="@+id/video_description_web"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/video_title_rl"
+            android:focusableInTouchMode="false"
+            android:scrollbars="vertical"
+            android:paddingTop="@dimen/video_detail_des_padding_top"
+            android:visibility="gone" />
+
+        <LinearLayout
+            android:id="@+id/video_description_ll"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/video_title_rl"
+            android:orientation="vertical"
+            android:paddingLeft="@dimen/video_detail_padding"
+            android:paddingRight="@dimen/video_detail_padding"
+            android:paddingTop="@dimen/video_detail_des_padding_top"
+            android:visibility="gone" />
+    </RelativeLayout>
+
+</RelativeLayout>

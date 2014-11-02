@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/channellist_selector"
+    android:orientation="vertical" >
+
+    <include
+        android:id="@+id/topic_item_left_module"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        layout="@layout/title_left_module" />
+    
+    
+    <include
+        android:id="@+id/topic_lists_item"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        layout="@layout/widget_channel_list_item_new" />
+    
+</LinearLayout>

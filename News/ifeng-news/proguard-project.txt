@@ -1,0 +1,148 @@
+##---------------Begin: proguard configuration common for all Android apps ----------
+-optimizationpasses 5
+-dontusemixedcaseclassnames
+-dontskipnonpubliclibraryclasses
+-dontpreverify
+-verbose
+
+-dontpreverify
+-repackageclasses ''
+-allowaccessmodification
+-optimizations !code/simplification/arithmetic,!field/*,!class/merging/*
+-keepattributes *Annotation*
+
+
+-keep public class * extends android.app.Activity
+-keep public class * extends android.app.Application
+-keep public class * extends android.app.Service
+-keep public class * extends android.content.BroadcastReceiver
+-keep public class * extends android.content.ContentProvider
+-keep public class * extends android.app.backup.BackupAgentHelper
+-keep public interface com.android.vending.licensing.ILicensingService
+-keep public class com.google.vending.licensing.ILicensingService
+-keep public class com.android.vending.licensing.ILicensingService
+-dontnote com.android.vending.licensing.ILicensingService
+
+
+# Explicitly preserve all serialization members. The Serializable interface
+# is only a marker interface, so it wouldn't save them.
+
+-keepnames class * implements java.io.Serializable
+
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+    !static !transient <fields>;
+    !private <fields>;
+    !private <methods>;
+    private void writeObject(java.io.ObjectOutputStream);
+    private void readObject(java.io.ObjectInputStream);
+    java.lang.Object writeReplace();
+    java.lang.Object readResolve();
+}
+
+-keep public class * extends android.view.View {
+    void set*(***);
+   	*** get*();
+}
+
+# Preserve all native method names and the names of their classes.
+-keepclasseswithmembernames class * {
+    native <methods>;
+}
+
+# We want to keep methods in Activity that could be used in the XML attribute onClick
+-keepclassmembers class * extends android.app.Activity {
+   public void *(android.view.View);
+}
+
+-keepclasseswithmembernames class * {
+    public <init>(android.content.Context, android.util.AttributeSet);
+}
+
+
+-keepclasseswithmembernames class * {
+    public <init>(android.content.Context, android.util.AttributeSet, int);
+}
+
+
+# Preserve static fields of inner classes of R classes that might be accessed
+# through introspection.
+-keepclassmembers class **.R$* {
+  public static <fields>;
+}
+
+-dontwarn android.support.**
+
+# Preserve the special static methods that are required in all enumeration classes.
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+-keep class * implements android.os.Parcelable {
+  public static final android.os.Parcelable$Creator *;
+}
+##---------------End: proguard configuration common for all Android apps ----------
+
+
+##---------------Begin: proguard configuration for Gson  ----------
+# Gson uses generic type information stored in a class file when working with fields. Proguard
+# removes such information by default, so configure it to keep all of it.
+-keepattributes Signature
+
+
+# Gson specific classes
+-keep class sun.misc.Unsafe { *; }
+#-keep class com.google.gson.stream.** { *; }
+
+
+# Application classes that will be serialized/deserialized over Gson
+-keep class com.ifeng.plutus.core.model.bean.** { *; }
+
+
+##---------------End: proguard configuration for Gson  ----------
+##---------------Begin: proguard configuration for dom4j  ----------
+# dom4j specific classes
+-dontwarn org.dom4j.**
+-dontwarn org.apache.**
+-dontwarn com.mediatek.telephony.**
+-dontwarn android.webkit.**
+-dontwarn com.ifeng.signature.**
+##---------------End: proguard configuration for dom4j   ----------
+-keep class com.ifeng.news2.bean.** { *; }
+-keep class com.ifeng.news2.sport_live.entity.**{*;}
+-keep class com.ifeng.news2.vote.entity.**{*;}
+-keep class com.ifeng.news2.sport_live.widget.**{*;}
+-keep class com.ifeng.news2.push.IPushBean{*;}
+-keep class com.ifeng.news2.push.IPushBean$Extra{*;}
+-keep class org.dom4j.**{*;}
+-keep class org.apache.**{*;}
+-keep class com.mediatek.telephony.**{*;}
+-keep class android.webkit.**{*;}
+-keep class com.ifeng.news2.activity.DetailActivity$JsInterface{*;}
+-keep class com.ifeng.news2.advertise.AdDetailActivity$ShakeJSInterface{*;}
+-keep class com.ifeng.news2.activity.VideoDetailActivity$JsInterface{*;}
+
+##--------- for weixin -----------
+-keep class com.tencent.mm.sdk.openapi.WXMediaMessage {*;}
+-keep class com.tencent.mm.sdk.openapi.** implements com.tencent.mm.sdk.openapi.WXMediaMessage$IMediaObject {*;}
+
+##----------for tencent qq----------------
+-keep class com.tencent.open.TDialog$*
+-keep class com.tencent.open.TDialog$* {*;}
+-keep class com.tencent.open.PKDialog
+-keep class com.tencent.open.PKDialog {*;}
+-keep class com.tencent.open.PKDialog$*
+-keep class com.tencent.open.PKDialog$* {*;}
+
+##----------- for yixin -----------------------
+-keep class im.yixin.sdk.api.YXMessage {*;}
+-keep class im.yixin.sdk.api.** implements im.yixin.sdk.api.YXMessage$YXMessageData{*;}
+
+##------------for auth ------------------------
+-keep public class android.webkit.WebViewClient
+-keep public class android.net.http.SslError
+
+##------------for 统计加密------------------------
+-keep class com.ifeng.signature.**{*;}

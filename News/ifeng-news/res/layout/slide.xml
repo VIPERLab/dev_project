@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/fillh_auto_size"
+    android:background="@color/black" >
+
+    <com.ifeng.news2.widget.SlideView
+        android:id="@+id/slide"
+        style="@style/fill_both_size"
+        android:spacing="9dip" />
+
+    <ImageView
+        android:id="@+id/loading"
+        style="@style/auto_size"
+        android:layout_centerInParent="true"
+        android:src="@drawable/default_slide" />
+
+    <RelativeLayout
+        android:id="@+id/titlebar"
+        style="@style/fillh_auto_size"
+        android:layout_alignParentTop="true"
+         >
+
+        
+
+        <FrameLayout
+            android:id="@+id/checkComment"
+            style="@style/auto_size"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+             >
+
+            <ImageView
+            android:layout_width="80dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center"
+            android:background="#752423" />
+
+            <TextView
+                android:id="@+id/commentsNum"
+                android:layout_width="wrap_content"
+                android:layout_height="50dp"
+                android:layout_gravity="center|right"
+                android:drawablePadding="5dp"
+                android:drawableRight="@drawable/gallery_comment_logo"
+                android:gravity="right|center_vertical"
+                android:paddingRight="15dp"
+                android:singleLine="true"
+                android:text="0"
+                android:textColor="@color/ivory"
+                android:textSize="12sp" />
+            
+        </FrameLayout>
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/bottombar2"
+        android:layout_width="fill_parent"
+        android:layout_height="50dip"
+        android:layout_alignParentBottom="true"
+        android:visibility="gone" >
+
+        <TextView
+            android:id="@+id/position"
+            style="@style/auto_size"
+            android:layout_centerInParent="true"
+            android:text="1/17"
+            android:textColor="#ffffff"
+            android:textSize="18sp" />
+    </RelativeLayout>
+
+    <ViewSwitcher
+        android:id="@+id/land_port_switcher"
+        style="@style/auto_size"
+        android:layout_alignParentBottom="true"
+        android:persistentDrawingCache="animation" >
+
+        <include
+            style="@style/auto_size"
+            android:layout_gravity="bottom"
+            layout="@layout/landscape_slide" />
+
+        <RelativeLayout style="@style/fillh_auto_size" >
+
+            <com.ifeng.news2.widget.IfengBottomTitleTabbar
+                android:id="@+id/bottombar"
+                style="@style/fillh_auto_size"
+                android:layout_alignParentBottom="true"
+                mode="mode_gallery_day" />
+
+            <include
+                android:id="@+id/detail_comment_module3"
+                style="@style/fillh_auto_size"
+                android:layout_alignParentBottom="true"
+                layout="@layout/detail_comment"
+                android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/description"
+                style="@style/fillh_auto_size"
+                android:layout_above="@id/bottombar"
+                android:background="@drawable/slide_panel"
+                android:lineSpacingExtra="3dp"
+                android:lines="3"
+                android:paddingBottom="10dp"
+                android:paddingLeft="15dp"
+                android:scrollbars="vertical"
+                android:textColor="@color/slide_title_color"
+                android:textSize="14sp" />
+
+            <RelativeLayout
+                android:id="@+id/slide_title"
+                style="@style/fillh_auto_size"
+                android:layout_above="@id/description"
+                android:background="@drawable/slide_panel"
+                android:paddingBottom="5dip" >
+
+                <TextView
+                    android:id="@+id/title"
+                    style="@style/auto_size"
+                    android:layout_alignParentLeft="true"
+                    android:layout_marginLeft="15dp"
+                    android:ems="11"
+                    android:gravity="center_vertical"
+                    android:maxLines="2"
+                    android:padding="2dip"
+                    android:textColor="@color/slide_title_color"
+                    android:textSize="20sp" />
+
+                <TextView
+                    android:id="@+id/page_tips"
+                    style="@style/auto_size"
+                    android:layout_alignParentRight="true"
+                    android:gravity="center_vertical"
+                    android:paddingRight="10dp"
+                    android:paddingTop="5dp"
+                    android:textColor="@color/slide_title_color"
+                    android:textSize="15sp" >
+                </TextView>
+            </RelativeLayout>
+        </RelativeLayout>
+    </ViewSwitcher>
+
+</RelativeLayout>

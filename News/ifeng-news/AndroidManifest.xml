@@ -1,0 +1,513 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.ifeng.news2"
+    android:versionCode="70"
+    android:versionName="4.1.3" >
+
+    <uses-sdk android:minSdkVersion="8" android:targetSdkVersion="15"/>
+    
+    <!-- basic permission for system -->
+    <uses-permission android:name="android.hardware.sensor.accelerometer" /> 
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.BROADCAST_STICKY" />
+    <uses-permission android:name="android.permission.GET_TASKS"/>
+    <!-- basic permission for qad -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <!-- permissions for push jar -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- umeng try catch -->
+    <uses-permission android:name="android.permission.READ_LOGS" >
+    </uses-permission>
+    <!-- permissions for iMocha -->
+    <!-- remove call phone & record audio permission -->
+    <uses-permission android:name="com.android.launcher.permission.INSTALL_SHORTCUT" />
+    <uses-permission android:name="com.android.launcher.permission.UNINSTALL_SHORTCUT" />
+
+    <!-- declare your callback permission so that your message WON'T be captured by other app -->
+    <permission android:name="com.ifeng.news2.permission.MMOAUTH_CALLBACK" />
+    <permission android:name="com.ifeng.news2.permission.MM_MESSAGE" />
+
+    <uses-permission android:name="com.ifeng.news2.permission.MMOAUTH_CALLBACK" />
+    <uses-permission android:name="com.ifeng.news2.permission.MM_MESSAGE" />
+    <uses-permission android:name="android.permission.WRITE_APN_SETTINGS" />
+
+    <!-- for weixin & yixin -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    
+    <!-- Samsung multi window support-->
+    <uses-library required="false" name="com.sec.android.app.multiwindow"> </uses-library>
+     
+    <supports-screens
+        android:anyDensity="true"
+        android:largeScreens="true"
+        android:normalScreens="true"
+        android:smallScreens="true" />
+
+    <application
+        android:name=".IfengNewsApp"
+        android:icon="@drawable/icon_ifeng"
+        
+        android:label="@string/app_name"
+        android:theme="@style/IfengTheme" >
+<!-- Samsung multi window support         -->
+        <meta-data android:name="com.sec.android.support.multiwindow" android:value="true" />
+
+        <activity
+            android:name="com.ifeng.news2.activity.SplashActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+                <category android:name="android.intent.category.MULTIWINDOW_LAUNCHER" />
+            </intent-filter>
+        </activity>       
+        <activity android:name="com.ifeng.news2.activity.AppBaseActivity" />
+        <activity
+            android:name="com.ifeng.news2.activity.HistoryMessageActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="com.ifeng.news2.activity.SurveyActivity"
+            android:screenOrientation="portrait" />
+        
+        <activity
+            android:name="com.ifeng.news2.fragment.NewsMasterFragmentActivity"
+            android:screenOrientation="portrait" 
+            android:launchMode="singleTask">
+             <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>  
+                <category android:name="android.intent.category.BROWSABLE" />
+                <category android:name="android.intent.category.DEFAULT"/> 
+                <data android:scheme="comifengnewsapp" android:host="list" />
+                <data android:scheme="comifengnews2app" android:host="list" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.ifeng.news2.sport_live.SportMainActivity"
+            android:screenOrientation="portrait" 
+            android:windowSoftInputMode="adjustResize"/>
+        <activity 
+            android:name="com.ifeng.news2.sport_live.SportReportActivity"
+            android:screenOrientation="portrait"
+            />
+        <activity android:name="com.ifeng.news2.sport_live.PoisonousWordsActivity"
+            android:screenOrientation="portrait"
+            />
+        <activity
+            android:name="com.ifeng.news2.activity.DetailActivity"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>  
+                <action android:name="ifeng.news.action.detail" />
+                <category android:name="android.intent.category.DEFAULT"/> 
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="comifengnewsapp" android:host="doc"/>
+                <data android:scheme="comifengnews2app" android:host="doc"/>
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.ifeng.news2.activity.TopicListActivity"
+            android:exported="false"
+            android:screenOrientation="portrait" >
+            <intent-filter>
+                <action android:name="action.com.ifeng.activity.TopicListActivity.ViewList" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.ifeng.news2.activity.TopicDetailModuleActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" >
+            <intent-filter>
+                <action android:name="action.com.ifeng.activity.TopicDetailModuleActivity.view" />
+            	<action android:name="android.intent.action.VIEW"/> 
+            	<category android:name="android.intent.category.DEFAULT"/> 
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="comifengnewsapp" android:host="topic"/>
+                <data android:scheme="comifengnews2app" android:host="topic" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name="com.ifeng.news2.activity.PlotTopicModuleActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" >
+        </activity>
+        <activity 
+            android:name="com.ifeng.news2.activity.AccountBindActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar"
+            >
+        </activity>
+        <activity 
+            android:name="com.ifeng.news2.activity.FontSizeActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar"
+            >
+        </activity>
+        <activity
+            android:name="com.ifeng.news2.activity.SlideActivity"
+            android:screenOrientation="user"
+            android:configChanges="keyboardHidden|orientation|screenSize"
+            android:windowSoftInputMode="adjustResize|stateHidden|stateUnchanged" >
+           <intent-filter>
+                <action android:name="android.intent.action.VIEW"/> 
+                <category android:name="android.intent.category.DEFAULT"/>  
+                 <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="comifengnewsapp" android:host="slide"/>
+                <data android:scheme="comifengnews2app" android:host="slide"/>
+            </intent-filter>
+        </activity>
+        <activity 
+            android:name="com.ifeng.news2.activity.PhotoAndTextLiveActivity"
+            android:hardwareAccelerated="false"
+            android:screenOrientation="portrait"/>
+        <activity
+            android:name="com.ifeng.news2.activity.AboutActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="com.ifeng.news2.activity.ChangeCityActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="com.ifeng.news2.activity.WeatherActivity"
+            android:screenOrientation="portrait" />
+        <activity
+            android:name="com.ifeng.news2.activity.CollectionActivity"
+            android:screenOrientation="portrait" />
+        <activity            
+            android:name="com.ifeng.news2.vote.VoteActivity"
+            android:screenOrientation="portrait"/>
+         <activity
+            android:name="com.ifeng.news2.activity.VideoDetailActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
+        <activity
+            android:name="com.ifeng.news2.activity.CommentsActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustResize|stateHidden" />
+        <activity
+            android:name="com.ifeng.news2.activity.PlayVideoActivity"
+            android:screenOrientation="user"
+            android:configChanges="orientation|keyboardHidden|screenSize"
+            android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen"
+             />       
+        <activity
+            android:name="com.ifeng.news2.activity.OffineManagerActivity"
+            android:screenOrientation="portrait" 
+            android:process=":external"/>
+
+        <service android:name="com.ifeng.news2.service.DownLoadAppService" />
+
+        <activity
+            android:name="com.ifeng.news2.activity.PopupLightbox"
+            android:configChanges="keyboardHidden|orientation" />
+         <activity 
+            android:name="com.ifeng.news2.activity.SubscriptionActivity"
+            android:screenOrientation="portrait"
+            ></activity>
+
+        <!-- AndroidShare -->
+        <activity
+            android:name="com.ifeng.share.activity.EditShareActivity"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+        <activity
+            android:name="com.ifeng.share.activity.TenqtAuthoActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+        <activity
+            android:name="com.ifeng.share.activity.TenqzAuthoActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+        <activity
+            android:name="com.ifeng.share.activity.FetionAuthoActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+        <activity
+            android:name="com.ifeng.share.activity.SinaAuthoActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation="portrait"
+            android:theme="@android:style/Theme.Black.NoTitleBar" />
+        
+        <!-- AndroidShare -->
+
+        <activity
+            android:name="com.ifeng.news2.advertise.AdDetailActivity"
+            android:screenOrientation="portrait"
+            android:windowSoftInputMode="adjustPan" />
+
+        <service android:name="com.ifeng.news2.commons.upgrade.UpgradeService" />
+        <service android:name="com.ifeng.news2.service.ScreenService" />
+        <!-- iMocha advertisement -->
+        <activity
+            android:name="com.hdtmobile.mocast.IMochaBrowserActivity"
+            android:configChanges="keyboardHidden|navigation|orientation"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" />
+        <activity
+            android:name="com.hdtmobile.mocast.IMochaPhotoActivity"
+            android:configChanges="orientation|navigation|keyboardHidden" />
+
+        <meta-data
+            android:name="IMOCHA_ADSPACE_ID"
+            android:value="4117" />
+        <meta-data
+            android:name="IMOCHA_APP_ID"
+            android:value="com.imocha" />
+        
+       <!-- tencentqq auth activity -->
+       <activity
+            android:name="com.tencent.tauth.AuthActivity"
+            android:launchMode="singleTask"
+            android:noHistory="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="tencent100265315" />
+            </intent-filter>
+        </activity>
+        <!-- push jar service & receivers -->
+<!--  去掉消息盒子相关内容
+        <receiver
+            android:name="com.ifeng.news2.messagebox.MessageReceiver"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="action.com.ifeng.messagebox.core.message" />
+                <action android:name="action.com.ifeng.messagebox.clearnotification" />
+                <action android:name="action.com.ifeng.news2.push.IPUSH_MESSAGE" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name="com.ifeng.news2.messagebox.core.PushService"
+            android:exported="false"
+            android:process=":push" >
+            <intent-filter android:priority="1000" >
+                <action android:name="com.ifeng.messagebox.core.PushService" />
+            </intent-filter>
+        </service>
+        <receiver
+            android:name="com.ifeng.news2.messagebox.core.MyBootReceiver"
+            android:exported="false"
+            android:process=":push" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ifeng.news2.messagebox.core.MyAlarmReceiver"
+            android:exported="false"
+            android:process=":push" >
+            <intent-filter>
+                <action android:name="action.com.ifeng.messagebox.core.set" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ifeng.news2.messagebox.core.MyConnectionReceiver"
+            android:exported="false"
+            android:process=":push" >
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.ifeng.news2.mboxagent.MBoxReceiver"
+            android:enabled="true"
+            android:exported="true" >
+            <intent-filter>
+                <action android:name="action.ifeng.messagebox.plugin.activation" />
+                <action android:name="android.intent.action.PACKAGE_ADDED" />
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+                <action android:name="android.intent.action.PACKAGE_DATA_CLEARED" />
+
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+ -->
+ 
+        <service android:name="com.ifeng.news2.service.PhoneService" >
+        </service>
+        <service
+            android:name="com.ifeng.news2.exception.SendErrorReportService"
+            android:exported="true"
+            android:process=":external" >
+        </service>
+        <receiver android:name="com.ifeng.news2.receiver.SplashBroadcastReceiver" 
+            android:exported="false">
+            <intent-filter>
+                <action android:name="action.com.ifeng.news.util.CLEAN_SPLASH_IDS" />
+            </intent-filter>
+        </receiver>      
+        
+        <!-- app overwrite receiver -->
+        <receiver android:name="com.ifeng.news2.receiver.OverwriteAppReceiver" >
+            <intent-filter android:priority="2147483647" >
+                <action android:name="android.intent.action.PACKAGE_REMOVED" />
+
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+
+        <service android:name=".service.SplashService" />
+
+        <receiver
+            android:name="com.ifeng.news2.receiver.HeartBeatBroadCastReceiver"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.ifeng.news2.action.HEART_BEAT" />
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+                <action android:name="android.intent.action.USER_PRESENT" />
+            </intent-filter>
+        </receiver>
+        <!-- youmeng -->
+        <meta-data
+            android:name="UMENG_APPKEY"
+            android:value="50d3ccec5270151c940000b4" />
+        <meta-data
+            android:name="UMENG_CHANNEL"
+            android:value="test" />
+
+        <!-- weixin -->
+        <receiver
+            android:name="com.tencent.mm.sdk.plugin.MMPluginOAuth$Receiver"
+            android:permission="com.tencent.mm.oauth.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.tencent.mm.sdk.plugin.Intent.ACTION_RESPONSE" />
+            </intent-filter>
+        </receiver>
+        <receiver
+            android:name="com.tencent.mm.sdk.channel.MMessage$Receiver"
+            android:permission="com.tencent.mm.plugin.permission.SEND" >
+            <intent-filter>
+                <action android:name="com.tencent.mm.sdk.channel.Intent.ACTION_MESSAGE" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- yixin -->
+        <receiver
+                android:name=".yxapi.YXAppRegister"
+                android:permission="im.yixin.sdk.permission.YIXIN_SDK_MESSAGE">
+            <intent-filter>
+                <action android:name="im.yixin.sdk.api.Intent.ACTION_REFRESH_YXAPP"/>
+            </intent-filter>
+        </receiver>
+        
+        <!-- iPush_Core -->
+		<service android:name="com.ifeng.ipush.client.service.PushService"
+			android:enabled="true"
+			android:exported="false" >
+		</service>
+		<service android:name="com.ifeng.ipush.client.service.EventService"
+			android:enabled="true"
+			android:exported="false" >
+		</service>
+		<receiver android:name="com.ifeng.ipush.client.receiver.PushReceiver"
+			android:enabled="true"
+			android:exported="false" >
+			<intent-filter>
+				<action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+			</intent-filter>
+		</receiver>
+		
+		<!-- IPush Receiver  -->
+		<receiver android:name="com.ifeng.news2.push.IfengPushReceiver"
+			android:enabled="true"
+			android:exported="false">
+			<intent-filter>
+				<!-- 通知到达事件 -->
+				<action android:name="com.ifeng.ipush.intent.NOTIFICATION_RECEIVED" />
+				<!-- 通知打开事件 -->
+				<action android:name="com.ifeng.ipush.intent.NOTIFICATION_OPENED" />
+				<!-- 消息到达事件 -->
+				<action android:name="com.ifeng.ipush.intent.ACTION_MESSAGE_RECEIVED" />
+				<!-- 注：此为应用包名 -->
+				<category android:name="com.ifeng.news2" />
+			</intent-filter>
+		</receiver>
+		<receiver
+            android:name="com.ifeng.news2.push.PushMessageReceiver"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="action.com.ifeng.news2.push.IPUSH_MESSAGE" />
+            </intent-filter>
+        </receiver>
+        
+		<!-- widget view -->
+		 <!-- widget view 4*2 provider-->
+        <receiver android:name="com.ifeng.news2.app.widgets.IfengWidgetProvider_4x2" android:exported="true"
+            android:process=":widget" android:label="@string/appwidget_label_4_2">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+				<action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+			</intent-filter>
+			<meta-data android:name="android.appwidget.provider" android:resource="@xml/appwidget_info_4_2" />
+		</receiver>
+		<!-- widget view 4*2 service -->
+		<service android:name="com.ifeng.news2.app.widgets.IfengWidgetService_4x2" android:exported="false" android:process=":widget" >
+		     <intent-filter>
+                <action android:name="com.ifeng.news2.app.widget.service.UPDATE_SERVICE_4_2" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+		 </service>
+		 <!-- widget view 4*3 provider-->
+        <receiver android:name="com.ifeng.news2.app.widgets.IfengWidgetProvider_4x3" android:label="@string/appwidget_label_4_3"
+            android:exported="true" android:process=":widget">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+				<action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+			</intent-filter>
+			<meta-data android:name="android.appwidget.provider" android:resource="@xml/appwidget_info_4_3" />
+		</receiver>
+		<!-- widget view 4*3 service -->
+		<service android:name="com.ifeng.news2.app.widgets.IfengWidgetService_4x3" android:exported="false" android:process=":widget">
+		     <intent-filter>
+                <action android:name="com.ifeng.news2.app.widget.service.UPDATE_SERVICE_4_3" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+		 </service>
+		 <!-- widget view 4*4 provider-->
+        <receiver android:name="com.ifeng.news2.app.widgets.IfengWidgetProvider_4x4"  android:label="@string/appwidget_label_4_4"
+            android:exported="true" android:process=":widget">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+				<action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+			</intent-filter>
+			<meta-data android:name="android.appwidget.provider" android:resource="@xml/appwidget_info_4_4" />
+		</receiver>
+		<!-- widget view 4*4 service -->
+		<service android:name="com.ifeng.news2.app.widgets.IfengWidgetService_4x4" android:exported="false" android:process=":widget">
+		     <intent-filter>
+                <action android:name="com.ifeng.news2.app.widget.service.UPDATE_SERVICE_4_4" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+		 </service>
+		 <!-- widget view 4*1 provider-->
+        <receiver android:name="com.ifeng.news2.app.widgets.IfengWidgetProvider_4x1"  android:label="@string/appwidget_label_4_1"
+            android:exported="true" android:process=":widget">
+			<intent-filter>
+				<action android:name="android.appwidget.action.APPWIDGET_ENABLED" />
+				<action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+				<action android:name="android.appwidget.action.APPWIDGET_DISABLED" />
+			</intent-filter>
+			<meta-data android:name="android.appwidget.provider" android:resource="@xml/appwidget_info_4_1" />
+		</receiver>
+		<!-- widget view 4*1 service -->
+		<service android:name="com.ifeng.news2.app.widgets.IfengWidgetService_4x1" android:exported="false" android:process=":widget" >
+		     <intent-filter>
+                <action android:name="com.ifeng.news2.app.widget.service.UPDATE_SERVICE_4_1" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+		 </service>
+    </application>
+
+</manifest>

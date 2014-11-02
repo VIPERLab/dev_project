@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/ivory2" >
+
+    <RelativeLayout
+        style="@style/fillh_auto_size"
+        android:orientation="horizontal"
+        android:paddingBottom="15dp"
+        android:paddingTop="15dp" >
+
+        <RelativeLayout
+            style="@style/auto_size"
+            android:layout_centerInParent="true" >
+
+            <ImageView
+                android:id="@+id/IV"
+                style="@style/auto_size"
+                android:paddingTop="3dp"
+                android:src="@drawable/direct_seeding_load_fail" />
+
+            <TextView
+                style="@style/auto_size"
+                android:layout_marginLeft="5dp"
+                android:layout_toRightOf="@+id/IV"
+                android:text="加载失败 请重试"
+                android:textColor="#4d4d4d"
+                android:textSize="16sp" />
+        </RelativeLayout>
+    </RelativeLayout>
+
+    <ImageView
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:background="@drawable/news_title_shadow_line" />
+
+</RelativeLayout>

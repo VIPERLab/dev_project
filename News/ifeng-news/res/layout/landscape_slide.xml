@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/auto_size"
+    android:layout_alignParentBottom="true"
+    android:layout_gravity="bottom"
+    android:background="@drawable/slide_panel"
+    android:gravity="bottom"
+    android:orientation="horizontal"
+    android:paddingLeft="15dip"
+    android:paddingRight="20dip" >
+
+    <LinearLayout
+        android:id="@+id/slide_back_tag"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:gravity="bottom"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:id="@+id/landscape_back"
+            style="@style/auto_size"
+            android:layout_gravity="bottom"
+            android:src="@drawable/land_slide_back_bg"
+            android:paddingBottom="8dip"
+            android:paddingLeft="8dip"
+            android:paddingRight="8dip"
+            android:paddingTop="5dip" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_margin="5dip"
+            android:background="@drawable/gallery_divider" />
+    </LinearLayout>
+
+    <LinearLayout
+        style="@style/auto_size"
+        android:layout_marginTop="6dip"
+        android:orientation="vertical"
+        android:paddingBottom="5dip"
+        android:paddingLeft="8dip" >
+
+        <RelativeLayout
+            android:id="@+id/landscape_slide_title"
+            style="@style/auto_size"
+            android:paddingBottom="5dip" >
+
+            <TextView
+                android:id="@+id/landscape_title"
+                style="@style/auto_size"
+                android:layout_alignParentLeft="true"
+                android:ems="18"
+                android:gravity="center_vertical"
+                android:maxLines="2"
+                android:textColor="@color/slide_title_color"
+                android:textSize="20sp" />
+
+            <TextView
+                android:id="@+id/landscape_page_tips"
+                style="@style/auto_size"
+                android:paddingTop="5dp"
+                android:layout_alignParentRight="true"
+                android:gravity="center_vertical"
+                android:textColor="@color/slide_title_color"
+                android:textSize="15sp" >
+            </TextView>
+        </RelativeLayout>
+
+        <TextView
+            android:id="@+id/landscape_description"
+            style="@style/auto_size"
+            android:lineSpacingExtra="3dp"
+            android:maxLines="3"
+            android:scrollbars="vertical"
+            android:textColor="@color/slide_title_color"
+            android:textSize="14sp" />
+    </LinearLayout>
+
+</LinearLayout>

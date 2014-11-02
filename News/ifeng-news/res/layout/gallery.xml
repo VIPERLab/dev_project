@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.ifeng.news2.widget.GalleryView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/gallery"
+    style="@style/fill_both_size"
+    android:listSelector="@android:color/transparent"
+    android:numColumns="2" 
+    android:fadingEdge="none"
+    android:background="@color/ivory2"
+    >
+
+</com.ifeng.news2.widget.GalleryView>

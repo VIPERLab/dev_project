@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/channel_menu_item_wrapper" >
+
+    <TextView
+        android:id="@+id/title_text"
+        style="@style/channel_menu_item" />
+
+
+</RelativeLayout>

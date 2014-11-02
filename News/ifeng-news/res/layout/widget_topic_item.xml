@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/channellist_selector" >
+
+    <ImageView
+        android:id="@+id/point"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:paddingLeft="10dp"
+        android:paddingRight="5dp"
+        android:src="@drawable/red_point" />
+
+    <ImageView
+        android:id="@+id/topic_arrow"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:paddingRight="10dp"
+        android:src="@drawable/list_item_arrow" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toLeftOf="@id/topic_arrow"
+        android:layout_toRightOf="@id/point"
+        android:paddingBottom="11dp"
+        android:paddingRight="2dp"
+        android:paddingTop="11dp"
+        android:textColor="#262626"
+        android:textSize="15sp" />
+
+    <!--
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="1dip"
+        android:background="@drawable/topic_divider" >
+    </LinearLayout>
+    -->
+
+</RelativeLayout>

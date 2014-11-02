@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingLeft="20dp"
+    
+    android:background="@color/white" >
+
+    <com.qad.view.RecyclingImageView
+        android:id="@+id/userIcon"
+        android:layout_width="52dp"
+        android:layout_height="52dp"
+        android:paddingTop="15dip"
+        android:src="@drawable/comment_default_photo" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@id/userIcon"
+        android:orientation="vertical"
+        android:paddingRight="24dp"
+        android:paddingTop="13dip" >
+
+        <RelativeLayout
+            android:id="@+id/linearLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <TextView
+                android:id="@+id/ip_from"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentLeft="true"
+                android:layout_marginLeft="5dip"
+                android:text="北京市网友"
+                android:textColor="#2b5470"
+                android:textSize="14sp" />
+
+            <TextView
+                android:id="@+id/uptimes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+             	android:layout_marginRight="3dp"
+                android:layout_marginTop="3dp"
+                android:text="33"
+                android:textColor="@color/list_readed_text_color"
+                android:textSize="12sp" />
+
+            <ImageView
+                android:id="@+id/uptimes_icon"
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:layout_marginRight="3dp"
+                android:layout_marginTop="3dp"
+                android:layout_toLeftOf="@id/uptimes" />
+        </RelativeLayout>
+
+        <LinearLayout
+            android:id="@+id/comment_floor_shadow"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="2dip"
+            android:layout_marginLeft="5dip"
+            android:layout_marginRight="5dip"
+          	
+            android:layout_marginTop="9dip"
+            android:background="#e7ecee"
+            android:visibility="gone" >
+
+            <LinearLayout
+                android:id="@+id/comment_floor_list"
+                style="@style/block_channel_list"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="1dip"
+                android:layout_marginLeft="1dip"
+                android:layout_marginRight="1dip"
+                android:layout_marginTop="1dip"
+                android:baselineAligned="true"
+                android:fadingEdge="horizontal"
+                android:orientation="vertical" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/linearLayout2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dip"
+            android:layout_marginLeft="5dip"
+          
+            android:layout_marginTop="5dip" >
+
+            <TextView
+                android:id="@+id/comment_content"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:lineSpacingExtra="4dp"
+                android:text="韩寒悼念新概念作文支付赵长天"
+                android:textColor="#4d4d4d"
+                android:textSize="16sp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1px"
+        android:layout_alignParentBottom="true"
+        android:layout_marginLeft="6dp"
+        android:background="#e7ecee" />
+
+</RelativeLayout>

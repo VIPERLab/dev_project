@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+    
+     <com.ifeng.news2.widget.IfengBottom
+        android:id="@+id/ifeng_bottom"
+        style="@style/fillh_auto_size"
+        android:layout_alignParentBottom="true" />
+    
+  <LinearLayout
+        android:id="@+id/sport_live_poisonous_wrapper"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@id/ifeng_bottom" >
+    </LinearLayout>
+    
+    <LinearLayout
+        android:id="@+id/shadow"
+        style="@style/fillh_auto_size"
+        android:layout_above="@id/ifeng_bottom"
+        android:background="@drawable/detail_tabbar_shadow" />
+</RelativeLayout>

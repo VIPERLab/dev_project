@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/black" >
+
+    <ImageView
+        android:id="@+id/default_image"
+        style="@style/auto_size"
+        android:layout_centerInParent="true"/>
+
+<!--     <ImageView
+        android:id="@+id/no_picture_mode_image"
+        style="@style/auto_size"
+        android:layout_centerInParent="true"
+        android:src="@drawable/default_slide_no_load"
+        android:visibility="gone" /> -->
+
+    <com.ifeng.news2.widget.zoom.PhotoView
+        android:id="@+id/slide_image"
+        style="@style/slide_item_image" />
+
+</RelativeLayout>

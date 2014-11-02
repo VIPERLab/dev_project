@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/plot_topic_title_module"
+    android:orientation="vertical" >
+
+    <TextView
+        android:id="@+id/plot_topic_title"
+        style="@style/plot_topic_title_text" />
+
+    <RelativeLayout
+        style="@style/plot_topic_title_revision_comment_module"
+        android:gravity="top" >
+
+        <TextView
+            android:id="@+id/plot_topic_title_revision"
+            style="@style/plot_topic_title_revision"
+            android:layout_alignParentLeft="true" />
+
+        <TextView
+            android:id="@+id/comment_num"
+            style="@style/auto_size"
+            android:layout_alignParentRight="true"
+            android:background="#eebb0b15"
+            android:drawablePadding="5dip"
+            android:text="0"
+            android:drawableRight="@drawable/comment_count_icon"
+            android:gravity="center_vertical"
+            android:paddingBottom="3dip"
+            android:paddingLeft="15dip"
+            android:paddingRight="15dip"
+            android:paddingTop="3dip"
+            android:textColor="@color/white"
+            android:textSize="13sp" />
+    </RelativeLayout>
+
+</LinearLayout>

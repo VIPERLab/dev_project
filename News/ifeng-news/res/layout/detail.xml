@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent" >
+    
+	<RelativeLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_gravity="center_vertical" >
+	    
+	    <LinearLayout
+	        android:id="@+id/advertise"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_above="@+id/bar_relative" />
+	 
+	    
+	    <include
+	        android:id="@+id/bar_relative"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:layout_alignParentBottom="true"
+	        layout="@layout/detail_title"
+	        android:gravity="center_vertical" />
+	
+	    <com.ifeng.news2.widget.DetailView
+	        android:id="@+id/detailView"
+	        android:layout_width="fill_parent"
+	        android:layout_height="fill_parent"
+	        android:layout_alignParentTop="true"
+	        android:fadingEdge="none"
+	        android:layout_above="@+id/advertise"
+	        android:fadingEdgeLength="0px" />
+	    
+	    <!-- 显示bar_relative阴影部分 -->
+	     <LinearLayout
+	        android:id="@+id/bar_relative_shadow"
+	        style="@style/fillh_auto_size"
+	        android:layout_above="@+id/bar_relative" 
+	        android:background="@drawable/detail_tabbar_shadow"/>
+	     
+	</RelativeLayout>
+	
+    <FrameLayout 
+        android:id="@+id/tips_detail"
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:background="@color/tips_background"
+	    android:visibility="gone" >
+	
+        <ImageView 
+            android:layout_width="wrap_content"
+		    android:layout_height="wrap_content"
+		    android:background="@drawable/tips_detail"
+		    android:layout_gravity="center"
+		    android:scaleType="center"/>
+    </FrameLayout>
+    
+</FrameLayout>
