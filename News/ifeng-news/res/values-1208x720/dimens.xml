@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    
-    <!-- widget size -->
-    <dimen name="widget_title_size">13.5sp</dimen>
-    <dimen name="widget_date_margin_top">4dip</dimen>
-    
-</resources>

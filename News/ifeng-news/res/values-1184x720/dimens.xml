@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-
-    
-    <!-- widget size -->
-	<dimen name="widget_logo_margin_left">9dip</dimen>
-	
-</resources>

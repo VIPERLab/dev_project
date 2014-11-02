@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/video_detail_rich_text"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:lineSpacingExtra="@dimen/video_detail_des_line_spacing_extra"
-    android:textColor="@color/video_detail_description_txt_color"
-    android:textSize="@dimen/video_relative_list_item_title_size"
-    android:typeface="sans" />
