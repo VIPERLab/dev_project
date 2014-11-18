@@ -30,8 +30,11 @@
     
     [rootView addSubview:subView1];
     [rootView addSubview:subView2];
-    
+   
+       
     NSLog(@"rootView's subViews: %@", rootView.subviews);
+    
+    UIImageView *imageView = [UIImageView alloc] initWithFrame:<#(CGRect)#>
 }
 
 - (void)didReceiveMemoryWarning {

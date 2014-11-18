@@ -40,6 +40,7 @@
 		823D037419F218C300C2FAD5 /* 2.UIViewTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = 2.UIViewTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		823D037919F218C300C2FAD5 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		823D037A19F218C300C2FAD5 /* __UIViewTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = __UIViewTests.m; sourceTree = "<group>"; };
+		8280339B1A02493F000AE54F /* MyPlayground.playground */ = {isa = PBXFileReference; lastKnownFileType = file.playground; path = MyPlayground.playground; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -89,6 +90,7 @@
 				823D036B19F218C300C2FAD5 /* Images.xcassets */,
 				823D036D19F218C300C2FAD5 /* LaunchScreen.xib */,
 				823D035E19F218C300C2FAD5 /* Supporting Files */,
+				8280339B1A02493F000AE54F /* MyPlayground.playground */,
 			);
 			path = 2.UIView;
 			sourceTree = "<group>";
@@ -412,6 +414,7 @@
 				823D038019F218C300C2FAD5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		823D038119F218C300C2FAD5 /* Build configuration list for PBXNativeTarget "2.UIViewTests" */ = {
 			isa = XCConfigurationList;
@@ -420,6 +423,7 @@
 				823D038319F218C300C2FAD5 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
