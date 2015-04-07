@@ -1,50 +1,3 @@
-#built application files
-*.apk
-*.ap_
-
-# files for the dex VM
-*.dex
-
-# Java class files
-*.class
-
-# generated files
-bin/
-gen/
-
-# Local configuration file (sdk path, etc)
-local.properties
-
-# Windows thumbnail db
-.DS_Store
-
-# Eclipse project files
-.classpath
-.project
-.metadata/
-
-# Android Studio
-.idea
-#.idea/workspace.xml - uncomment this and comment/delete .idea if it better suit your needs
-.gradle
-gradle/
-gradlew
-gradlew.bat
-build/
-/*/local.properties
-/*/out
-/*/*/build
-/*/*/production
-*.iml
-*.iws
-*.ipr
-*~
-
-*.properties
-
-*/lint.xml
-
-
 # OS X
 #
 .DS_Store
@@ -94,4 +47,51 @@ DerivedData
 # http://guides.cocoapods.org/using/using-cocoapods.html#should-i-ignore-the-pods-directory-in-source-control?
 #
 # Pods/
+
+#Android
+#built application files
+*.apk
+*.ap_
+
+# files for the dex VM
+*.dex
+
+# Java class files
+*.class
+
+# generated files
+bin/
+gen/
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Windows thumbnail db
+.DS_Store
+
+# Eclipse project files
+.classpath
+.project
+.metadata/
+
+# Android Studio
+.idea
+#.idea/workspace.xml - uncomment this and comment/delete .idea if it better suit your needs
+.gradle
+gradle/
+gradlew
+gradlew.bat
+build/
+/*/local.properties
+/*/out
+/*/*/build
+/*/*/production
+*.iml
+*.iws
+*.ipr
+*~
+
+*.properties
+
+*/lint.xml
 
